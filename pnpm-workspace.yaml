@@ -1,0 +1,3 @@
+packages:
+  - reframed
+  - e2e/*

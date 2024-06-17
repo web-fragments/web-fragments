@@ -1,0 +1,15 @@
+{
+  "name": "simple-spa",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "link:../../node_modules/typescript",
+    "vite": "link:../../node_modules/vite"
+  }
+}
