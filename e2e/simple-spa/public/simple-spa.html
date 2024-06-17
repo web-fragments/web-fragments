@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple SPA (reframed source)</title>
+  </head>
+  <body>
+    <h1>Simple SPA</h1>
+    <section id="spa-root">initializing...</section>
+    <script type="module">
+      const root = document.getElementById("spa-root");
+      let counter = 0;
+      setInterval(() => {
+        counter++;
+        console.log("simple-spa: counter =", counter);
+        root.textContent = `counter: ${counter}`;
+      }, 1000);
+      globalThis.hello = () => {
+        console.log("hello from iframe, counter=", counter);
+      };
+    </script>
+  </body>
+</html>

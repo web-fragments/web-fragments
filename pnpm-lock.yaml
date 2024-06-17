@@ -8,14 +8,21 @@ importers:
 
   .:
     devDependencies:
+      '@types/node':
+        specifier: ^20.14.2
+        version: 20.14.2
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
         specifier: ^5.2.0
-        version: 5.2.0
+        version: 5.2.0(@types/node@20.14.2)
 
   e2e/simple-spa:
+    dependencies:
+      reframed:
+        specifier: workspace:*
+        version: link:../../reframed
     devDependencies:
       typescript:
         specifier: link:../../node_modules/typescript
@@ -31,7 +38,7 @@ importers:
         version: 5.2.2
       vite:
         specifier: ^5.2.0
-        version: 5.2.0
+        version: 5.2.0(@types/node@20.14.2)
       writable-dom:
         specifier: 1.0.3
         version: 1.0.3
@@ -377,6 +384,12 @@ packages:
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
     dev: true
 
+  /@types/node@20.14.2:
+    resolution: {integrity: sha512-xyu6WAMVwv6AKFLB+e/7ySZVr/0zLCzOa7rSpq6jNwpqOrUbcACDWC+53d4n2QHOnDou0fbIsg8wZu/sxrnI4Q==}
+    dependencies:
+      undici-types: 5.26.5
+    dev: true
+
   /esbuild@0.20.2:
     resolution: {integrity: sha512-WdOOppmUNU+IbZ0PaDiTst80zjnrOkyJNHoKupIcVyU8Lvla3Ugx94VzkQ32Ijqd7UhHJy75gNWDMUekcrSJ6g==}
     engines: {node: '>=12'}
@@ -472,7 +485,11 @@ packages:
     hasBin: true
     dev: true
 
-  /vite@5.2.0:
+  /undici-types@5.26.5:
+    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+    dev: true
+
+  /vite@5.2.0(@types/node@20.14.2):
     resolution: {integrity: sha512-xMSLJNEjNk/3DJRgWlPADDwaU9AgYRodDH2t6oENhJnIlmU9Hx1Q6VpjyXua/JdMw1WJRbnAgHJ9xgET9gnIAg==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
@@ -500,6 +517,7 @@ packages:
       terser:
         optional: true
     dependencies:
+      '@types/node': 20.14.2
       esbuild: 0.20.2
       postcss: 8.4.38
       rollup: 4.18.0

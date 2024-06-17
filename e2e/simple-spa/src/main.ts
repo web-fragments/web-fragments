@@ -2,9 +2,7 @@ import "./style.css";
 import typescriptLogo from "./typescript.svg";
 import viteLogo from "/vite.svg";
 import { setupCounter } from "./counter.ts";
-import reframed from "reframed";
-
-reframed();
+import { reframed } from "reframed";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div>
@@ -25,3 +23,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 `;
 
 setupCounter(document.querySelector<HTMLButtonElement>("#counter")!);
+
+const reframedContainer = await reframed("/simple-spa.html", "section");
+reframedContainer.setAttribute("style", "border:1px dashed red");
+document.body.insertAdjacentElement("beforeend", reframedContainer);

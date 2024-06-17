@@ -1,3 +1,1 @@
-export default () => {
-  console.log("hello reframed world!");
-};
+export { reframed } from "./src/reframed";
