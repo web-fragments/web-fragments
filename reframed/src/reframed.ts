@@ -102,6 +102,35 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
         return reframedContainer.querySelector(selector);
       },
     },
+
+    // redirect to mainDocument
+    activeElement: {
+      get: () => {
+        return mainDocument.activeElement;
+      },
+    },
+
+    // redirect to mainDocument
+    head: {
+      get: () => {
+        // TODO should we enforce that there is a HEAD-like element under reframedContainer?
+        return reframedContainer;
+      },
+    },
+
+    body: {
+      get: () => {
+        // TODO should we enforce that there is a BODY-like element under reframedContainer?
+        return reframedContainer;
+      }
+    },
+
+    stylesheets: {
+      get: () => {
+        // TODO: use shadow root's sheets instead
+        return mainDocument.styleSheets;
+      },
+    }
   });
 
   const domCreateProperties: (keyof Pick<Document,
