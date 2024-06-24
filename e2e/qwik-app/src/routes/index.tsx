@@ -1,4 +1,4 @@
-import { component$, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useOnDocument, $ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 
 import { reframed } from 'reframed';
@@ -11,11 +11,15 @@ import Starter from "../components/starter/next-steps/next-steps";
 
 
 export default component$(() => {
-  useVisibleTask$(async () => {
+
+  useOnDocument('DOMContentLoaded', $(async () => {
+    //debugger;
+    if (document.unreframedBody) return;
     const reframedContainer = document.getElementById('flower')!;
     reframedContainer.setAttribute("style", "border:1px dashed red");
-    await reframed("/demo/flower", reframedContainer);
-  });
+    await reframed("/demo/flower/", {container: reframedContainer});
+  }));
+
 
   return (
     <>

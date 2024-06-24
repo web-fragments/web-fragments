@@ -67,6 +67,9 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
   const mainDocumentPrototype = Object.getPrototypeOf(Object.getPrototypeOf(mainDocument));
   let updatedIframeTitle: string | undefined = undefined;
 
+  const unpatchedIframeDocumentPrototypeProps = Object.getOwnPropertyDescriptors(iframeDocumentPrototype);
+  const unpatchedIframeBody = iframeDocument.body;
+
   Object.defineProperties(iframeDocumentPrototype, {
     title: {
       get: function () {
@@ -78,7 +81,6 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
         );
       },
       set: function (newTitle: string) {
-        debugger;
         updatedIframeTitle = newTitle;
       },
     },
@@ -123,6 +125,14 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
       get: () => {
         // TODO should we enforce that there is a BODY-like element under reframedContainer?
         return reframedContainer;
+      }
+    },
+
+    // TODO: hack
+    unreframedBody: {
+      get: () => {
+        return unpatchedIframeBody;
+        //unpatchedIframeDocumentPrototypeProps.body.value;
       }
     },
 
