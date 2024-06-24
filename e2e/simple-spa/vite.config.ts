@@ -9,7 +9,7 @@ export default defineConfig({
 
       // cross-repo development only!
       // requires writable-dom checked out as a sibling to `reframed`
-      //"writable-dom": resolve(__dirname, "../../../writable-dom/src/index.ts"),
+      "writable-dom": resolve(__dirname, "../../../writable-dom/src/index.ts"),
     },
   },
 });
