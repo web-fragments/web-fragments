@@ -27,7 +27,13 @@
       console.debug("simple-spa script end");
       console.assert(
         document.title === "Simple SPA",
-        `didn't bootstrap in an iframe, document title: ${document.title}`
+        `script[type=module] didn't eval in an iframe, document title: ${document.title}`
+      );
+    </script>
+    <script>
+      console.assert(
+        document.title === "Simple SPA",
+        `script[type=] didn't eval in an iframe, document title: ${document.title}`
       );
     </script>
   </body>

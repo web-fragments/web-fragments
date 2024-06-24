@@ -7,9 +7,10 @@ import WritableDOMStream from "writable-dom";
  *    The default is [`article`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article).
  * @returns
  */
-export function reframed(reframedSrc: string, containerTagName: string = "article"): HTMLElement {
+export function reframed(reframedSrc: string, options: {container?: HTMLElement, containerTagName: string} = { containerTagName: "article"}): HTMLElement {
   // create the reframed container
-  const reframedContainer = document.createElement(containerTagName);
+  const reframedContainer = options.container ?? document.createElement(options.containerTagName);
+  reframedContainer.setAttribute('reframed-src', reframedSrc)
 
   // kick off reframing but don't wait for it
   reframe(reframedSrc, reframedContainer);

@@ -24,6 +24,6 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 
 setupCounter(document.querySelector<HTMLButtonElement>("#counter")!);
 
-const reframedContainer = reframed("/simple-spa.html", "section");
+const reframedContainer = reframed("/simple-spa.html");
 reframedContainer.setAttribute("style", "border:1px dashed red");
 document.body.appendChild(reframedContainer);

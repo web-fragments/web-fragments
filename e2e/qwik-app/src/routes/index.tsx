@@ -12,9 +12,9 @@ import Starter from "../components/starter/next-steps/next-steps";
 
 export default component$(() => {
   useVisibleTask$(async () => {
-    const reframedContainer = await reframed("/demo/flower", "section");
+    const reframedContainer = document.getElementById('flower')!;
     reframedContainer.setAttribute("style", "border:1px dashed red");
-    document.getElementById('flower')?.append(reframedContainer);
+    await reframed("/demo/flower", reframedContainer);
   });
 
   return (
