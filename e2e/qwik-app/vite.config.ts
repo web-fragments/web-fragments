@@ -35,6 +35,10 @@ export default defineConfig(({ command, mode }): UserConfig => {
     resolve: {
       alias: {
         reframed: resolve(__dirname, "../../reframed/index.ts"),
+
+        // cross-repo development only!
+        // requires writable-dom checked out as a sibling to `reframed`
+        "writable-dom": resolve(__dirname, "../../../writable-dom/src/index.ts"),
       },
     },
 

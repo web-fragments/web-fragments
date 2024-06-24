@@ -20,7 +20,7 @@ export default component$(() => {
   return (
     <>
       <Hero />
-      <article id="flower"></article>
+      <article id="flower" style="border: 1px dashed red"></article>
       <Starter />
 
       <div role="presentation" class="ellipsis"></div>

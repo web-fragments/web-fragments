@@ -62,6 +62,8 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement) {
  */
 function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: HTMLElement): void {
   const iframeDocumentPrototype = Object.getPrototypeOf(Object.getPrototypeOf(iframeDocument));
+  const mainDocument = reframedContainer.ownerDocument;
+  const mainDocumentPrototype = Object.getPrototypeOf(Object.getPrototypeOf(mainDocument));
   let updatedIframeTitle: string | undefined = undefined;
 
   Object.defineProperties(iframeDocumentPrototype, {
@@ -80,13 +82,90 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
       },
     },
 
-    // redirect getElementById to scoped reframedContainer.querySelector query
+    // redirect getElementById to be a scoped reframedContainer.querySelector query
     getElementById: {
       value(id: string) {
         return reframedContainer.querySelector(`#${id}`);
       },
     },
+
+    // redirect getElementByName to be a scoped reframedContainer.querySelector query
+    getElementByName: {
+      value(name: string) {
+        return reframedContainer.querySelector(`[name="${name}"]`);
+      },
+    },
+
+    // redirect querySelector to be a scoped reframedContainer.querySelector query
+    querySelector: {
+      value(selector: string) {
+        return reframedContainer.querySelector(selector);
+      },
+    },
   });
+
+  const domCreateProperties: (keyof Pick<Document,
+    "createAttributeNS" |
+    "createCDATASection" |
+     "createComment" |
+    "createDocumentFragment" |
+     "createElement" |
+    "createElementNS" |
+    "createEvent" |
+    "createExpression" |
+    "createNSResolver" |
+    "createNodeIterator" |
+    "createProcessingInstruction"|
+    "createRange"|
+    "createTextNode"|
+    "createTreeWalker"
+    >)[] = [
+    "createAttributeNS",
+    "createCDATASection",
+     "createComment",
+    "createDocumentFragment",
+     "createElement",
+    "createElementNS",
+    "createEvent",
+    "createExpression",
+    "createNSResolver",
+    "createNodeIterator",
+    "createProcessingInstruction",
+    "createRange",
+    "createTextNode",
+    "createTreeWalker",
+  ];
+  for (const createProperty of domCreateProperties) {
+    Object.defineProperty(iframeDocumentPrototype, createProperty, {
+      value: function reframedCreateFn() {
+        // @ts-expect-error WTD?!?
+        return (mainDocument[createProperty]).apply(mainDocument, arguments);
+      }
+    });
+  }
+
+  // methods to query for elements that can be retargeted into the reframedContainer
+  const domQueryProperties: (keyof Pick<Document,
+    "querySelector" |
+    "querySelectorAll" |
+     "getElementsByClassName" |
+    "getElementsByTagName" |
+     "getElementsByTagNameNS"
+    >)[] = [
+    "querySelector",
+    "querySelectorAll",
+    "getElementsByClassName",
+    "getElementsByTagName",
+    "getElementsByTagNameNS",
+  ];
+  for (const queryProperty of domQueryProperties) {
+    Object.defineProperty(iframeDocumentPrototype, queryProperty, {
+      value: function reframedCreateFn() {
+        // @ts-expect-error WTD?!?
+        return (reframedContainer[queryProperty]).apply(reframedContainer, arguments);
+      }
+    });
+  }
 }
 
 /**
