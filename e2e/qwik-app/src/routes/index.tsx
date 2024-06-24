@@ -1,16 +1,26 @@
 import { component$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 
+import { reframed } from 'reframed';
+
 import Counter from "../components/starter/counter/counter";
 import Hero from "../components/starter/hero/hero";
 import Infobox from "../components/starter/infobox/infobox";
 import Starter from "../components/starter/next-steps/next-steps";
+
+// TODO: run this as client only
+const reframedContainer = await reframed("/demo/flower", "section");
+reframedContainer.setAttribute("style", "border:1px dashed red");
+document.getElementById('flower')?.append(reframedContainer);
+
 
 export default component$(() => {
   return (
     <>
       <Hero />
       <Starter />
+
+      <article id="flower"></article>
 
       <div role="presentation" class="ellipsis"></div>
       <div role="presentation" class="ellipsis ellipsis-purple"></div>

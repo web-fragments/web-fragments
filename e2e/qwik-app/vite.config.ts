@@ -1,3 +1,4 @@
+import {resolve} from "node:path";
 /**
  * This is the base config for vite.
  * When building, the adapter config is used which loads this file and extends it.
@@ -27,6 +28,14 @@ export default defineConfig(({ command, mode }): UserConfig => {
       // Put problematic deps that break bundling here, mostly those with binaries.
       // For example ['better-sqlite3'] if you use that in server functions.
       exclude: [],
+    },
+
+    // TODO is the next line needed in qwik? it was needed for simple-spa
+    appType: "mpa", // so that Vite returns 404 on fetch to an non-existent .html file
+    resolve: {
+      alias: {
+        reframed: resolve(__dirname, "../../reframed/index.ts"),
+      },
     },
 
     /**
