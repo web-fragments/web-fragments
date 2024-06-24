@@ -1,22 +1,34 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Simple SPA (reframed source)</title>
+    <title>Simple SPA</title>
   </head>
   <body>
     <h1>Simple SPA</h1>
     <section id="spa-root">initializing...</section>
     <script type="module">
+      console.log(`simple-spa starting (document.title == '${document.title})'`);
       const root = document.getElementById("spa-root");
       let counter = 0;
-      setInterval(() => {
+
+      const updateCounter = () => {
         counter++;
-        console.log("simple-spa: counter =", counter);
+        //console.debug("simple-spa: counter =", counter);
         root.textContent = `counter: ${counter}`;
-      }, 1000);
+      };
+
+      updateCounter();
+      setInterval(updateCounter, 1000);
+
       globalThis.hello = () => {
         console.log("hello from iframe, counter=", counter);
       };
+
+      console.debug("simple-spa script end");
+      console.assert(
+        document.title === "Simple SPA",
+        `didn't bootstrap in an iframe, document title: ${document.title}`
+      );
     </script>
   </body>
 </html>

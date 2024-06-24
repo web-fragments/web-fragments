@@ -10,7 +10,7 @@
   "author": "Igor Minar <i@igor.dev> (https://igor.dev)",
   "license": "MIT",
   "devDependencies": {
-    "writable-dom": "1.0.3",
+    "writable-dom": "IgorMinar/writable-dom#reframed-support",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   },

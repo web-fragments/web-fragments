@@ -24,6 +24,9 @@ importers:
         specifier: workspace:*
         version: link:../../reframed
     devDependencies:
+      '@types/node':
+        specifier: link:../../node_modules/@types/node
+        version: link:../../node_modules/@types/node
       typescript:
         specifier: link:../../node_modules/typescript
         version: link:../../node_modules/typescript
@@ -40,8 +43,8 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0(@types/node@20.14.2)
       writable-dom:
-        specifier: 1.0.3
-        version: 1.0.3
+        specifier: IgorMinar/writable-dom#reframed-support
+        version: github.com/IgorMinar/writable-dom/dd1e15e72f89c1a895ef816647264c424fad40f0
 
 packages:
 
@@ -525,6 +528,10 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /writable-dom@1.0.3:
-    resolution: {integrity: sha512-cZ00t/f1vDv7ieq6Sjy5nwjvhh9hZu1XC3YY/zKkX8CxKU7DVBWyKbKME1y5Uex8GUpwpyTBLkeRQ9VJAuGrJQ==}
+  github.com/IgorMinar/writable-dom/dd1e15e72f89c1a895ef816647264c424fad40f0:
+    resolution: {tarball: https://codeload.github.com/IgorMinar/writable-dom/tar.gz/dd1e15e72f89c1a895ef816647264c424fad40f0}
+    name: writable-dom
+    version: 1.0.0
+    prepare: true
+    requiresBuild: true
     dev: true
