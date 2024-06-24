@@ -85,8 +85,8 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0(@types/node@20.14.2)
       writable-dom:
-        specifier: 1.0.3
-        version: 1.0.3
+        specifier: github:IgorMinar/writable-dom#reframed-support
+        version: https://codeload.github.com/IgorMinar/writable-dom/tar.gz/2ec821b7206e48933c7876738d4ca14b164549bd
 
 packages:
 
@@ -1918,8 +1918,9 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  writable-dom@1.0.3:
-    resolution: {integrity: sha512-cZ00t/f1vDv7ieq6Sjy5nwjvhh9hZu1XC3YY/zKkX8CxKU7DVBWyKbKME1y5Uex8GUpwpyTBLkeRQ9VJAuGrJQ==}
+  writable-dom@https://codeload.github.com/IgorMinar/writable-dom/tar.gz/2ec821b7206e48933c7876738d4ca14b164549bd:
+    resolution: {tarball: https://codeload.github.com/IgorMinar/writable-dom/tar.gz/2ec821b7206e48933c7876738d4ca14b164549bd}
+    version: 1.0.0
 
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
@@ -4063,7 +4064,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  writable-dom@1.0.3: {}
+  writable-dom@https://codeload.github.com/IgorMinar/writable-dom/tar.gz/2ec821b7206e48933c7876738d4ca14b164549bd: {}
 
   yocto-queue@0.1.0: {}
 
