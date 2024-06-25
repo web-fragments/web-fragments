@@ -1,4 +1,7 @@
 import type { MetaFunction } from "@remix-run/node";
+import { useEffect, useRef } from "react";
+
+import { reframed } from "reframed";
 
 export const meta: MetaFunction = () => {
   return [
@@ -8,6 +11,16 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Index() {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    (async () => {
+      if (document.unreframedBody) return;
+      const reframedContainer = ref.current;
+      if (!reframedContainer) return;
+      await reframed("/counter", { container: reframedContainer });
+    })();
+  }, []);
+
   return (
     <div className="font-sans p-4">
       <h1 className="text-3xl">Welcome to Remix</h1>
@@ -43,6 +56,15 @@ export default function Index() {
           </a>
         </li>
       </ul>
+      <article
+        style={{
+          border: "6px dashed red",
+          scale: "60%",
+          display: "grid",
+          placeContent: "center",
+        }}
+        ref={ref}
+      ></article>
     </div>
   );
 }
