@@ -31,6 +31,8 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement) {
           })<hr>${await reframedHtmlResponse.text()}`
         );
 
+  // create shadow root to isolate styles
+  const shadowRoot = reframedContainer.attachShadow({ mode: 'open' });
   // create a hidden iframe and use it isolate JavaScript scripts
   const iframe = document.createElement("iframe");
   iframe.name = reframedSrc;
@@ -39,11 +41,11 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement) {
     const iframeDocument = iframe.contentDocument;
     assert(iframeDocument !== null, "iframe.contentDocument is defined");
 
-    monkeyPatchIFrameDocument(iframeDocument, reframedContainer);
+    monkeyPatchIFrameDocument(iframeDocument, shadowRoot);
 
     reframedHtmlStream
       .pipeThrough(new TextDecoderStream())
-      .pipeTo(new WritableDOMStream(reframedContainer, { scriptLoadingDocument: iframeDocument }))
+      .pipeTo(new WritableDOMStream(shadowRoot, { scriptLoadingDocument: iframeDocument }))
       .finally(() => {
         console.log("reframing done!", {
           source: reframedSrc,
@@ -61,9 +63,9 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement) {
  * Apply monkey-patches to the source iframe so that we trick code running in it to behave as if it
  * was running in the main frame.
  */
-function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: HTMLElement): void {
+function monkeyPatchIFrameDocument(iframeDocument: Document, shadowRoot: ShadowRoot): void {
   const iframeDocumentPrototype = Object.getPrototypeOf(Object.getPrototypeOf(iframeDocument));
-  const mainDocument = reframedContainer.ownerDocument;
+  const mainDocument = shadowRoot.ownerDocument;
   const mainDocumentPrototype = Object.getPrototypeOf(Object.getPrototypeOf(mainDocument));
   let updatedIframeTitle: string | undefined = undefined;
 
@@ -76,7 +78,7 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
         return (
           updatedIframeTitle ??
           // https://html.spec.whatwg.org/multipage/dom.html#document.title
-          reframedContainer.getElementsByTagName("title")[0]?.textContent?.trim() ??
+          shadowRoot.querySelector("title")?.textContent?.trim() ??
           "[reframed document]"
         );
       },
@@ -88,21 +90,21 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
     // redirect getElementById to be a scoped reframedContainer.querySelector query
     getElementById: {
       value(id: string) {
-        return reframedContainer.querySelector(`#${id}`);
+        return shadowRoot.querySelector(`#${id}`);
       },
     },
 
     // redirect getElementByName to be a scoped reframedContainer.querySelector query
     getElementByName: {
       value(name: string) {
-        return reframedContainer.querySelector(`[name="${name}"]`);
+        return shadowRoot.querySelector(`[name="${name}"]`);
       },
     },
 
     // redirect querySelector to be a scoped reframedContainer.querySelector query
     querySelector: {
       value(selector: string) {
-        return reframedContainer.querySelector(selector);
+        return shadowRoot.querySelector(selector);
       },
     },
 
@@ -117,14 +119,14 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
     head: {
       get: () => {
         // TODO should we enforce that there is a HEAD-like element under reframedContainer?
-        return reframedContainer;
+        return shadowRoot;
       },
     },
 
     body: {
       get: () => {
         // TODO should we enforce that there is a BODY-like element under reframedContainer?
-        return reframedContainer;
+        return shadowRoot.firstElementChild;
       }
     },
 
@@ -137,14 +139,13 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
 
     stylesheets: {
       get: () => {
-        // TODO: use shadow root's sheets instead
-        return mainDocument.styleSheets;
+        return shadowRoot.styleSheets;
       },
     },
 
     dispatchEvent: {
       value(event: Event) {
-        return reframedContainer.dispatchEvent(event);
+        return shadowRoot.dispatchEvent(event);
       }
     }
   });
@@ -207,7 +208,7 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
     Object.defineProperty(iframeDocumentPrototype, queryProperty, {
       value: function reframedCreateFn() {
         // @ts-expect-error WTD?!?
-        return (reframedContainer[queryProperty]).apply(reframedContainer, arguments);
+        return (shadowRoot[queryProperty]).apply(shadowRoot, arguments);
       }
     });
   }
@@ -226,8 +227,8 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
           return originalDocumentFn.apply(document, arguments);
         }
 
-        return reframedContainer[listenerProperty].apply(
-          reframedContainer,
+        return shadowRoot[listenerProperty].apply(
+          shadowRoot,
           // @ts-expect-error WTD?!?
           arguments
         );
