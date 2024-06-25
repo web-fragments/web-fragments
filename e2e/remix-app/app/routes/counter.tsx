@@ -19,9 +19,10 @@ export default function Counter() {
     })();
   }, []);
 
-  return !shouldReframe ? (
-    <div>
-      <style>{`
+  return (
+    <>
+      <div>
+        <style>{`
     .counter {
         margin: 1rem;
         display: flex;
@@ -32,36 +33,35 @@ export default function Counter() {
         padding: 0.5rem;
     }
   `}</style>
-      <div className="counter">
-        <button
-          onClick={() => {
-            setCounter((counter) => counter - 1);
-          }}
-        >
-          -
-        </button>
-        <span>{counter}</span>
-        <button
-          onClick={() => {
-            setCounter((counter) => counter + 1);
-          }}
-        >
-          +
-        </button>
+        <div className="counter">
+          <button
+            onClick={() => {
+              setCounter((counter) => counter - 1);
+            }}
+          >
+            -
+          </button>
+          <span>{counter}</span>
+          <button
+            onClick={() => {
+              setCounter((counter) => counter + 1);
+            }}
+          >
+            +
+          </button>
+        </div>
       </div>
-    </div>
-  ) : (
-    <>
-      <h1>hello from parent remix</h1>
-      <article
-        style={{
-          border: "6px dashed red",
-          scale: "60%",
-          display: "grid",
-          placeContent: "center",
-        }}
-        ref={ref}
-      ></article>
+      {shouldReframe && (
+        <article
+          style={{
+            border: "6px dashed red",
+            scale: "60%",
+            display: "grid",
+            placeContent: "center",
+          }}
+          ref={shouldReframe ? ref : undefined}
+        ></article>
+      )}
     </>
   );
 }
