@@ -95,6 +95,10 @@ function handleBrowserRequest(
   responseHeaders: Headers,
   remixContext: EntryContext
 ) {
+  if (request.headers.get('sec-fetch-dest') === 'iframe') {
+    return new Response('<!doctype html><title>');
+  }
+  
   return new Promise((resolve, reject) => {
     let shellRendered = false;
     const { pipe, abort } = renderToPipeableStream(

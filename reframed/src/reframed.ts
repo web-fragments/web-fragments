@@ -37,6 +37,7 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement) {
   const iframe = document.createElement("iframe");
   iframe.name = reframedSrc;
   iframe.hidden = true;
+  iframe.src = reframedSrc;
   iframe.addEventListener("load", () => {
     const iframeDocument = iframe.contentDocument;
     assert(iframeDocument !== null, "iframe.contentDocument is defined");
