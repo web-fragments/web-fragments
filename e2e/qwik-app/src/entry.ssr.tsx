@@ -21,6 +21,14 @@ export default function (opts: RenderToStreamOptions) {
   return renderToStream(<Root />, {
     manifest,
     ...opts,
+
+    // needed for reframing/fragmenting
+    containerTagName: 'qwik-fragment',
+    qwikLoader: {
+      include: 'always',
+      position: 'bottom',
+    },
+
     // Use container attributes to set attributes on the html tag.
     containerAttributes: {
       lang: "en-us",

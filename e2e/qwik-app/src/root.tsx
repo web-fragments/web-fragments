@@ -18,6 +18,13 @@ export default component$(() => {
 
   return (
     <QwikCityProvider>
+        <RouterHead />
+        <RouterOutlet />
+    </QwikCityProvider>
+
+    /*
+    TODO: review which of these we need to keep, e.g. serviceWorker
+    <QwikCityProvider>
       <head>
         <meta charset="utf-8" />
         <link rel="manifest" href="/manifest.json" />
@@ -28,5 +35,6 @@ export default component$(() => {
         <RouterOutlet />
       </body>
     </QwikCityProvider>
+    */
   );
 });

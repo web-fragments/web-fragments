@@ -13,10 +13,8 @@ import Starter from "../components/starter/next-steps/next-steps";
 export default component$(() => {
 
   useOnDocument('DOMContentLoaded', $(async () => {
-    //debugger;
     if (document.unreframedBody) return;
     const reframedContainer = document.getElementById('flower')!;
-    reframedContainer.setAttribute("style", "border:1px dashed red");
     await reframed("/demo/flower/", {container: reframedContainer});
   }));
 
@@ -24,7 +22,7 @@ export default component$(() => {
   return (
     <>
       <Hero />
-      <article id="flower" style="border: 1px dashed red"></article>
+      <article id="flower" style="border: 6px dashed red; scale: 60%; margin: -20rem 0 -10rem;"></article>
       <Starter />
 
       <div role="presentation" class="ellipsis"></div>

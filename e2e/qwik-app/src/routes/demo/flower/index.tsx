@@ -22,7 +22,11 @@ export default component$(() => {
 
     const internal = setInterval(() => state.count++, 7000);
     cleanup(() => clearInterval(internal));
-  });
+  },
+  // TODO: figure out why the default intersection-observer strategy doesn't work with reframing
+  //       likely just a missing patch
+  { strategy: 'document-idle' }
+  );
 
   return (
     <div class="container container-center">

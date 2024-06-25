@@ -132,7 +132,6 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
     unreframedBody: {
       get: () => {
         return unpatchedIframeBody;
-        //unpatchedIframeDocumentPrototypeProps.body.value;
       }
     },
 
@@ -141,6 +140,12 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
         // TODO: use shadow root's sheets instead
         return mainDocument.styleSheets;
       },
+    },
+
+    dispatchEvent: {
+      value(event: Event) {
+        return reframedContainer.dispatchEvent(event);
+      }
     }
   });
 
@@ -203,6 +208,29 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, reframedContainer: 
       value: function reframedCreateFn() {
         // @ts-expect-error WTD?!?
         return (reframedContainer[queryProperty]).apply(reframedContainer, arguments);
+      }
+    });
+  }
+
+  // methods to manage document listeners
+  const domListenerProperties: (keyof Pick<Document,
+    "addEventListener" |
+    "removeEventListener"
+    >)[] = ["addEventListener", "removeEventListener"];
+  for (const listenerProperty of domListenerProperties) {
+    const originalDocumentFn = document[listenerProperty];
+    Object.defineProperty(iframeDocumentPrototype, listenerProperty, {
+      value: function reframedListenerFn(eventName: string) {
+        if (eventName === "DOMContentLoaded") {
+          // @ts-expect-error WTD?!?
+          return originalDocumentFn.apply(document, arguments);
+        }
+
+        return reframedContainer[listenerProperty].apply(
+          reframedContainer,
+          // @ts-expect-error WTD?!?
+          arguments
+        );
       }
     });
   }
