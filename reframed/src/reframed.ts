@@ -95,8 +95,8 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, shadowRoot: ShadowR
       },
     },
 
-    // redirect getElementByName to be a scoped reframedContainer.querySelector query
-    getElementByName: {
+    // redirect getElementsByName to be a scoped reframedContainer.querySelector query
+    getElementsByName: {
       value(name: string) {
         return shadowRoot.querySelector(`[name="${name}"]`);
       },
@@ -148,8 +148,56 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, shadowRoot: ShadowR
       value(event: Event) {
         return shadowRoot.dispatchEvent(event);
       }
-    }
-  });
+    },
+
+    childElementCount: {
+      get() {
+        return shadowRoot.childElementCount;
+      }
+    },
+
+    hasChildNodes: {
+      value(id: string) {
+        return shadowRoot.hasChildNodes();
+      },
+    },
+
+    children: {
+      get() {
+        return shadowRoot.children;
+      }
+    },
+
+    firstElementChild: {
+      get() {
+        return shadowRoot.firstElementChild;
+      }
+    },
+
+    firstChild: {
+      get() {
+        return shadowRoot.firstChild;
+      }
+    },
+
+    lastElementChild: {
+      get() {
+        return shadowRoot.lastElementChild;
+      }
+    },
+
+    lastChild: {
+      get() {
+        return shadowRoot.lastChild;
+      }
+    },
+
+    rootElement: {
+      get() {
+        return shadowRoot.firstChild;
+      }
+    },
+  } satisfies Record<keyof Document, any>);
 
   const domCreateProperties: (keyof Pick<Document,
     "createAttributeNS" |
