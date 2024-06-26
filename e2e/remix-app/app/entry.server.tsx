@@ -95,6 +95,15 @@ function handleBrowserRequest(
   responseHeaders: Headers,
   remixContext: EntryContext
 ) {
+  /**
+   * This early return makes it so that all http requests
+   * from an iframe return an empty html response.
+   *
+   * This is done to enable setting iframe.src in reframed,
+   * so that window.location (which is unpatchable and can't
+   * be modified without triggering an undesirable iframe
+   * reload) in the reframed context has the correct url.
+   */
   if (request.headers.get('sec-fetch-dest') === 'iframe') {
     return new Response('<!doctype html><title>');
   }
