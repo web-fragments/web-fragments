@@ -68,6 +68,8 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, shadowRoot: ShadowR
   const iframeDocumentPrototype = Object.getPrototypeOf(Object.getPrototypeOf(iframeDocument));
   const mainDocument = shadowRoot.ownerDocument;
   const mainDocumentPrototype = Object.getPrototypeOf(Object.getPrototypeOf(mainDocument));
+  const mainWindow = mainDocument.defaultView!;
+  const iframeWindow = iframeDocument.defaultView!;
   let updatedIframeTitle: string | undefined = undefined;
 
   const unpatchedIframeDocumentPrototypeProps = Object.getOwnPropertyDescriptors(iframeDocumentPrototype);
@@ -283,6 +285,83 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, shadowRoot: ShadowR
         );
       }
     });
+
+
+
+// window.location is read-only and non-configurable, so we can't patch it
+//
+// additionally in a browsing context with one or more iframes, the history
+// all frames contribute to the joint history: https://www.w3.org/TR/2011/WD-html5-20110525/history.html#joint-session-history
+// this means that we need to be careful not to add duplicate entries to the
+// history stack via pushState within the iframe as that would double the
+// number of history entries that back/forward button would have to work through
+//
+// therefore we do the following:
+// - intercept all history.pushState history.replaceState calls and replay
+//   them in the main window
+// - update the window.location within the iframe via history.replaceState
+// - intercept window.addEventListener('popstate', ...) registration and forward it onto the main window
+const originalHistoryFns = new Map();
+["back", "forward", "go", "pushState", "replaceState"].forEach((prop) => {
+  originalHistoryFns.set(prop, iframeWindow.history.__proto__[prop]);
+  Object.defineProperty(iframeWindow.history.__proto__, prop, {
+    get: () => {
+      return function reframedHistoryGetter() {
+        console.log(
+          prop,
+          "history length",
+          mainWindow.history.length,
+          iframeWindow.history.length
+        );
+
+        switch (prop) {
+          case "pushState": {
+            Reflect.apply(
+              originalHistoryFns.get("replaceState"),
+              iframeWindow.history,
+              arguments
+            );
+            mainWindow.history.pushState(...arguments);
+            break;
+          }
+          case "replaceState": {
+            Reflect.apply(
+              originalHistoryFns.get("replaceState"),
+              iframeWindow.history,
+              arguments
+            );
+            mainWindow.history.replaceState(...arguments);
+            break;
+          }
+          default: {
+            Reflect.apply(
+              mainWindow.history[prop],
+              mainWindow.history,
+              arguments
+            );
+          }
+        }
+      };
+    },
+  });
+});
+
+// keep window.location and history.state in sync with the ones in the parent window
+mainWindow.addEventListener("popstate", () => {
+  Reflect.apply(originalHistoryFns.get("replaceState"), iframeWindow.history.__proto__, [
+    mainWindow.history.state,
+    null,
+    mainWindow.location.href,
+  ]);
+});
+
+["length", "scrollRestoration", "state"].forEach((prop) => {
+  Object.defineProperty(iframeWindow.history.__proto__, prop, {
+    get: () => {
+      return Reflect.get(mainWindow.history, prop);
+    },
+  });
+});
   }
 }
 
