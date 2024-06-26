@@ -1,4 +1,4 @@
-import { RequestHandler } from "@builder.io/qwik-city";
+import type { RequestHandler } from "@builder.io/qwik-city";
 
 /**
  * This is a Qwik middleware plugin that intercepts all http
@@ -10,13 +10,7 @@ import { RequestHandler } from "@builder.io/qwik-city";
  * reload) in the reframed context has the correct url.
  */
 export const onRequest: RequestHandler = async (requestEvent) => {
-    // for iframe
-  // requestEvent.request.headers.get("sec-fetch-dest") === "iframe";
-  // for document request
   if (requestEvent.request.headers.get("sec-fetch-dest") === "iframe") {
-    // requestEvent.send
-    // for json requestEvent.json
-    // for html requestEvent.html
-    throw requestEvent.html(200, "<html><body>hello world</body></html>");
+    throw requestEvent.html(200, "<html><body></body></html>");
   }
 };
