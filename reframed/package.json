@@ -1,6 +1,6 @@
 {
   "name": "reframed",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "module": "dist/reframed.js",
   "files": [
@@ -11,7 +11,7 @@
   "license": "MIT",
   "//writable-dom": "somehow this ends up pulling the repo and branch, and even building the project, but outputs a package with missing `dist` folder - unclear why???",
   "devDependencies": {
-    "writable-dom": "github:IgorMinar/writable-dom#reframed-support",
+    "writable-dom": "link:../../writable-dom/",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   },
