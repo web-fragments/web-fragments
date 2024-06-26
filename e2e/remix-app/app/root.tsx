@@ -46,7 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <ScrollRestoration />
       <Scripts />
 
-      {/* 
+      {/*
           This is a hack to work around an issue with WritableDOM not populating
           the contents of the last script element (which just so happens to be responsible
           for hydrating the application). We noticed that if that script tag wasn't the last
