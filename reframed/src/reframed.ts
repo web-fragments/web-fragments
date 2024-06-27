@@ -38,6 +38,9 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement) {
   iframe.name = reframedSrc;
   iframe.hidden = true;
   iframe.src = reframedSrc;
+
+  const { promise, resolve } = Promise.withResolvers();
+
   iframe.addEventListener("load", () => {
     const iframeDocument = iframe.contentDocument;
     assert(iframeDocument !== null, "iframe.contentDocument is defined");
@@ -53,11 +56,14 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement) {
           targetContainer: reframedContainer,
           title: iframeDocument.defaultView!.document.title,
         });
+        resolve(undefined);
       });
   });
 
   // append iframe to the document to activate loading it
   document.body.insertAdjacentElement("beforeend", iframe);
+
+  return promise;
 }
 
 /**
