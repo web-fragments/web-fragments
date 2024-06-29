@@ -11,6 +11,6 @@ import type { RequestHandler } from "@builder.io/qwik-city";
  */
 export const onRequest: RequestHandler = async (requestEvent) => {
   if (requestEvent.request.headers.get("sec-fetch-dest") === "iframe") {
-    throw requestEvent.html(200, "<html><body></body></html>");
+    throw requestEvent.html(200, "<!doctype html><title>");
   }
 };
