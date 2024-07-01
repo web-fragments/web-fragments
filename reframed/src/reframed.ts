@@ -120,6 +120,7 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, shadowRoot: ShadowR
     // redirect to mainDocument
     activeElement: {
       get: () => {
+        // TODO: we see event.target during dispatchEvent to be set to null, it's likely due to this patch... investigate why!
         return mainDocument.activeElement;
       },
     },
