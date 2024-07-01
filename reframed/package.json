@@ -9,7 +9,6 @@
   "sideEffects": false,
   "author": "Igor Minar <i@igor.dev> (https://igor.dev)",
   "license": "MIT",
-  "//writable-dom": "somehow this ends up pulling the repo and branch, and even building the project, but outputs a package with missing `dist` folder - unclear why???",
   "devDependencies": {
     "writable-dom": "github:IgorMinar/writable-dom#reframed-support",
     "typescript": "^5.5.0",
