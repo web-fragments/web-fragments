@@ -1,28 +1,7 @@
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function Counter() {
-  const [shouldReframe, setShouldReframe] = useState(false);
   const [counter, setCounter] = useState(0);
-
-  const ref = useRef<HTMLElement>(null);
-  const reframingWasTriggered = useRef<boolean>(false);
-
-  useEffect(() => {
-    (async () => {
-      if (!document.unreframedBody) {
-        setShouldReframe(true);
-      }
-
-      if(reframingWasTriggered.current) return;
-      reframingWasTriggered.current = true;
-
-      const { reframed } = await import("reframed");
-      const reframedContainer = ref.current;
-      if (!reframedContainer) return;
-
-      await reframed("/counter", { container: reframedContainer });
-    })();
-  }, []);
 
   return (
     <>
@@ -56,17 +35,6 @@ export default function Counter() {
           </button>
         </div>
       </div>
-      {shouldReframe && (
-        <article
-          style={{
-            border: "6px dashed red",
-            scale: "60%",
-            display: "grid",
-            placeContent: "center",
-          }}
-          ref={shouldReframe ? ref : undefined}
-        ></article>
-      )}
     </>
   );
 }

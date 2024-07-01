@@ -1,7 +1,4 @@
 import type { MetaFunction } from "@remix-run/node";
-import { useEffect, useRef } from "react";
-
-import { reframed } from "reframed";
 
 export const meta: MetaFunction = () => {
   return [

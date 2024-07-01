@@ -7,6 +7,7 @@ import {
   json,
   useRouteLoaderData,
 } from "@remix-run/react";
+import { useRef, useState, useEffect } from "react";
 import "./tailwind.css";
 
 function isDocumentRequest(request: Request) {
@@ -23,7 +24,29 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const [shouldReframe, setShouldReframe] = useState(false);
   const {standaloneMode} = useRouteLoaderData<typeof loader>('root');
+
+  const ref = useRef<HTMLElement>(null);
+  const reframingWasTriggered = useRef<boolean>(false);
+
+  useEffect(() => {
+    (async () => {
+      if (!document.unreframedBody) {
+        setShouldReframe(true);
+      }
+
+      if(reframingWasTriggered.current) return;
+      reframingWasTriggered.current = true;
+
+      const { reframed } = await import("reframed");
+      const reframedContainer = ref.current;
+      if (!reframedContainer) return;
+
+      await reframed("/counter", { container: reframedContainer });
+    })();
+  }, []);
+
   return standaloneMode ? (
     <html lang="en">
       <head>
@@ -33,6 +56,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+      {shouldReframe && (
+        <article
+          style={{
+            border: "6px dashed red",
+            scale: "60%",
+            display: "grid",
+            placeContent: "center",
+          }}
+          ref={shouldReframe ? ref : undefined}
+        ></article>
+      )}
         {children}
         <ScrollRestoration />
         <Scripts />
