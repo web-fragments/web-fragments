@@ -7,18 +7,16 @@ import WritableDOMStream from "writable-dom";
  *    The default is [`article`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article).
  * @returns
  */
-export function reframed(reframedSrc: string, options: {container?: HTMLElement, containerTagName: string} = { containerTagName: "article"}): HTMLElement {
+export function reframed(reframedSrc: string, options: {container?: HTMLElement, containerTagName: string} = { containerTagName: "article"}): Promise<HTMLIFrameElement> {
   // create the reframed container
   const reframedContainer = options.container ?? document.createElement(options.containerTagName);
   reframedContainer.setAttribute('reframed-src', reframedSrc)
 
   // kick off reframing but don't wait for it
-  reframe(reframedSrc, reframedContainer);
-
-  return reframedContainer;
+  return reframe(reframedSrc, reframedContainer);
 }
 
-async function reframe(reframedSrc: string, reframedContainer: HTMLElement) {
+async function reframe(reframedSrc: string, reframedContainer: HTMLElement): Promise<HTMLIFrameElement> {
   console.debug("reframing!", { source: reframedSrc, targetContainer: reframedContainer.outerHTML });
 
   const reframedHtmlResponse = await fetch(reframedSrc);
@@ -39,7 +37,7 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement) {
   iframe.hidden = true;
   iframe.src = reframedSrc;
 
-  const { promise, resolve } = Promise.withResolvers();
+  const { promise, resolve } = Promise.withResolvers<HTMLIFrameElement>();
 
   iframe.addEventListener("load", () => {
     const iframeDocument = iframe.contentDocument;
@@ -56,7 +54,7 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement) {
           targetContainer: reframedContainer,
           title: iframeDocument.defaultView!.document.title,
         });
-        resolve(undefined);
+        resolve(iframe);
       });
   });
 
