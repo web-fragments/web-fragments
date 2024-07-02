@@ -9,6 +9,7 @@ import {
 } from "@remix-run/react";
 import { useRef, useState, useEffect } from "react";
 import "./tailwind.css";
+import "./global.css";
 
 function isDocumentRequest(request: Request) {
   return request.headers.get('sec-fetch-dest') === 'document';
