@@ -7,16 +7,26 @@ import WritableDOMStream from "writable-dom";
  *    The default is [`article`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article).
  * @returns
  */
-export function reframed(reframedSrc: string, options: {container?: HTMLElement, containerTagName: string} = { containerTagName: "article"}): Promise<HTMLIFrameElement> {
+export function reframed(reframedSrc: string, options: {container?: HTMLElement, containerTagName: string} = { containerTagName: "article"}): {
+  iframe: HTMLIFrameElement;
+  container: HTMLElement;
+  ready: Promise<void>;
+} {
   // create the reframed container
   const reframedContainer = options.container ?? document.createElement(options.containerTagName);
   reframedContainer.setAttribute('reframed-src', reframedSrc)
 
-  // kick off reframing but don't wait for it
-  return reframe(reframedSrc, reframedContainer);
+  // create the iframe
+  const iframe = document.createElement("iframe");
+
+  return {
+    iframe,
+    container: reframedContainer,
+    ready: reframe(reframedSrc, reframedContainer, iframe),
+  }
 }
 
-async function reframe(reframedSrc: string, reframedContainer: HTMLElement): Promise<HTMLIFrameElement> {
+async function reframe(reframedSrc: string, reframedContainer: HTMLElement, iframe: HTMLIFrameElement): Promise<void> {
   console.debug("reframing!", { source: reframedSrc, targetContainer: reframedContainer.outerHTML });
 
   const reframedHtmlResponse = await fetch(reframedSrc);
@@ -32,12 +42,11 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement): Pro
   // create shadow root to isolate styles
   const shadowRoot = reframedContainer.attachShadow({ mode: 'open' });
   // create a hidden iframe and use it isolate JavaScript scripts
-  const iframe = document.createElement("iframe");
   iframe.name = reframedSrc;
   iframe.hidden = true;
   iframe.src = reframedSrc;
 
-  const { promise, resolve } = Promise.withResolvers<HTMLIFrameElement>();
+  const { promise, resolve } = Promise.withResolvers<void>();
 
   iframe.addEventListener("load", () => {
     const iframeDocument = iframe.contentDocument;
@@ -54,7 +63,7 @@ async function reframe(reframedSrc: string, reframedContainer: HTMLElement): Pro
           targetContainer: reframedContainer,
           title: iframeDocument.defaultView!.document.title,
         });
-        resolve(iframe);
+        resolve();
       });
   });
 
