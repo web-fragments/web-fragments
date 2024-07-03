@@ -97,7 +97,7 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, shadowRoot: ShadowR
     // redirect getElementById to be a scoped reframedContainer.querySelector query
     getElementById: {
       value(id: string) {
-        return shadowRoot.querySelector(`#${id}`);
+        return shadowRoot.querySelector(`[id="${id}"]`);
       },
     },
 
