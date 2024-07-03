@@ -138,7 +138,7 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, shadowRoot: ShadowR
       }
     },
 
-    // TODO: hack
+    // @ts-ignore -- TODO: hack
     unreframedBody: {
       get: () => {
         return unpatchedIframeBody;
@@ -326,7 +326,8 @@ const originalHistoryFns = new Map();
               iframeWindow.history,
               arguments
             );
-            mainWindow.history.pushState(...arguments);
+            const args = [...arguments] as Parameters<History['pushState']>;
+            mainWindow.history.pushState(...args);
             break;
           }
           case "replaceState": {
@@ -335,7 +336,8 @@ const originalHistoryFns = new Map();
               iframeWindow.history,
               arguments
             );
-            mainWindow.history.replaceState(...arguments);
+            const args = [...arguments] as Parameters<History['replaceState']>;
+            mainWindow.history.replaceState(...args);
             break;
           }
           default: {
