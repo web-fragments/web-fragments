@@ -35,7 +35,14 @@ function serverPiercing(): Plugin {
 
         gateway.registerFragment({
           fragmentId: "remix",
-          prePiercingStyles: ``,
+          prePiercingStyles: `
+            :not(piercing-fragment-outlet) > piercing-fragment-host[fragment-id="remix"] {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+            }
+          `,
           shouldBeIncluded() {
             return true;
           },
