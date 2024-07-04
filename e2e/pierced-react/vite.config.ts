@@ -39,9 +39,18 @@ function serverPiercing(): Plugin {
           shouldBeIncluded() {
             return true;
           },
-          fetcher: () => {
-            // TODO: return the proper remix fragment response
-            return new Response("hello");
+          fetcher: async (req: Request) => {
+            const url = new URL(req.url);
+            // fetch from the pierced-react-remix-fragment (TODO: find a better solution than hardcoding the port here etc...)
+            const newUrl = `http://localhost:1123${url.pathname}`;
+            const newReq = new Request(newUrl, req);
+            try {
+              const resp = await fetch(newReq);
+              return resp;
+            } catch {
+              console.warn('\x1b[33m\n🚧 Remix fragment not found, please spin up the pierced-react-remix-fragment and try again 🚧\n\x1b[0m');
+              return new Response('FRAGMENT NOT FOUND!');
+            }
           },
         });
       });
