@@ -1,0 +1,17 @@
+{
+  "name": "fragment-elements",
+  "description": "",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240620.0",
+    "vite-plugin-dts": "^3.9.1",
+    "@vitejs/plugin-react": "^4.3.1"
+  }
+}
