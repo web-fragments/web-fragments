@@ -4,36 +4,48 @@ import react from "@vitejs/plugin-react";
 // @ts-ignore
 import { PiercingGateway } from "../../packages/fragment-gateway/src/index";
 
-const gateway = new PiercingGateway({
-  getLegacyAppBaseUrl() {
-    // return env.APP_BASE_URL;
-    return "http://localhost:5173";
-  },
-  isolateFragments() {
-    return false;
-  },
-  shouldPiercingBeEnabled() {
-    // TODO: enable piercing
-    return false;
-  },
-});
-
-gateway.registerFragment({
-  fragmentId: "remix",
-  prePiercingStyles: ``,
-  shouldBeIncluded() {
-    return true;
-  },
-  fetcher: () => {
-    // TODO: return the proper remix fragment response
-    return new Response("hello");
-  },
-});
-
 function serverPiercing(): Plugin {
   return {
     name: "piercing-plugin",
-    configureServer(server) {
+    async configureServer(server) {
+      let gateway: PiercingGateway | undefined;
+      let serverAddressBaseUrl: string | undefined;
+      server.httpServer?.once("listening", () => {
+        const serverAddress = server.httpServer?.address();
+
+        if (!serverAddress) {
+          console.warn("Unexpected error, serverAddress no present");
+          return;
+        }
+
+        serverAddressBaseUrl =
+          typeof serverAddress === "string"
+            ? serverAddress
+            : `http://localhost:${serverAddress.port}`;
+
+        gateway = new PiercingGateway({
+          getLegacyAppBaseUrl() {
+            return serverAddressBaseUrl!;
+          },
+          isolateFragments() {
+            return false;
+          },
+          shouldPiercingBeEnabled: true,
+        });
+
+        gateway.registerFragment({
+          fragmentId: "remix",
+          prePiercingStyles: ``,
+          shouldBeIncluded() {
+            return true;
+          },
+          fetcher: () => {
+            // TODO: return the proper remix fragment response
+            return new Response("hello");
+          },
+        });
+      });
+
       server.middlewares.use(async (req, res, next) => {
         const isNonFragmentHtmlRequest =
           req &&
@@ -43,9 +55,11 @@ function serverPiercing(): Plugin {
 
         const shouldBypassGateway = req.headers["x-bypass-piercing-gateway"];
 
-        if (isNonFragmentHtmlRequest && !shouldBypassGateway) {
-          const url = `http://localhost:5173${req.url}`;
-          const headers = new Headers(Object.entries(req.headers)as [string, string][]);
+        if (gateway && isNonFragmentHtmlRequest && !shouldBypassGateway) {
+          const url = `${serverAddressBaseUrl}${req.url}`;
+          const headers = new Headers(
+            Object.entries(req.headers) as [string, string][]
+          );
           const request = new Request(url, { headers });
           // this is a standard html request, apply the piercing gateway
           // TODO: this should support streaming

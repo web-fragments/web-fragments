@@ -4,10 +4,6 @@ import {
   // transformStream,
   wrapStreamInText
 } from './stream-utilities';
-// for debugging replace `qwikloader.js` with `qwikloader.debug.js` to have the code non-minified
-// @ts-ignore
-// import qwikloader from '@builder.io/qwik/qwikloader.js?raw';
-// import reframedClient from './reframed-client?raw';
 
 /**
  * Configuration object for the registration of a fragment in the app's gateway worker.
@@ -72,9 +68,9 @@ export interface PiercingGatewayConfig {
   /**
    * Allows the disabling of the whole server-side piercing based on the current request.
    */
-  shouldPiercingBeEnabled?: (
+  shouldPiercingBeEnabled?: boolean | ((
     request: Request,
-  ) => boolean | Promise<boolean>;
+  ) => boolean | Promise<boolean>);
 
   /**
    * When enabled, isolates the execution context of each fragment to an iframe.
@@ -130,6 +126,19 @@ export class PiercingGateway {
     return this.forwardFetchToBaseApp(request);
   };
 
+  private async isPiercingEnabled(request: Request): Promise<boolean> {
+    if(this.config.shouldPiercingBeEnabled === undefined) {
+      // if no option is provided the default behavior is to have piercing enabled
+      return true;
+    }
+
+    if(typeof this.config.shouldPiercingBeEnabled === 'boolean') {
+      return this.config.shouldPiercingBeEnabled;
+    }
+
+    return this.config.shouldPiercingBeEnabled(request);
+  }
+
   private async handleHtmlRequest(
     request: Request
   ) {
@@ -143,9 +152,7 @@ export class PiercingGateway {
         new Request(baseUrl, request),
       ).then(response => response.text());
 
-      const piercingEnabled =
-        !this.config.shouldPiercingBeEnabled ||
-        (await this.config.shouldPiercingBeEnabled(request));
+      const piercingEnabled = this.isPiercingEnabled(request);
 
       const fragmentStreamOrNullPromises: Promise<ReadableStream | null>[] =
         !piercingEnabled
@@ -283,15 +290,6 @@ export class PiercingGateway {
           'piercingFragmentHostInlineScript'}\n` + '</head>'
       );
 
-      // TODO: enable isolateFragments
-      // if (!this.config.isolateFragments?.(env)) {
-      //   // We need to include the qwikLoader script here
-      //   // this is a temporary bugfix, see: https://jira.cfops.it/browse/DEVDASH-51
-      //   indexBody = indexBody.replace(
-      //     '</head>',
-      //     `\n${qwikloaderScript}</head>`
-      //   );
-      // }
       return new Response(indexBody, response);
     }
 
