@@ -45,8 +45,8 @@ function serverPiercing(): Plugin {
 
         if (isNonFragmentHtmlRequest && !shouldBypassGateway) {
           const url = `http://localhost:5173${req.url}`;
-          // TODO: add headers and whatnot to request
-          const request = new Request(url);
+          const headers = new Headers(Object.entries(req.headers)as [string, string][]);
+          const request = new Request(url, { headers });
           // this is a standard html request, apply the piercing gateway
           // TODO: this should support streaming
           const html = await (await gateway.fetch(request)).text();

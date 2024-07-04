@@ -1,6 +1,6 @@
 // import { piercingFragmentHostInlineScript } from './index';
 import {
-  // concatenateStreams,
+  concatenateStreams,
   // transformStream,
   wrapStreamInText
 } from './stream-utilities';
@@ -124,64 +124,59 @@ export class PiercingGateway {
     );
     if (fragmentAssetResponse) return fragmentAssetResponse;
 
-    // const htmlResponse = await this.handleHtmlRequest(request, env, ctx);
-    // if (htmlResponse) return htmlResponse;
+    const htmlResponse = await this.handleHtmlRequest(request);
+    if (htmlResponse) return htmlResponse;
 
     return this.forwardFetchToBaseApp(request);
   };
 
-  // private async handleHtmlRequest(
-  //   request: Request,
-  //   env: Env,
-  //   ctx: ExecutionContext
-  // ) {
-  //   const requestIsForHtml = request.headers
-  //     .get('Accept')
-  //     ?.includes('text/html');
+  private async handleHtmlRequest(
+    request: Request
+  ) {
+    const requestIsForHtml = request.headers
+      .get('Accept')
+      ?.includes('text/html');
 
-  //   if (requestIsForHtml) {
-  //     const baseUrl = this.config.getLegacyAppBaseUrl(env).replace(/\/$/, '');
-  //     const indexBodyResponse = this.fetchBaseIndexHtml(
-  //       new Request(baseUrl, request),
-  //       env
-  //     ).then(response => response.text());
+    if (requestIsForHtml) {
+      const baseUrl = this.config.getLegacyAppBaseUrl().replace(/\/$/, '');
+      const indexBodyResponse = this.fetchBaseIndexHtml(
+        new Request(baseUrl, request),
+      ).then(response => response.text());
 
-  //     const piercingEnabled =
-  //       !this.config.shouldPiercingBeEnabled ||
-  //       (await this.config.shouldPiercingBeEnabled(request, env, ctx));
+      const piercingEnabled =
+        !this.config.shouldPiercingBeEnabled ||
+        (await this.config.shouldPiercingBeEnabled(request));
 
-  //     const fragmentStreamOrNullPromises: Promise<ReadableStream | null>[] =
-  //       !piercingEnabled
-  //         ? []
-  //         : Array.from(this.fragmentConfigs.values()).map(
-  //             async fragmentConfig => {
-  //               const shouldBeIncluded = await fragmentConfig.shouldBeIncluded(
-  //                 request,
-  //                 env,
-  //                 ctx
-  //               );
+      const fragmentStreamOrNullPromises: Promise<ReadableStream | null>[] =
+        !piercingEnabled
+          ? []
+          : Array.from(this.fragmentConfigs.values()).map(
+              async fragmentConfig => {
+                const shouldBeIncluded = await fragmentConfig.shouldBeIncluded(
+                  request,
+                );
 
-  //               return shouldBeIncluded
-  //                 ? this.fetchSSRedFragment(env, fragmentConfig, request)
-  //                 : null;
-  //             }
-  //           );
+                return shouldBeIncluded
+                  ? this.fetchSSRedFragment(fragmentConfig, request)
+                  : null;
+              }
+            );
 
-  //     const [indexBody, ...fragmentStreamsOrNulls] = await Promise.all([
-  //       indexBodyResponse,
-  //       ...fragmentStreamOrNullPromises
-  //     ]);
+      const [indexBody, ...fragmentStreamsOrNulls] = await Promise.all([
+        indexBodyResponse,
+        ...fragmentStreamOrNullPromises
+      ]);
 
-  //     const fragmentStreamsToInclude = fragmentStreamsOrNulls.filter(
-  //       streamOrNull => streamOrNull !== null
-  //     ) as ReadableStream<any>[];
+      const fragmentStreamsToInclude = fragmentStreamsOrNulls.filter(
+        streamOrNull => streamOrNull !== null
+      ) as ReadableStream<any>[];
 
-  //     return this.returnCombinedIndexPage(
-  //       indexBody,
-  //       concatenateStreams(fragmentStreamsToInclude)
-  //     );
-  //   }
-  // }
+      return this.returnCombinedIndexPage(
+        indexBody,
+        concatenateStreams(fragmentStreamsToInclude)
+      );
+    }
+  }
 
   private async handleFragmentFetch(request: Request) {
     const match = request.url.match(
@@ -213,8 +208,6 @@ export class PiercingGateway {
   }
 
   private async handleFragmentAssetFetch(request: Request) {
-    console.log(`\x1b[31m req.url \x1b[0m`, request.url);
-    
     const url = new URL(request.url);
     const path = url.pathname;
     const regex = /\/_fragment\/([^/]*)\/?.*$/;
@@ -245,62 +238,65 @@ export class PiercingGateway {
     return res;
   }
 
-  // private async returnCombinedIndexPage(
-  //   indexBody: string,
-  //   streamToInclude: ReadableStream
-  // ): Promise<Response> {
-  //   const indexOfEndBody = indexBody.indexOf('</body>');
-  //   const preStream = indexBody.substring(0, indexOfEndBody);
-  //   const postStream = indexBody.substring(indexOfEndBody);
+  private async returnCombinedIndexPage(
+    indexBody: string,
+    streamToInclude: ReadableStream
+  ): Promise<Response> {
+    const indexOfEndBody = indexBody.indexOf('</body>');
+    const preStream = indexBody.substring(0, indexOfEndBody);
+    const postStream = indexBody.substring(indexOfEndBody);
 
-  //   const stream = wrapStreamInText(preStream, postStream, streamToInclude);
+    const stream = wrapStreamInText(preStream, postStream, streamToInclude);
 
-  //   return new Response(stream, {
-  //     headers: {
-  //       'content-type': 'text/html;charset=UTF-8'
-  //     }
-  //   });
-  // }
+    return new Response(stream, {
+      headers: {
+        'content-type': 'text/html;charset=UTF-8'
+      }
+    });
+  }
 
-  // private async fetchBaseIndexHtml(request: Request, env: Env) {
-  //   // Note: we make sure to handle/proxy Upgrade requests, so
-  //   //       that Vite's HMR can work for local development
-  //   const upgradeHeader = request.headers.get('Upgrade');
-  //   if (upgradeHeader) {
-  //     const { webSocket } = (await fetch(request)) as unknown as {
-  //       webSocket: WebSocket;
-  //     };
+  private async fetchBaseIndexHtml(request: Request) {
+    // Note: we make sure to handle/proxy Upgrade requests, so
+    //       that Vite's HMR can work for local development
+    const upgradeHeader = request.headers.get('Upgrade');
+    if (upgradeHeader) {
+      const { webSocket } = (await fetch(request)) as unknown as {
+        webSocket: WebSocket;
+      };
 
-  //     return new Response(null, {
-  //       status: 101,
-  //       webSocket
-  //     });
-  //   }
+      return new Response(null, {
+        status: 101,
+        webSocket
+      });
+    }
 
-  //   const response = await fetch(request);
+    const headers = new Headers([...request.headers, ['x-bypass-piercing-gateway', '1']]);
+    const response = await fetch(request, { headers });
 
-  //   const requestIsForHtml = request.headers
-  //     .get('Accept')
-  //     ?.includes('text/html');
-  //   if (requestIsForHtml) {
-  //     let indexBody = (await response.text()).replace(
-  //       '</head>',
-  //       `${piercingFragmentHostInlineScript}\n` + '</head>'
-  //     );
+    const requestIsForHtml = request.headers
+      .get('Accept')
+      ?.includes('text/html');
+    if (requestIsForHtml) {
+      let indexBody = (await response.text()).replace(
+        '</head>',
+        `${// TODO: enable script
+          'piercingFragmentHostInlineScript'}\n` + '</head>'
+      );
 
-  //     if (!this.config.isolateFragments?.(env)) {
-  //       // We need to include the qwikLoader script here
-  //       // this is a temporary bugfix, see: https://jira.cfops.it/browse/DEVDASH-51
-  //       indexBody = indexBody.replace(
-  //         '</head>',
-  //         `\n${qwikloaderScript}</head>`
-  //       );
-  //     }
-  //     return new Response(indexBody, response);
-  //   }
+      // TODO: enable isolateFragments
+      // if (!this.config.isolateFragments?.(env)) {
+      //   // We need to include the qwikLoader script here
+      //   // this is a temporary bugfix, see: https://jira.cfops.it/browse/DEVDASH-51
+      //   indexBody = indexBody.replace(
+      //     '</head>',
+      //     `\n${qwikloaderScript}</head>`
+      //   );
+      // }
+      return new Response(indexBody, response);
+    }
 
-  //   return response;
-  // }
+    return response;
+  }
 
   private async fetchSSRedFragment(
     fragmentConfig: FragmentConfig,
