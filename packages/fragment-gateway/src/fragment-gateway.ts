@@ -12,7 +12,7 @@ import {
 /**
  * Configuration object for the registration of a fragment in the app's gateway worker.
  */
-export interface FragmentConfig<Env> {
+export interface FragmentConfig {
   /**
    * Unique Id for the fragment.
    */
@@ -42,8 +42,7 @@ export interface FragmentConfig<Env> {
    */
   transformRequest?: (
     request: Request,
-    env: Env,
-    fragmentConfig: FragmentConfig<Env>
+    fragmentConfig: FragmentConfig
   ) => Request;
   /**
    * Function which on HTML requests, based on the current request, environment and
@@ -52,39 +51,41 @@ export interface FragmentConfig<Env> {
    */
   shouldBeIncluded: (
     request: Request,
-    env: Env,
-    ctx: unknown
   ) => boolean | Promise<boolean>;
+  /**
+   * The fetcher for the fragment
+   */
+  fetcher: (
+    request: Request
+  ) => Response | Promise<Response>;
 }
 
 /**
  * Configuration object for the implementation of the app's gateway worker.
  */
-export interface PiercingGatewayConfig<Env> {
+export interface PiercingGatewayConfig {
   /**
    * Function which based on the current environment returns
    * the base url for the base/legacy application.
    */
-  getLegacyAppBaseUrl: (env: Env) => string;
+  getLegacyAppBaseUrl: () => string;
   /**
    * Allows the disabling of the whole server-side piercing based on the current request.
    */
   shouldPiercingBeEnabled?: (
     request: Request,
-    env: Env,
-    ctx: unknown
   ) => boolean | Promise<boolean>;
 
   /**
    * When enabled, isolates the execution context of each fragment to an iframe.
    */
-  isolateFragments?: (env: Env) => boolean;
+  isolateFragments?: () => boolean;
 }
 
-export class PiercingGateway<Env> {
-  private fragmentConfigs: Map<string, FragmentConfig<Env>> = new Map();
+export class PiercingGateway {
+  private fragmentConfigs: Map<string, FragmentConfig> = new Map();
 
-  constructor(private config: PiercingGatewayConfig<Env>) {}
+  constructor(private config: PiercingGatewayConfig) {}
 
   /**
    * Registers a fragment in the gateway worker so that it can be integrated
@@ -92,7 +93,7 @@ export class PiercingGateway<Env> {
    *
    * @param fragmentConfig Configuration object for the fragment.
    */
-  registerFragment(fragmentConfig: FragmentConfig<Env>) {
+  registerFragment(fragmentConfig: FragmentConfig) {
     if (this.fragmentConfigs.has(fragmentConfig.fragmentId)) {
       console.warn(
         "\x1b[31m Warning: you're trying to register a fragment with id" +
@@ -114,24 +115,19 @@ export class PiercingGateway<Env> {
   */
   fetch = async (
     request: Request,
-    env: Env,
-    ctx: unknown
   ): Promise<Response> => {
-    this.validateFragmentConfigs(env);
-
-    const fragmentResponse = await this.handleFragmentFetch(request, env);
+    const fragmentResponse = await this.handleFragmentFetch(request);
     if (fragmentResponse) return fragmentResponse;
 
     const fragmentAssetResponse = await this.handleFragmentAssetFetch(
       request,
-      env
     );
     if (fragmentAssetResponse) return fragmentAssetResponse;
 
     // const htmlResponse = await this.handleHtmlRequest(request, env, ctx);
     // if (htmlResponse) return htmlResponse;
 
-    return this.forwardFetchToBaseApp(request, env);
+    return this.forwardFetchToBaseApp(request);
   };
 
   // private async handleHtmlRequest(
@@ -187,7 +183,7 @@ export class PiercingGateway<Env> {
   //   }
   // }
 
-  private async handleFragmentFetch(request: Request, env: Env) {
+  private async handleFragmentFetch(request: Request) {
     const match = request.url.match(
       /^https?:\/\/[^/]*\/piercing-fragment\/([^?/]+)\/?(?:\?.+)?/
     );
@@ -204,7 +200,6 @@ export class PiercingGateway<Env> {
     }
 
     const fragmentStream = await this.fetchSSRedFragment(
-      env,
       fragmentConfig,
       request,
       false
@@ -217,7 +212,9 @@ export class PiercingGateway<Env> {
     });
   }
 
-  private async handleFragmentAssetFetch(request: Request, env: Env) {
+  private async handleFragmentAssetFetch(request: Request) {
+    console.log(`\x1b[31m req.url \x1b[0m`, request.url);
+    
     const url = new URL(request.url);
     const path = url.pathname;
     const regex = /\/_fragment\/([^/]*)\/?.*$/;
@@ -233,18 +230,19 @@ export class PiercingGateway<Env> {
       request
     );
     return this.proxyAssetRequestToFragmentWorker(
-      env,
       fragmentConfig,
       adjustedReq
     );
   }
 
-  private forwardFetchToBaseApp(request: Request, env: Env) {
+  private async forwardFetchToBaseApp(request: Request) {
     const url = new URL(request.url);
-    const baseUrl = this.config.getLegacyAppBaseUrl(env).replace(/\/$/, '');
+    const baseUrl = this.config.getLegacyAppBaseUrl().replace(/\/$/, '');
 
     const newRequest = new Request(`${baseUrl}${url.pathname}`);
-    return fetch(newRequest, request);
+    const headers = new Headers([...request.headers, ['x-bypass-piercing-gateway', '1']]);
+    const res = await fetch(newRequest, {...request, headers});
+    return res;
   }
 
   // private async returnCombinedIndexPage(
@@ -305,14 +303,13 @@ export class PiercingGateway<Env> {
   // }
 
   private async fetchSSRedFragment(
-    env: Env,
-    fragmentConfig: FragmentConfig<Env>,
+    fragmentConfig: FragmentConfig,
     request: Request,
     prePiercing = true
   ): Promise<ReadableStream> {
-    const service = this.getFragmentFetcher(env, fragmentConfig.fragmentId);
-    const newRequest = this.getRequestForFragment(request, fragmentConfig, env);
-    const response = await service.fetch(newRequest);
+    const fragmentFetcher = fragmentConfig.fetcher;
+    const newRequest = this.getRequestForFragment(request, fragmentConfig);
+    const response = await fragmentFetcher(newRequest);
     let fragmentStream = response.body!;
 
     // const fragmentId = fragmentConfig.fragmentId;
@@ -353,8 +350,7 @@ export class PiercingGateway<Env> {
 
   private getRequestForFragment(
     request: Request,
-    fragmentConfig: FragmentConfig<Env>,
-    env: Env
+    fragmentConfig: FragmentConfig,
   ) {
     const url = new URL(
       request.url.replace(`piercing-fragment/${fragmentConfig.fragmentId}`, '')
@@ -364,20 +360,13 @@ export class PiercingGateway<Env> {
       fragmentConfig.transformRequest ?? this.defaultTransformRequest;
     const newRequest = transformRequest(
       new Request(url, request),
-      env,
       fragmentConfig
     );
     return newRequest;
   }
 
-  private getFragmentFetcher(env: Env, fragmentId: string): any {
-    // @ts-ignore
-    return env[`${fragmentId}-fragment`];
-  }
-
   private proxyAssetRequestToFragmentWorker(
-    env: Env,
-    { fragmentId }: FragmentConfig<Env>,
+    { fragmentId }: FragmentConfig,
     request: Request
   ) {
     const url = new URL(request.url);
@@ -394,20 +383,6 @@ export class PiercingGateway<Env> {
     // return service.fetch(newRequest);
     return fetch(newRequest);
     // return fetch(new )
-  }
-
-  private validateFragmentConfigs(env: Env): void {
-    const missingBindingFragmentIds = [...this.fragmentConfigs.keys()].filter(
-      fragmentId => !this.getFragmentFetcher(env, fragmentId)
-    );
-    if (missingBindingFragmentIds.length) {
-      throw new Error(
-        "Some fragments have been configured in the gateway but their services aren't" +
-          ' registered in the toml file, please correct the fragment id provided or' +
-          ' make sure that the toml file contains the following services: ' +
-          missingBindingFragmentIds.map(id => `${id}-fragment`).join(', ')
-      );
-    }
   }
 
   private defaultTransformRequest(request: Request) {
