@@ -3,8 +3,8 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  server: {
-    port: 1123,
+  build: {
+    assetsDir: '_fragments/remix/assets',
   },
   plugins: [
     remix({

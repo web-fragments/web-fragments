@@ -217,7 +217,7 @@ export class PiercingGateway {
   private async handleFragmentAssetFetch(request: Request) {
     const url = new URL(request.url);
     const path = url.pathname;
-    const regex = /\/_fragment\/([^/]*)\/?.*$/;
+    const regex = /\/_fragments\/([^/]*)\/?.*$/;
     const match = path.match(regex);
     if (match?.length !== 2) return null;
     const fragmentId = match[1];
@@ -359,23 +359,10 @@ export class PiercingGateway {
   }
 
   private proxyAssetRequestToFragmentWorker(
-    { fragmentId }: FragmentConfig,
+    { fetcher }: FragmentConfig,
     request: Request
   ) {
-    const url = new URL(request.url);
-    const pathname = url.pathname;
-    const fragmentBasePathRegex = new RegExp(
-      `^\\/_fragment\\/${fragmentId}(?:\\/?)(.*)$`
-    );
-    const match = fragmentBasePathRegex.exec(pathname);
-    const assetPath = match?.[1] ?? '';
-    // const service = this.getFragmentFetcher(env, fragmentId);
-    url.pathname = `/${assetPath}`;
-    url.hostname = `${fragmentId}.pages.dev`;
-    const newRequest = new Request(url, request);
-    // return service.fetch(newRequest);
-    return fetch(newRequest);
-    // return fetch(new )
+    return fetcher(request);
   }
 
   private defaultTransformRequest(request: Request) {

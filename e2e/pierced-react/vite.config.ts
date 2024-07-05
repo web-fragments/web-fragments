@@ -49,13 +49,13 @@ function serverPiercing(): Plugin {
           fetcher: async (req: Request) => {
             const url = new URL(req.url);
             // fetch from the pierced-react-remix-fragment (TODO: find a better solution than hardcoding the port here etc...)
-            const newUrl = `http://localhost:1123${url.pathname}`;
+            const newUrl = `http://localhost:3000${url.pathname}`;
             const newReq = new Request(newUrl, req);
             try {
               const resp = await fetch(newReq);
               return resp;
             } catch {
-              console.warn('\x1b[33m\n🚧 Remix fragment not found, please spin up the pierced-react-remix-fragment and try again 🚧\n\x1b[0m');
+              console.warn('\x1b[33m\n🚧 Remix fragment not found, please spin up the pierced-react-remix-fragment (with remix-serve) and try again 🚧\n\x1b[0m');
               return new Response('FRAGMENT NOT FOUND!');
             }
           },
@@ -63,24 +63,28 @@ function serverPiercing(): Plugin {
       });
 
       server.middlewares.use(async (req, res, next) => {
-        const isNonFragmentHtmlRequest =
-          req &&
-          req.url &&
-          req.headers.accept?.includes("text/html") &&
-          !req.url.startsWith("/_fragment/");
-
         const shouldBypassGateway = req.headers["x-bypass-piercing-gateway"];
 
-        if (gateway && isNonFragmentHtmlRequest && !shouldBypassGateway) {
+        if (gateway && !shouldBypassGateway) {
           const url = `${serverAddressBaseUrl}${req.url}`;
           const headers = new Headers(
             Object.entries(req.headers) as [string, string][]
           );
           const request = new Request(url, { headers });
-          // this is a standard html request, apply the piercing gateway
-          // TODO: this should support streaming
-          const html = await (await gateway.fetch(request)).text();
-          res.end(html);
+          // TODO: the following should support streaming
+          const gatewayResponse = await gateway.fetch(request);
+
+          const text = await gatewayResponse.text();
+
+          gatewayResponse.headers.forEach((value, key) => {
+            if(key === 'content-encoding') {
+              // we're decoding the value so we need to remove this header
+              return;
+            }
+            res.setHeader(key, value);
+          });
+
+          res.end(text);
         } else {
           next();
         }
