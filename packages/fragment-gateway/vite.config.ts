@@ -16,5 +16,11 @@ export default defineConfig({
       formats: ['es'],
       fileName: 'index'
     },
+    rollupOptions: {
+      external: ['fragment-elements'],
+    }
+  },
+  optimizeDeps: {
+    exclude: ['fragment-elements']
   }
 });

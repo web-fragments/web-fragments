@@ -2,16 +2,30 @@
   "name": "fragment-elements",
   "description": "",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.jz",
+  "types": "./dist/index.d.tz",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "type": "./dist/index.d.ts"
+    },
+    "./outlet": {
+      "import": "./dist/outlet.js",
+      "type": "./dist/outlet.d.ts"
+    }
+  },
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build"
+    "build:host-inline-script": "tsc && vite build -c ./fragment-host.vite.config.ts",
+    "build": "pnpm build:host-inline-script && tsc && vite build"
   },
+  "//wd0": "writable-dom needs to be checked out as a sibling to `reframed`",
+  "//wd1": "TODO: this is incorrect and should be addressed as fragment-elements should be able to be standalone",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240620.0",
     "vite-plugin-dts": "^3.9.1",
-    "@vitejs/plugin-react": "^4.3.1"
+    "@vitejs/plugin-react": "^4.3.1",
+    "writable-dom": "../../../writable-dom"
   }
 }

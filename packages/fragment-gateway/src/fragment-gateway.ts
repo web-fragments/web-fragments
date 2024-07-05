@@ -1,4 +1,4 @@
-// import { piercingFragmentHostInlineScript } from './index';
+import { piercingFragmentHostInlineScript } from 'fragment-elements';
 import {
   concatenateStreams,
   // transformStream,
@@ -286,8 +286,7 @@ export class PiercingGateway {
     if (requestIsForHtml) {
       let indexBody = (await response.text()).replace(
         '</head>',
-        `${// TODO: enable script
-          'piercingFragmentHostInlineScript'}\n` + '</head>'
+        `${piercingFragmentHostInlineScript}\n` + '</head>'
       );
 
       return new Response(indexBody, response);

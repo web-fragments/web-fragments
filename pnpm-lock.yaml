@@ -273,8 +273,15 @@ importers:
       vite-plugin-dts:
         specifier: ^3.9.1
         version: 3.9.1(@types/node@20.14.9)(typescript@5.5.3)(vite@5.3.3)
+      writable-dom:
+        specifier: ../../../writable-dom
+        version: link:../../../writable-dom
 
   packages/fragment-gateway:
+    dependencies:
+      fragment-elements:
+        specifier: workspace:*
+        version: link:../fragment-elements
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240620.0
@@ -8574,6 +8581,5 @@ packages:
     resolution: {tarball: https://codeload.github.com/IgorMinar/writable-dom/tar.gz/44edbf52357edd5bb3d47e6b1df3f60e5a72bca6}
     name: writable-dom
     version: 1.0.0
-    prepare: true
     requiresBuild: true
     dev: true
