@@ -63,31 +63,36 @@ function serverPiercing(): Plugin {
       });
 
       server.middlewares.use(async (req, res, next) => {
+        if(!gateway) return next();
+
         const shouldBypassGateway = req.headers["x-bypass-piercing-gateway"];
+        if (shouldBypassGateway) return next();
 
-        if (gateway && !shouldBypassGateway) {
-          const url = `${serverAddressBaseUrl}${req.url}`;
-          const headers = new Headers(
-            Object.entries(req.headers) as [string, string][]
-          );
-          const request = new Request(url, { headers });
-          // TODO: the following should support streaming
-          const gatewayResponse = await gateway.fetch(request);
+        const isHtmlRequest = req.headers.accept?.includes("text/html");
+        const isFragmentRequest = !!(req.url?.startsWith("/_fragment/"));
 
-          const text = await gatewayResponse.text();
+        if(!isHtmlRequest && !isFragmentRequest) return next();
 
-          gatewayResponse.headers.forEach((value, key) => {
-            if(key === 'content-encoding') {
-              // we're decoding the value so we need to remove this header
-              return;
-            }
-            res.setHeader(key, value);
-          });
+        const url = `${serverAddressBaseUrl}${req.url}`;
+        const headers = new Headers(
+          Object.entries(req.headers) as [string, string][]
+        );
 
-          res.end(text);
-        } else {
-          next();
-        }
+        const request = new Request(url, { headers });
+        // TODO: the following should support streaming
+        const gatewayResponse = await gateway.fetch(request);
+
+        const text = await gatewayResponse.text();
+
+        gatewayResponse.headers.forEach((value, key) => {
+          if(key === 'content-encoding') {
+            // we're decoding the value so we need to remove this header
+            return;
+          }
+          res.setHeader(key, value);
+        });
+
+        res.end(text);
       });
     },
   };
