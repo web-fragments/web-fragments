@@ -1,7 +1,7 @@
 import { piercingFragmentHostInlineScript } from 'fragment-elements';
 import {
   concatenateStreams,
-  // transformStream,
+  transformStream,
   wrapStreamInText
 } from './stream-utilities';
 
@@ -340,7 +340,19 @@ export class PiercingGateway {
     // }
 
     const [preFragment, postFragment] = template.split('--FRAGMENT_CONTENT--');
-    return wrapStreamInText(preFragment, postFragment, fragmentStream);
+
+    const transformedFragmentStream = transformStream(fragmentStream, (chunk: string) => {
+      // we rewrite scripts tags by prefixing their type with "inert-", or adding an "inert" type if they don't have one
+
+      // Note: this is temporary/testing code and very hacky & brittle (and relies on the fact that we get script opening tags
+      //       not split across different chunks), ideally for a proper solution we should use HTML rewriter or something like that
+
+      chunk = chunk.replace(/<script([\s\S]*?)\btype="(\w+)"([\s\S]*?)>/g, '<script$1type="inert-$2"$3>');
+      chunk = chunk.replace(/<script(\s*)>/g, '<script type="inert"$1>');
+      return chunk;
+    });
+
+    return wrapStreamInText(preFragment, postFragment, transformedFragmentStream);
   }
 
   private getRequestForFragment(
