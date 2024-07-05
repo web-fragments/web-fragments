@@ -35,8 +35,11 @@ function serverPiercing(): Plugin {
 
         gateway.registerFragment({
           fragmentId: "remix",
+          // TODO: using a shadow dom here we can't use selectors that reply on the fragment-outlet/host elements
+          //       so here we have some standard css that is always applied, we should look into removing this once
+          //       the fragment gets reframed
           prePiercingStyles: `
-            :not(piercing-fragment-outlet) > piercing-fragment-host[fragment-id="remix"] {
+            .remix-counter-page {
               position: fixed;
               top: 50%;
               left: 50%;

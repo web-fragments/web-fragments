@@ -19,7 +19,7 @@ export default function Index() {
           background: #00c4ff;
           padding: 0.5rem;
           margin: 1rem;
-          width: fix-content;
+          width: fit-content;
 
           p {
             margin-bottom: 0.5rem;
