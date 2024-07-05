@@ -20,6 +20,12 @@ importers:
 
   e2e/pierced-react:
     dependencies:
+      fragment-elements:
+        specifier: workspace:*
+        version: link:../../packages/fragment-elements
+      fragment-gateway:
+        specifier: workspace:*
+        version: link:../../packages/fragment-gateway
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -282,6 +288,9 @@ importers:
       fragment-elements:
         specifier: workspace:*
         version: link:../fragment-elements
+      reframed:
+        specifier: workspace:*
+        version: link:../../reframed
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240620.0

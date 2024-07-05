@@ -5,6 +5,8 @@ import {
   wrapStreamInText
 } from './stream-utilities';
 
+import { reframingInlineScript } from './reframing';
+
 /**
  * Configuration object for the registration of a fragment in the app's gateway worker.
  */
@@ -286,7 +288,7 @@ export class PiercingGateway {
     if (requestIsForHtml) {
       let indexBody = (await response.text()).replace(
         '</head>',
-        `${piercingFragmentHostInlineScript}\n` + '</head>'
+        `${piercingFragmentHostInlineScript}\n${reframingInlineScript}` + '</head>'
       );
 
       return new Response(indexBody, response);

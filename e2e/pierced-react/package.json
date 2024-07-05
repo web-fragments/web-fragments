@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "fragment-gateway": "workspace:*",
+    "fragment-elements": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

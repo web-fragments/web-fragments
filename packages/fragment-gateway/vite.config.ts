@@ -17,10 +17,10 @@ export default defineConfig({
       fileName: 'index'
     },
     rollupOptions: {
-      external: ['fragment-elements'],
+      external: ['fragment-elements', "src/reframing"],
     }
   },
   optimizeDeps: {
-    exclude: ['fragment-elements']
-  }
+    exclude: ['fragment-elements'],
+  },
 });

@@ -2,19 +2,22 @@ import WritableDOMStream from "writable-dom";
 
 /**
  *
- * @param reframedSrc url of an http endpoint that will generate html stream to be reframed.
+ * @param reframedSrcOrSourceShadowRoot url of an http endpoint that will generate html stream to be reframed, or a shadowRoot containing the html to reframe
  * @param containerTagName tag name of the HTMLElement that will be created and used as the target container.
  *    The default is [`article`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article).
  * @returns
  */
-export function reframed(reframedSrc: string, options: {container?: HTMLElement, containerTagName: string} = { containerTagName: "article"}): {
+export function reframed(reframedSrcOrSourceShadowRoot: string|ShadowRoot, options: {container?: HTMLElement, containerTagName: string} = { containerTagName: "article"}): {
   iframe: HTMLIFrameElement;
   container: HTMLElement;
   ready: Promise<void>;
 } {
   // create the reframed container
   const reframedContainer = options.container ?? document.createElement(options.containerTagName);
-  reframedContainer.setAttribute('reframed-src', reframedSrc)
+  if(typeof reframedSrcOrSourceShadowRoot === 'string') {
+    const reframedSrc = reframedSrcOrSourceShadowRoot;
+    reframedContainer.setAttribute('reframed-src', reframedSrc);
+  }
 
   // create the iframe
   const iframe = document.createElement("iframe");
@@ -22,29 +25,67 @@ export function reframed(reframedSrc: string, options: {container?: HTMLElement,
   return {
     iframe,
     container: reframedContainer,
-    ready: reframe(reframedSrc, reframedContainer, iframe),
+    ready: reframe(reframedSrcOrSourceShadowRoot, reframedContainer, iframe),
   }
 }
 
-async function reframe(reframedSrc: string, reframedContainer: HTMLElement, iframe: HTMLIFrameElement): Promise<void> {
-  console.debug("reframing!", { source: reframedSrc, targetContainer: reframedContainer.outerHTML });
+async function reframe(reframedSrcOrSourceShadowRoot: string|ShadowRoot, reframedContainer: HTMLElement, iframe: HTMLIFrameElement): Promise<void> {
+  console.debug("reframing!", { source: reframedSrcOrSourceShadowRoot, targetContainer: reframedContainer.outerHTML });
 
-  const reframedHtmlResponse = await fetch(reframedSrc);
-  const reframedHtmlStream =
-    reframedHtmlResponse.status === 200
-      ? await reframedHtmlResponse.body!
-      : stringToStream(
-          `error fetching ${reframedSrc} (HTTP Status = ${
-            reframedHtmlResponse.status
-          })<hr>${await reframedHtmlResponse.text()}`
-        );
+  let reframedHtmlStream: ReadableStream<any>;
+
+  const reframedSrc = typeof reframedSrcOrSourceShadowRoot === 'string' ? reframedSrcOrSourceShadowRoot : null;
+
+  if(reframedSrc) {
+    const reframedHtmlResponse = await fetch(reframedSrc);
+    reframedHtmlStream =
+      reframedHtmlResponse.status === 200
+        ? await reframedHtmlResponse.body!
+        : stringToStream(
+            `error fetching ${reframedSrc} (HTTP Status = ${
+              reframedHtmlResponse.status
+            })<hr>${await reframedHtmlResponse.text()}`
+          );
+  } else {
+      // copy the shadowRoot html over
+  
+      // TODO: this doesn't support streaming, see if it could
+      //       (can we stream html into the host shadowRoot and at the same time stream that html through to the iframe?)
+
+      const shadowRoot = reframedSrcOrSourceShadowRoot as ShadowRoot;
+
+      let shadowRootInnerHtml = shadowRoot.innerHTML;
+
+      // we rewrite scripts tags by prefixing their type with "inert-", or adding an "inert" type if they don't have one
+
+      // Note: this is temporary/testing code and very hacky & brittle (and relies on the fact that we get script opening tags
+      //       not split across different chunks), ideally for a proper solution we should use HTML rewriter or something like that
+
+      shadowRootInnerHtml = shadowRootInnerHtml.replace(/<script([\s\S]*?)\btype="inert-(\w+)"([\s\S]*?)>/g, '<script$1type="$2"$3>');
+      shadowRootInnerHtml = shadowRootInnerHtml.replace(/<script type="inert"(\s*)>/g, '<script$1>');
+
+      shadowRoot.innerHTML = "";
+
+      const encoder = new TextEncoder();
+      const uint8Array = encoder.encode(shadowRootInnerHtml);
+
+      reframedHtmlStream = new ReadableStream({
+        async start(controller) {
+          controller.enqueue(uint8Array);
+        }
+      });
+  }
 
   // create shadow root to isolate styles
   const shadowRoot = reframedContainer.attachShadow({ mode: 'open' });
-  // create a hidden iframe and use it isolate JavaScript scripts
-  iframe.name = reframedSrc;
+
+  // hide the iframe that we use to isolate JavaScript scripts
   iframe.hidden = true;
-  iframe.src = reframedSrc;
+
+  if(reframedSrc) {
+    iframe.name = reframedSrc;
+    iframe.src = reframedSrc;
+  }
 
   const { promise, resolve } = Promise.withResolvers<void>();
 

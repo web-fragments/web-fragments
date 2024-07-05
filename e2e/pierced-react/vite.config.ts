@@ -1,8 +1,6 @@
 import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { PiercingGateway } from "../../packages/fragment-gateway/src/index";
+import { PiercingGateway } from "fragment-gateway";
 
 function serverPiercing(): Plugin {
   return {
@@ -104,4 +102,7 @@ function serverPiercing(): Plugin {
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), serverPiercing()],
+  optimizeDeps: {
+    exclude: ["fragment-gateway"]
+  },
 });
