@@ -314,8 +314,10 @@ export class PiercingGateway {
 
     let template = `
       <piercing-fragment-host fragment-id=${fragmentConfig.fragmentId}>
-        ${prePiercingStyles}
-        --FRAGMENT_CONTENT--
+        <template shadowrootmode="open">
+          ${prePiercingStyles}
+          --FRAGMENT_CONTENT--
+        </template>
       </piercing-fragment-host>
     `;
 
