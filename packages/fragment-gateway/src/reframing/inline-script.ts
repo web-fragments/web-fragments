@@ -5,6 +5,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const hostShadowRoot = host?.shadowRoot;
 
     if(hostShadowRoot) {
-        reframed(hostShadowRoot, { container: document.querySelector('fragment-outlet') as HTMLElement, containerTagName: 'article' });
+        reframed(hostShadowRoot, { container: host as HTMLElement, containerTagName: 'article' });
     }
 }, { once: true });
