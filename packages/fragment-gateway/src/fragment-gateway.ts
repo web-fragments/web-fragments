@@ -28,7 +28,7 @@ export interface FragmentConfig {
    * For best results they should use the following selector:
    * :not(piercing-fragment-outlet) > piercing-fragment-host[fragment-id="fragmentId"]
    */
-  prePiercingStyles: string;
+  prePiercingStyles?: string;
   /**
    * Function which transforms all the requests for the fetching of a fragment using
    * custom logic. This can be used to convert url paths into search parameters (or
@@ -114,6 +114,10 @@ export class PiercingGateway {
   fetch = async (
     request: Request,
   ): Promise<Response> => {
+    if (request.headers.get('sec-fetch-dest') === 'iframe') {
+      return new Response('<!doctype html><title>');
+    }
+
     const fragmentResponse = await this.handleFragmentFetch(request);
     if (fragmentResponse) return fragmentResponse;
 
@@ -219,7 +223,7 @@ export class PiercingGateway {
   private async handleFragmentAssetFetch(request: Request) {
     const url = new URL(request.url);
     const path = url.pathname;
-    const regex = /\/_fragments\/([^/]*)\/?.*$/;
+    const regex = /\/_fragment\/([^/]*)\/?.*$/;
     const match = path.match(regex);
     if (match?.length !== 2) return null;
     const fragmentId = match[1];
@@ -310,7 +314,7 @@ export class PiercingGateway {
     // const fragmentId = fragmentConfig.fragmentId;
     // const framework = fragmentConfig.framework;
 
-    const prePiercingStyles = prePiercing
+    const prePiercingStyles = prePiercing && fragmentConfig.prePiercingStyles
       ? `<style>${fragmentConfig.prePiercingStyles}</style>`
       : ``;
 

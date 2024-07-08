@@ -72,6 +72,7 @@ async function reframe(reframedSrcOrSourceShadowRoot: string|ShadowRoot, reframe
       reframedHtmlStream = new ReadableStream({
         async start(controller) {
           controller.enqueue(uint8Array);
+          controller.close();
         }
       });
   }
@@ -85,6 +86,10 @@ async function reframe(reframedSrcOrSourceShadowRoot: string|ShadowRoot, reframe
   if(reframedSrc) {
     iframe.name = reframedSrc;
     iframe.src = reframedSrc;
+  } else {
+    // TODO: we have to properly get the location and set it here
+    iframe.name = '/';
+    iframe.src = '/';
   }
 
   const { promise, resolve } = Promise.withResolvers<void>();
