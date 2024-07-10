@@ -12,8 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "fragment-elements": "workspace:*",
-    "fragment-gateway": "workspace:*",
+    "web-fragments": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
