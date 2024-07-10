@@ -34,7 +34,7 @@ export default defineConfig(({ command, mode }): UserConfig => {
     appType: "mpa", // so that Vite returns 404 on fetch to an non-existent .html file
     resolve: {
       alias: {
-        reframed: resolve(__dirname, "../../reframed/index.ts"),
+        reframed: resolve(__dirname, "../../packages/reframed/index.ts"),
 
         // cross-repo development only!
         // requires writable-dom checked out as a sibling to `reframed`

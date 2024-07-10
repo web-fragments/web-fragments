@@ -259,7 +259,7 @@ importers:
     dependencies:
       reframed:
         specifier: workspace:*
-        version: link:../../reframed
+        version: link:../../packages/reframed
     devDependencies:
       '@types/node':
         specifier: link:../../node_modules/@types/node
@@ -270,6 +270,18 @@ importers:
       vite:
         specifier: link:../../node_modules/vite
         version: link:../../node_modules/vite
+
+  packages/reframed:
+    devDependencies:
+      typescript:
+        specifier: ^5.5.0
+        version: 5.5.3
+      vite:
+        specifier: ^5.2.0
+        version: 5.3.3(@types/node@20.14.9)
+      writable-dom:
+        specifier: github:IgorMinar/writable-dom#reframed-support
+        version: github.com/IgorMinar/writable-dom/44edbf52357edd5bb3d47e6b1df3f60e5a72bca6
 
   packages/web-fragments:
     devDependencies:
@@ -284,25 +296,13 @@ importers:
         version: 6.2.2
       reframed:
         specifier: workspace:*
-        version: link:../../reframed
+        version: link:../reframed
       vite:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.9)
       vite-plugin-dts:
         specifier: ^3.9.1
         version: 3.9.1(@types/node@20.14.9)(typescript@5.5.3)(vite@5.3.3)
-
-  reframed:
-    devDependencies:
-      typescript:
-        specifier: ^5.5.0
-        version: 5.5.3
-      vite:
-        specifier: ^5.2.0
-        version: 5.3.3(@types/node@20.14.9)
-      writable-dom:
-        specifier: github:IgorMinar/writable-dom#reframed-support
-        version: github.com/IgorMinar/writable-dom/44edbf52357edd5bb3d47e6b1df3f60e5a72bca6
 
 packages:
 
