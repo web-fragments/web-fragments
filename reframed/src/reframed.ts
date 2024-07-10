@@ -462,6 +462,7 @@ function assert(value: boolean, message: string): asserts value {
 }
 
 type ReframedDocument = Document & {
+  // TODO: this is a hack and needs to be removed
   unreframedBody: HTMLBodyElement;
 }
 
