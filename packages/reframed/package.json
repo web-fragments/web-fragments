@@ -7,7 +7,6 @@
     "dist"
   ],
   "sideEffects": false,
-  "author": "Igor Minar <i@igor.dev> (https://igor.dev)",
   "license": "MIT",
   "devDependencies": {
     "writable-dom": "github:IgorMinar/writable-dom#reframed-support",
@@ -18,5 +17,33 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
-  }
+  },
+  "author": "Igor Minar <i@igor.dev> (https://igor.dev)",
+  "contributors": [
+    {
+      "name": "Pete Bacon Darwin",
+      "email": "pete@bacondarwin.com",
+      "url": "https://github.com/petebacondarwin"
+    },
+    {
+      "name": "Cina Saffary",
+      "email": "itscina@gmail.com",
+      "url": "https://github.com/1000hz"
+    },
+    {
+      "name": "Richard Nguyen",
+      "email": "richard.n.1337@gmail.com",
+      "url": "https://github.com/rnguyen17"
+    },
+    {
+      "name": "James Culveyhouse",
+      "email": "jculveyhouse@gmail.com",
+      "url": "https://github.com/jculvey"
+    },
+    {
+      "name": "Dario Piotrowicz",
+      "email": "dario.piotrowicz@gmail.com",
+      "url": "https://github.com/dario-piotrowicz"
+    }
+  ]
 }
