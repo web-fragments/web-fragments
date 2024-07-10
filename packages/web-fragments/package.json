@@ -17,11 +17,9 @@
     "dev": "vite",
     "build": "vite build"
   },
-  "dependencies": {
-    "path-to-regexp": "^6.2.2",
-    "reframed": "workspace:*"
-  },
   "devDependencies": {
+    "path-to-regexp": "^6.2.2",
+    "reframed": "workspace:*",
     "@cloudflare/workers-types": "^4.20240620.0",
     "vite-plugin-dts": "^3.9.1",
     "@vitejs/plugin-react": "^4.3.1",

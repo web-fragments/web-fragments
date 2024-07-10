@@ -272,13 +272,6 @@ importers:
         version: link:../../node_modules/vite
 
   packages/web-fragments:
-    dependencies:
-      path-to-regexp:
-        specifier: ^6.2.2
-        version: 6.2.2
-      reframed:
-        specifier: workspace:*
-        version: link:../../reframed
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240620.0
@@ -286,6 +279,12 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.3.1
         version: 4.3.1(vite@5.3.3)
+      path-to-regexp:
+        specifier: ^6.2.2
+        version: 6.2.2
+      reframed:
+        specifier: workspace:*
+        version: link:../../reframed
       vite:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.9)
@@ -7113,6 +7112,7 @@ packages:
 
   /path-to-regexp@6.2.2:
     resolution: {integrity: sha512-GQX3SSMokngb36+whdpRXE+3f9V8UzyAorlYvOGx87ufGHehNTn5lCxrKtLyZ4Yl/wEKnNnr98ZzOwwDZV5ogw==}
+    dev: true
 
   /path-type@4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
