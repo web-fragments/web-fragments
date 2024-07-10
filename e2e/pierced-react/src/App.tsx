@@ -27,7 +27,7 @@ function App() {
       </div>
       {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
       {/* @ts-ignore */}
-      {/* <fragment-outlet fragment-id="remix" /> */}
+      <fragment-outlet fragment-id="remix" />
     </>
   )
 }

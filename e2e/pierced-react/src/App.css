@@ -40,3 +40,12 @@
 .read-the-docs {
   color: #888;
 }
+
+fragment-outlet[fragment-id="remix"] {
+  outline: 3px dashed red;
+  display: block;
+  height: 10rem;
+  width: 20rem;
+  display: grid;
+  place-content: center;
+}

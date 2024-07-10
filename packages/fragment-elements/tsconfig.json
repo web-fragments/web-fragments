@@ -17,6 +17,6 @@
     "jsx": "react-jsx",
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["src", "fragment-host.vite.config.ts"],
+  "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

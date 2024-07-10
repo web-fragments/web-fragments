@@ -32,8 +32,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      reframed: resolve(__dirname, "../../reframed/index.ts"),
-
       // cross-repo development only!
       // requires writable-dom checked out as a sibling to `reframed`
       // TODO: this is incorrect here and should be addressed as fragment-elements should be able to be standalone

@@ -7,15 +7,16 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build:reframing-inline-script": "vite build -c ./reframing.vite.config.ts",
-    "build": "pnpm build:reframing-inline-script && tsc && vite build"
+    "build": "tsc && vite build"
   },
   "dependencies": {
     "fragment-elements": "workspace:*",
+    "path-to-regexp": "^6.2.2",
     "reframed": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240620.0",
-    "vite-plugin-dts": "^3.9.1"
+    "vite-plugin-dts": "^3.9.1",
+    "vite": "^5.3.3"
   }
 }

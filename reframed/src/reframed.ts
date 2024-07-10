@@ -7,114 +7,126 @@ import WritableDOMStream from "writable-dom";
  *    The default is [`article`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article).
  * @returns
  */
-export function reframed(reframedSrcOrSourceShadowRoot: string|ShadowRoot, options: {container?: HTMLElement, containerTagName: string} = { containerTagName: "article"}): {
+export function reframed(reframedSrcOrSourceShadowRoot: string|ShadowRoot, options: {container: HTMLElement} | { containerTagName: string} = { containerTagName: "article"}): {
   iframe: HTMLIFrameElement;
   container: HTMLElement;
   ready: Promise<void>;
 } {
   // create the reframed container
-  const reframedContainer = options.container ?? document.createElement(options.containerTagName);
-  if(typeof reframedSrcOrSourceShadowRoot === 'string') {
-    const reframedSrc = reframedSrcOrSourceShadowRoot;
-    reframedContainer.setAttribute('reframed-src', reframedSrc);
-  }
+  const reframedContainer = 'container' in options ? options.container : document.createElement(options.containerTagName);
+  const reframedContainerShadowRoot = reframedContainer.shadowRoot ?? reframedContainer.attachShadow({mode: "open"});
 
   // create the iframe
   const iframe = document.createElement("iframe");
 
-  return {
-    iframe,
-    container: reframedContainer,
-    ready: reframe(reframedSrcOrSourceShadowRoot, reframedContainer, iframe),
-  }
-}
-
-async function reframe(reframedSrcOrSourceShadowRoot: string|ShadowRoot, reframedContainer: HTMLElement, iframe: HTMLIFrameElement): Promise<void> {
-  console.debug("reframing!", { source: reframedSrcOrSourceShadowRoot, targetContainer: reframedContainer.outerHTML });
-
-  let reframedHtmlStream: ReadableStream<any>;
-
-  const reframedSrc = typeof reframedSrcOrSourceShadowRoot === 'string' ? reframedSrcOrSourceShadowRoot : null;
-
-  if(reframedSrc) {
-    const reframedHtmlResponse = await fetch(reframedSrc);
-    reframedHtmlStream =
-      reframedHtmlResponse.status === 200
-        ? await reframedHtmlResponse.body!
-        : stringToStream(
-            `error fetching ${reframedSrc} (HTTP Status = ${
-              reframedHtmlResponse.status
-            })<hr>${await reframedHtmlResponse.text()}`
-          );
-  } else {
-      // copy the shadowRoot html over
-  
-      // TODO: this doesn't support streaming, see if it could
-      //       (can we stream html into the host shadowRoot and at the same time stream that html through to the iframe?)
-
-      const shadowRoot = reframedSrcOrSourceShadowRoot as ShadowRoot;
-
-      let shadowRootInnerHtml = shadowRoot.innerHTML;
-
-      // we rewrite scripts tags by prefixing their type with "inert-", or adding an "inert" type if they don't have one
-
-      // Note: this is temporary/testing code and very hacky & brittle (and relies on the fact that we get script opening tags
-      //       not split across different chunks), ideally for a proper solution we should use HTML rewriter or something like that
-
-      shadowRootInnerHtml = shadowRootInnerHtml.replace(/<script([\s\S]*?)\btype="inert-(\w+)"([\s\S]*?)>/g, '<script$1type="$2"$3>');
-      shadowRootInnerHtml = shadowRootInnerHtml.replace(/<script type="inert"(\s*)>/g, '<script$1>');
-
-      shadowRoot.innerHTML = "";
-
-      const encoder = new TextEncoder();
-      const uint8Array = encoder.encode(shadowRootInnerHtml);
-
-      reframedHtmlStream = new ReadableStream({
-        async start(controller) {
-          controller.enqueue(uint8Array);
-          controller.close();
-        }
-      });
-  }
-
-  // create shadow root to isolate styles
-  const shadowRoot = reframedContainer.attachShadow({ mode: 'open' });
-
   // hide the iframe that we use to isolate JavaScript scripts
   iframe.hidden = true;
 
-  if(reframedSrc) {
-    iframe.name = reframedSrc;
-    iframe.src = reframedSrc;
-  } else {
-    // TODO: we have to properly get the location and set it here
-    iframe.name = '/';
-    iframe.src = '/';
-  }
-
-  const { promise, resolve } = Promise.withResolvers<void>();
+  let {promise: monkeyPatchPromise, resolve: resolveMonkeyPatchPromise} = Promise.withResolvers<void>();
 
   iframe.addEventListener("load", () => {
     const iframeDocument = iframe.contentDocument;
     assert(iframeDocument !== null, "iframe.contentDocument is defined");
 
-    monkeyPatchIFrameDocument(iframeDocument, shadowRoot);
+    monkeyPatchIFrameDocument(iframeDocument, reframedContainerShadowRoot);
+    resolveMonkeyPatchPromise();
+  });
 
+  let ready: Promise<void>;
+
+  if(typeof reframedSrcOrSourceShadowRoot === 'string') {
+    const reframedSrc = reframedSrcOrSourceShadowRoot;
+    reframedContainer.setAttribute('reframed-src', reframedSrc);
+    ready = reframeWithFetch(reframedSrcOrSourceShadowRoot, reframedContainer.shadowRoot as ParentNode, iframe);
+  } else {
+    ready = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe);
+  }
+
+  // Note: this line needs to be here as it needs to be added before all the reframing logic
+  //       has added the various load event listeners
+  document.body.insertAdjacentElement("beforeend", iframe);
+
+  return {
+    iframe,
+    container: reframedContainer,
+    ready: Promise.all([monkeyPatchPromise, ready]).then(() => {}),
+  }
+}
+
+async function reframeWithFetch(
+  reframedSrc: string,
+  target: ParentNode,
+  iframe: HTMLIFrameElement
+): Promise<void> {
+  console.debug("reframing (with fetch)!", {
+    source: reframedSrc,
+    targetContainer: target,
+  });
+
+  const reframedHtmlResponse = await fetch(reframedSrc);
+  const reframedHtmlStream =
+    reframedHtmlResponse.status === 200
+      ? reframedHtmlResponse.body!
+      : stringToStream(
+          `error fetching ${reframedSrc} (HTTP Status = ${
+            reframedHtmlResponse.status
+          })<hr>${await reframedHtmlResponse.text()}`
+        );
+
+  iframe.name = reframedSrc;
+  iframe.src = reframedSrc;
+
+  const {promise, resolve} = Promise.withResolvers<void>()
+
+  iframe.addEventListener("load", () => {
     reframedHtmlStream
       .pipeThrough(new TextDecoderStream())
-      .pipeTo(new WritableDOMStream(shadowRoot, { scriptLoadingDocument: iframeDocument }))
+      .pipeTo(
+        new WritableDOMStream(target, {
+          scriptLoadingDocument: document,
+        })
+      )
       .finally(() => {
-        console.log("reframing done!", {
+        console.log("reframing done (reframeWithFetch)!", {
           source: reframedSrc,
-          targetContainer: reframedContainer,
-          title: iframeDocument.defaultView!.document.title,
+          target,
+          title: document.defaultView!.document.title,
         });
         resolve();
       });
-  });
+  })
 
-  // append iframe to the document to activate loading it
-  document.body.insertAdjacentElement("beforeend", iframe);
+  return promise
+}
+
+async function reframeFromTarget(source: ParentNode, iframe: HTMLIFrameElement): Promise<void> {
+  console.debug("reframing! (reframeFromTarget)", { source });
+
+  iframe.src = document.location.href;
+
+  const scripts = [...source.querySelectorAll('script')]
+
+  const {promise, resolve} = Promise.withResolvers<void>()
+
+  iframe.addEventListener("load", () => {
+    scripts.forEach(script => {
+      const scriptType = script.getAttribute('data-script-type');
+      script.removeAttribute('data-script-type');
+      script.removeAttribute('type')
+      if (scriptType) {
+        script.setAttribute('type', scriptType)
+      }
+
+      assert(!!(iframe.contentDocument && isReframedDocument(iframe.contentDocument)), 'iframe.contentDocument is not a reframed document');
+      iframe.contentDocument.unreframedBody.appendChild(iframe.contentDocument.importNode(script, true));
+    })
+
+    console.log("reframing done (reframeFromTarget)!", {
+      source,
+      title: document.defaultView!.document.title,
+    });
+    resolve();
+  });
 
   return promise;
 }
@@ -363,8 +375,8 @@ function monkeyPatchIFrameDocument(iframeDocument: Document, shadowRoot: ShadowR
 // - intercept window.addEventListener('popstate', ...) registration and forward it onto the main window
 const originalHistoryFns = new Map();
 ["back", "forward", "go", "pushState", "replaceState"].forEach((prop) => {
-  originalHistoryFns.set(prop, iframeWindow.history.__proto__[prop]);
-  Object.defineProperty(iframeWindow.history.__proto__, prop, {
+  originalHistoryFns.set(prop, Object.getPrototypeOf(iframeWindow.history)[prop]);
+  Object.defineProperty(Object.getPrototypeOf(iframeWindow.history), prop, {
     get: () => {
       return function reframedHistoryGetter() {
         console.log(
@@ -410,7 +422,7 @@ const originalHistoryFns = new Map();
 
 // keep window.location and history.state in sync with the ones in the parent window
 mainWindow.addEventListener("popstate", () => {
-  Reflect.apply(originalHistoryFns.get("replaceState"), iframeWindow.history.__proto__, [
+  Reflect.apply(originalHistoryFns.get("replaceState"), Object.getPrototypeOf(iframeWindow.history), [
     mainWindow.history.state,
     null,
     mainWindow.location.href,
@@ -418,7 +430,7 @@ mainWindow.addEventListener("popstate", () => {
 });
 
 ["length", "scrollRestoration", "state"].forEach((prop) => {
-  Object.defineProperty(iframeWindow.history.__proto__, prop, {
+  Object.defineProperty(Object.getPrototypeOf(iframeWindow.history), prop, {
     get: () => {
       return Reflect.get(mainWindow.history, prop);
     },
@@ -447,4 +459,12 @@ const stringToStream = (str: string): ReadableStream => {
  */
 function assert(value: boolean, message: string): asserts value {
   console.assert(value, message);
+}
+
+type ReframedDocument = Document & {
+  unreframedBody: HTMLBodyElement;
+}
+
+function isReframedDocument(document: Document & { unreframedBody?: HTMLBodyElement }): document is ReframedDocument {
+  return 'unreframedBody' in document;
 }

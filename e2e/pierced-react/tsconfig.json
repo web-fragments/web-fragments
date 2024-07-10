@@ -5,6 +5,9 @@
       "path": "./tsconfig.app.json"
     },
     {
+      "path": "./tsconfig.pages-functions.json"
+    },
+    {
       "path": "./tsconfig.node.json"
     }
   ]

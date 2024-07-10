@@ -17,8 +17,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build:host-inline-script": "tsc && vite build -c ./fragment-host.vite.config.ts",
-    "build": "pnpm build:host-inline-script && tsc && vite build"
+    "build": "tsc && vite build"
   },
   "//wd0": "writable-dom needs to be checked out as a sibling to `reframed`",
   "//wd1": "TODO: this is incorrect and should be addressed as fragment-elements should be able to be standalone",
@@ -27,5 +26,8 @@
     "vite-plugin-dts": "^3.9.1",
     "@vitejs/plugin-react": "^4.3.1",
     "writable-dom": "../../../writable-dom"
+  },
+  "dependencies": {
+    "reframed": "workspace:*"
   }
 }

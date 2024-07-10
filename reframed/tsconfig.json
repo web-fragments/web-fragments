@@ -1,5 +1,4 @@
 {
   "extends": "../tsconfig.json",
-  "files": ["index.ts"],
   "include": ["global.d.ts", "src"]
 }
