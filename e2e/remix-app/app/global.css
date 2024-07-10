@@ -1,0 +1,7 @@
+a {
+  color: blue;
+
+  &:is(:hover, :focus-visible) {
+    text-decoration: underline;
+  }
+}
