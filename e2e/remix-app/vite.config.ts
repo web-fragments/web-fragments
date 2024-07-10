@@ -16,7 +16,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      reframed: resolve(__dirname, "../../reframed/index.ts"),
+      reframed: resolve(__dirname, "../../packages/reframed/index.ts"),
 
       // cross-repo development only!
       // requires writable-dom checked out as a sibling to `reframed`
