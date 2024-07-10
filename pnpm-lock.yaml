@@ -20,18 +20,15 @@ importers:
 
   e2e/pierced-react:
     dependencies:
-      fragment-elements:
-        specifier: workspace:*
-        version: link:../../packages/fragment-elements
-      fragment-gateway:
-        specifier: workspace:*
-        version: link:../../packages/fragment-gateway
       react:
         specifier: ^18.3.1
         version: 18.3.1
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      web-fragments:
+        specifier: workspace:*
+        version: link:../../packages/web-fragments
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240620.0
@@ -274,11 +271,7 @@ importers:
         specifier: link:../../node_modules/vite
         version: link:../../node_modules/vite
 
-  packages/fragment-elements:
-    dependencies:
-      reframed:
-        specifier: workspace:*
-        version: link:../../reframed
+  packages/web-fragments:
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240620.0
@@ -286,28 +279,12 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.3.1
         version: 4.3.1(vite@5.3.3)
-      vite-plugin-dts:
-        specifier: ^3.9.1
-        version: 3.9.1(@types/node@20.14.9)(typescript@5.5.3)(vite@5.3.3)
-      writable-dom:
-        specifier: ../../../writable-dom
-        version: link:../../../writable-dom
-
-  packages/fragment-gateway:
-    dependencies:
-      fragment-elements:
-        specifier: workspace:*
-        version: link:../fragment-elements
       path-to-regexp:
         specifier: ^6.2.2
         version: 6.2.2
       reframed:
         specifier: workspace:*
         version: link:../../reframed
-    devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20240620.0
-        version: 4.20240620.0
       vite:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.9)
@@ -7135,6 +7112,7 @@ packages:
 
   /path-to-regexp@6.2.2:
     resolution: {integrity: sha512-GQX3SSMokngb36+whdpRXE+3f9V8UzyAorlYvOGx87ufGHehNTn5lCxrKtLyZ4Yl/wEKnNnr98ZzOwwDZV5ogw==}
+    dev: true
 
   /path-type@4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}

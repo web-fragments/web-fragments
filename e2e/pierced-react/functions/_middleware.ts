@@ -1,4 +1,4 @@
-import { FragmentGateway, getPagesMiddleware } from 'fragment-gateway';
+import { FragmentGateway, getPagesMiddleware } from 'web-fragments/gateway';
 
 const gateway = new FragmentGateway({
     prePiercingStyles: `<style id="fragment-piercing-styles" type="text/css">

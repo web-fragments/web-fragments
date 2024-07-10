@@ -1,7 +1,7 @@
+import path from 'node:path';
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
-import path, { resolve } from 'node:path';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [
@@ -14,10 +14,9 @@ export default defineConfig({
     emptyOutDir: false,
     lib: {
       entry: {
-        index: path.resolve(__dirname, 'src/index.ts'),
-        outlet: path.resolve(__dirname, 'src/fragment-outlet.ts'),
+        gateway: path.resolve(__dirname, 'src/gateway/index.ts'),
+        elements: path.resolve(__dirname, 'src/elements/index.ts'),
       },
-      name: 'FragmentLibrary',
       formats: ['es'],
     },
     rollupOptions: {
@@ -35,7 +34,7 @@ export default defineConfig({
       // cross-repo development only!
       // requires writable-dom checked out as a sibling to `reframed`
       // TODO: this is incorrect here and should be addressed as fragment-elements should be able to be standalone
-      "writable-dom": resolve(__dirname, "../../../writable-dom/src/index.ts"),
+      "writable-dom": path.resolve(__dirname, "../../../writable-dom/src/index.ts"),
     },
   },
 });

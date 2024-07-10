@@ -1,0 +1,28 @@
+{
+  "name": "web-fragments",
+  "description": "",
+  "type": "module",
+  "exports": {
+		"./gateway": {
+			"import": "./dist/gateway.js",
+			"types": "./dist/gateway.d.ts"
+		},
+		"./elements": {
+			"import": "./dist/elements.js",
+			"types": "./dist/elements.d.ts"
+		}
+	},
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "path-to-regexp": "^6.2.2",
+    "reframed": "workspace:*",
+    "@cloudflare/workers-types": "^4.20240620.0",
+    "vite-plugin-dts": "^3.9.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.3.3"
+  }
+}
