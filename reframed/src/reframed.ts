@@ -409,6 +409,7 @@ const originalHistoryFns = new Map();
           }
           default: {
             Reflect.apply(
+              // @ts-ignore
               mainWindow.history[prop],
               mainWindow.history,
               arguments
