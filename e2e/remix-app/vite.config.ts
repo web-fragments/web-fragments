@@ -1,5 +1,4 @@
 import { vitePlugin as remix } from "@remix-run/dev";
-import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -16,11 +15,9 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      reframed: resolve(__dirname, "../../packages/reframed/index.ts"),
-
       // cross-repo development only!
       // requires writable-dom checked out as a sibling to `reframed`
-      "writable-dom": resolve(__dirname, "../../../writable-dom/src/index.ts"),
+      "writable-dom": new URL("../../../writable-dom/src/index.ts", import.meta.url).pathname,
     },
   },
 });

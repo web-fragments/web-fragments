@@ -3,15 +3,25 @@
   "description": "",
   "type": "module",
   "exports": {
-		"./gateway": {
-			"import": "./dist/gateway.js",
-			"types": "./dist/gateway.d.ts"
-		},
-		"./elements": {
-			"import": "./dist/elements.js",
-			"types": "./dist/elements.d.ts"
-		}
-	},
+    "./gateway": {
+      "import": "./src/gateway/index.ts"
+    },
+    "./elements": {
+      "import": "./src/elements/index.ts"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      "./gateway": {
+        "import": "./dist/gateway.js",
+        "types": "./dist/gateway.d.ts"
+      },
+      "./elements": {
+        "import": "./dist/elements.js",
+        "types": "./dist/elements.d.ts"
+      }
+    }
+  },
   "version": "0.0.1",
   "scripts": {
     "dev": "vite",
