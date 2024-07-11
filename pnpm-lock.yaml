@@ -2,7 +2,7 @@ lockfileVersion: '9.0'
 
 settings:
   autoInstallPeers: true
-  excludeLinksFromLockfile: false
+  excludeLinksFromLockfile:   false
 
 importers:
 
@@ -11,6 +11,9 @@ importers:
       '@types/node':
         specifier: ^20.14.2
         version: 20.14.9
+      prettier:
+        specifier: ^3.2.5
+        version: 3.3.2
       typescript:
         specifier: ^5.2.2
         version: 5.5.3

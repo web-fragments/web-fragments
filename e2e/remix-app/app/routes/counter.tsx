@@ -2,12 +2,12 @@ import { Link } from "@remix-run/react";
 import { useState } from "react";
 
 export default function Counter() {
-  const [counter, setCounter] = useState(0);
+	const [counter, setCounter] = useState(0);
 
-  return (
-    <>
-      <div>
-        <style>{`
+	return (
+		<>
+			<div>
+				<style>{`
     .counter {
         margin: 1rem;
         display: flex;
@@ -18,25 +18,25 @@ export default function Counter() {
         padding: 0.5rem;
     }
   `}</style>
-        <Link to={'/fancy-counter'}>go to fancy counter</Link>
-        <div className="counter">
-          <button
-            onClick={() => {
-              setCounter((counter) => counter - 1);
-            }}
-          >
-            -
-          </button>
-          <span>{counter}</span>
-          <button
-            onClick={() => {
-              setCounter((counter) => counter + 1);
-            }}
-          >
-            +
-          </button>
-        </div>
-      </div>
-    </>
-  );
+				<Link to={"/fancy-counter"}>go to fancy counter</Link>
+				<div className="counter">
+					<button
+						onClick={() => {
+							setCounter((counter) => counter - 1);
+						}}
+					>
+						-
+					</button>
+					<span>{counter}</span>
+					<button
+						onClick={() => {
+							setCounter((counter) => counter + 1);
+						}}
+					>
+						+
+					</button>
+				</div>
+			</div>
+		</>
+	);
 }

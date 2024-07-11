@@ -1,68 +1,68 @@
 {
-  "name": "web-fragments",
-  "description": "",
-  "type": "module",
-  "exports": {
-    "./gateway": {
-      "import": "./src/gateway/index.ts"
-    },
-    "./elements": {
-      "import": "./src/elements/index.ts"
-    }
-  },
-  "publishConfig": {
-    "exports": {
-      "./gateway": {
-        "import": "./dist/gateway.js",
-        "types": "./dist/gateway.d.ts"
-      },
-      "./elements": {
-        "import": "./dist/elements.js",
-        "types": "./dist/elements.d.ts"
-      }
-    }
-  },
-  "version": "0.0.2",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build"
-  },
-  "devDependencies": {
-    "path-to-regexp": "^6.2.2",
-    "reframed": "workspace:*",
-    "@cloudflare/workers-types": "^4.20240620.0",
-    "vite-plugin-dts": "^3.9.1",
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.3.3"
-  },
-  "author": "Igor Minar<i@igor.dev>",
-  "contributors": [
-    {
-      "name": "Pete Bacon Darwin",
-      "email": "pete@bacondarwin.com",
-      "url": "https://github.com/petebacondarwin"
-    },
-    {
-      "name": "Cina Saffary",
-      "email": "itscina@gmail.com",
-      "url": "https://github.com/1000hz"
-    },
-    {
-      "name": "Richard Nguyen",
-      "url": "https://github.com/rnguyen17"
-    },
-    {
-      "name": "James Culveyhouse",
-      "email": "jculveyhouse@gmail.com",
-      "url": "https://github.com/jculvey"
-    },
-    {
-      "name": "Dario Piotrowicz",
-      "email": "dario.piotrowicz@gmail.com",
-      "url": "https://github.com/dario-piotrowicz"
-    }
-  ]
+	"name": "web-fragments",
+	"description": "",
+	"type": "module",
+	"exports": {
+		"./gateway": {
+			"import": "./src/gateway/index.ts"
+		},
+		"./elements": {
+			"import": "./src/elements/index.ts"
+		}
+	},
+	"publishConfig": {
+		"exports": {
+			"./gateway": {
+				"import": "./dist/gateway.js",
+				"types": "./dist/gateway.d.ts"
+			},
+			"./elements": {
+				"import": "./dist/elements.js",
+				"types": "./dist/elements.d.ts"
+			}
+		}
+	},
+	"version": "0.0.2",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build"
+	},
+	"devDependencies": {
+		"path-to-regexp": "^6.2.2",
+		"reframed": "workspace:*",
+		"@cloudflare/workers-types": "^4.20240620.0",
+		"vite-plugin-dts": "^3.9.1",
+		"@vitejs/plugin-react": "^4.3.1",
+		"vite": "^5.3.3"
+	},
+	"author": "Igor Minar<i@igor.dev>",
+	"contributors": [
+		{
+			"name": "Pete Bacon Darwin",
+			"email": "pete@bacondarwin.com",
+			"url": "https://github.com/petebacondarwin"
+		},
+		{
+			"name": "Cina Saffary",
+			"email": "itscina@gmail.com",
+			"url": "https://github.com/1000hz"
+		},
+		{
+			"name": "Richard Nguyen",
+			"url": "https://github.com/rnguyen17"
+		},
+		{
+			"name": "James Culveyhouse",
+			"email": "jculveyhouse@gmail.com",
+			"url": "https://github.com/jculvey"
+		},
+		{
+			"name": "Dario Piotrowicz",
+			"email": "dario.piotrowicz@gmail.com",
+			"url": "https://github.com/dario-piotrowicz"
+		}
+	]
 }
