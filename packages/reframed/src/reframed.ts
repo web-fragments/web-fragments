@@ -418,6 +418,13 @@ const originalHistoryFns = new Map();
         }
       };
     },
+    // QwikCity tries to monkey-patch `pushState` and `replaceState`
+    // which results in a runtime error:
+    //   TypeError: Cannot set property pushState of #<History> which only has a getter
+    // so we need to add a no-op setter.
+    // TODO: come up with a better workaround that doesn't break Qwik.
+    // https://github.com/QwikDev/qwik/blob/3c5e5a7614c3f64cbf89f1304dd59609053eddf0/packages/qwik-city/runtime/src/spa-init.ts#L127-L135
+    set: () => {},
   });
 });
 
