@@ -28,7 +28,7 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
     routePatterns: ["/", "/_fragment/remix/:_*"],
     // Note: make sure to run the pierced-react-remix-fragment (with remix-serve)
     upstream: "http://localhost:3000",
-    onFragmentFailedFetch: () => {
+    onSsrFetchError: () => {
       return new Response(
         "<p id='remix-fragment-not-found'><style>#remix-fragment-not-found { color: red; font-size: 2rem; }</style>Remix fragment not found</p>",
         { headers: [["content-type", "text/html"]] }
@@ -36,7 +36,7 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
     },
   });
 
-  getGatewayMiddleware._gatewayMiddleware = getPagesMiddleware(gateway, devMode);
+  getGatewayMiddleware._gatewayMiddleware = getPagesMiddleware(gateway, devMode ? 'development' : 'production');
   return getGatewayMiddleware._gatewayMiddleware;
 };
 

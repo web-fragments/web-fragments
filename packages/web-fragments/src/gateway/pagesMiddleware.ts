@@ -7,7 +7,7 @@ const fragmentHostInitialization = ({ content, classNames }: {content: string; c
 
 export function getPagesMiddleware(
   gateway: FragmentGateway,
-  devMode: boolean,
+  mode: "production" | "development" = "development"
 ): PagesFunction<unknown> {
   return async ({ request, next }) => {
     /**
@@ -74,23 +74,25 @@ export function getPagesMiddleware(
         let fragmentRes: Response;
         let fragmentFailedResOrError: Response | unknown | null = null;
         try {
-          fragmentRes = scriptRewriter.transform(await fetch(fragmentReq));
-          if (fragmentRes.status >= 400 && fragmentRes.status <= 500) {
-            fragmentFailedResOrError = fragmentRes;
+          const response = await fetch(fragmentReq);
+          if (response.status >= 400 && response.status <= 599) {
+            fragmentFailedResOrError = response;
+          } else {
+            fragmentRes = scriptRewriter.transform(response);
           }
         } catch (e) {
           fragmentFailedResOrError = e;
         }
 
         if (fragmentFailedResOrError) {
-          if (matchedFragment.onFragmentFailedFetch) {
-            fragmentRes = await matchedFragment.onFragmentFailedFetch(
+          if (matchedFragment.onSsrFetchError) {
+            fragmentRes = await matchedFragment.onSsrFetchError(
               fragmentReq,
               fragmentFailedResOrError
             );
           } else {
             fragmentRes = new Response(
-              devMode
+              mode === 'development'
                 ? `<p>Fetching fragment upstream failed: ${matchedFragment.upstream}</p>`
                 : "<p>There was a problem fulfilling your request.</p>",
               { headers: [["content-type", "text/html"]] }

@@ -36,7 +36,7 @@ export interface FragmentConfig {
    * @param failedRes the failed response (with a 4xx or 5xx status) or the thrown error
    * @returns the response to use for the document's ssr
    */
-  onFragmentFailedFetch?: (req: RequestInfo, failedResOrError: Response|unknown) => Response|Promise<Response>;
+  onSsrFetchError?: (req: RequestInfo, failedResOrError: Response|unknown) => Response|Promise<Response>;
 }
 
 type FragmentGatewayConfig = {
