@@ -36,6 +36,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-qwik": "^1.5.7",
     "prettier": "^3.2.5",
+    "reframed": "workspace:*",
     "typescript": "5.4.5",
     "undici": "*",
     "vite": "^5.2.10",
