@@ -2,7 +2,10 @@
   "name": "reframed",
   "version": "0.0.5",
   "type": "module",
-  "module": "dist/reframed.js",
+  "module": "index.ts",
+  "publishConfig": {
+    "module": "dist/reframed.js"
+  },
   "files": [
     "dist"
   ],
