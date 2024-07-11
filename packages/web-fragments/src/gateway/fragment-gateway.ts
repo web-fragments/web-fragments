@@ -27,6 +27,20 @@ export interface FragmentConfig {
    * This will be fetched on any request paths matching the specified `routePatterns`
    */
   upstream: string;
+  /**
+   * Handler/Fallback to apply when the fetch for a fragment ssr code fails.
+   * It allows the gateway to serve the provided fallback response instead of an error response straight
+   * from the server.
+   *
+   * @param req the request sent to the fragment
+   * @param failedRes the failed response (with a 4xx or 5xx status) or the thrown error
+   * @returns the response to use for the document's ssr
+   */
+  onSsrFetchError?: (req: RequestInfo, failedResOrError: Response|unknown) => Response|Promise<Response>;
+}
+
+type FragmentGatewayConfig = {
+  prePiercingStyles?: string;
 }
 
 export class FragmentGateway {
@@ -34,8 +48,8 @@ export class FragmentGateway {
   private routeMap: Map<MatchFunction, FragmentConfig> = new Map();
   #prePiercingStyles: string;
 
-  constructor(options?: { prePiercingStyles?: string }) {
-    this.#prePiercingStyles = options?.prePiercingStyles ?? '';
+  constructor(config?: FragmentGatewayConfig) {
+    this.#prePiercingStyles = config?.prePiercingStyles ?? '';
   }
 
   get prePiercingStyles() {
