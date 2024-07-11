@@ -23,6 +23,9 @@
     }
   },
   "version": "0.0.2",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build"
