@@ -1,4 +1,3 @@
-import {resolve} from "node:path";
 /**
  * This is the base config for vite.
  * When building, the adapter config is used which loads this file and extends it.
@@ -20,7 +19,7 @@ errorOnDuplicatesPkgDeps(devDependencies, dependencies);
 /**
  * Note that Vite normally starts from `index.html` but the qwikCity plugin makes start at `src/entry.ssr.tsx` instead.
  */
-export default defineConfig(({ command, mode }): UserConfig => {
+export default defineConfig((): UserConfig => {
   return {
     plugins: [qwikCity(), qwikVite(), tsconfigPaths()],
     // This tells Vite which dependencies to pre-build in dev mode.
@@ -34,11 +33,9 @@ export default defineConfig(({ command, mode }): UserConfig => {
     appType: "mpa", // so that Vite returns 404 on fetch to an non-existent .html file
     resolve: {
       alias: {
-        reframed: resolve(__dirname, "../../packages/reframed/index.ts"),
-
         // cross-repo development only!
         // requires writable-dom checked out as a sibling to `reframed`
-        "writable-dom": resolve(__dirname, "../../../writable-dom/src/index.ts"),
+        "writable-dom": new URL("../../../writable-dom/src/index.ts", import.meta.url).pathname,
       },
     },
 
