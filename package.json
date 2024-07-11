@@ -13,6 +13,10 @@
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   },
+  "engines": {
+    "pnpm": ">=9"
+  },
+  "engineStrict": true,
   "author": "Igor Minar<i@igor.dev>",
   "license": "MIT"
 }
