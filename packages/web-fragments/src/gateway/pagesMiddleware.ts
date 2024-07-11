@@ -7,6 +7,7 @@ const fragmentHostInitialization = ({ content, classNames }: {content: string; c
 
 export function getPagesMiddleware(
   gateway: FragmentGateway,
+  devMode: boolean,
 ): PagesFunction<unknown> {
   return async ({ request, next }) => {
     /**
@@ -19,10 +20,10 @@ export function getPagesMiddleware(
      * reload) in the reframed context has the correct url.
      */
     if (request.headers.get('sec-fetch-dest') === 'iframe') {
-        const matchedFragment = gateway.matchRequestToFragment(request);
-        if (matchedFragment) {
-            return new Response('<!doctype html><title>');
-        }
+      const matchedFragment = gateway.matchRequestToFragment(request);
+      if (matchedFragment) {
+        return new Response('<!doctype html><title>');
+      }
     }
 
     // If this is a document request, we should bail and
@@ -52,8 +53,8 @@ export function getPagesMiddleware(
         const requestUrl = new URL(request.url);
 
         const upstreamUrl = new URL(
-            `${requestUrl.pathname}${requestUrl.search}`,
-            matchedFragment.upstream,
+          `${requestUrl.pathname}${requestUrl.search}`,
+          matchedFragment.upstream,
         );
 
         // TODO: this logic should not be here but in the reframed package (and imported and used here)
@@ -63,12 +64,39 @@ export function getPagesMiddleware(
           element(element) {
             const scriptType = element.getAttribute('type');
             if(scriptType) {
-                element.setAttribute('data-script-type', scriptType);
+              element.setAttribute('data-script-type', scriptType);
             }
             element.setAttribute('type', 'inert');
           }
         });
-        const fragmentRes = scriptRewriter.transform(await fetch(upstreamUrl, { ...request }));
+
+        const fragmentReq: RequestInfo = { ...request, url: upstreamUrl };
+        let fragmentRes: Response;
+        let fragmentFailedResOrError: Response | unknown | null = null;
+        try {
+          fragmentRes = scriptRewriter.transform(await fetch(fragmentReq));
+          if (fragmentRes.status >= 400 && fragmentRes.status <= 500) {
+            fragmentFailedResOrError = fragmentRes;
+          }
+        } catch (e) {
+          fragmentFailedResOrError = e;
+        }
+
+        if (fragmentFailedResOrError) {
+          if (matchedFragment.onFragmentFailedFetch) {
+            fragmentRes = await matchedFragment.onFragmentFailedFetch(
+              fragmentReq,
+              fragmentFailedResOrError
+            );
+          } else {
+            fragmentRes = new Response(
+              devMode
+                ? `<p>Fetching fragment upstream failed: ${matchedFragment.upstream}</p>`
+                : "<p>There was a problem fulfilling your request.</p>",
+              { headers: [["content-type", "text/html"]] }
+            );
+          }
+        }
 
         const rewriter = new HTMLRewriter()
           .on('head', {
