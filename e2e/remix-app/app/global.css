@@ -1,7 +1,7 @@
 a {
-  color: blue;
+	color: blue;
 
-  &:is(:hover, :focus-visible) {
-    text-decoration: underline;
-  }
+	&:is(:hover, :focus-visible) {
+		text-decoration: underline;
+	}
 }

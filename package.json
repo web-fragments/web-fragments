@@ -1,48 +1,52 @@
 {
-  "name": "web-fragments-monorepo",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
-  },
-  "devDependencies": {
-    "@types/node": "^20.14.2",
-    "typescript": "^5.2.2",
-    "vite": "^5.2.0"
-  },
-  "engines": {
-    "pnpm": ">=9"
-  },
-  "engineStrict": true,
-  "license": "MIT",
-  "author": "Igor Minar <i@igor.dev> (https://igor.dev)",
-  "contributors": [
-    {
-      "name": "Pete Bacon Darwin",
-      "email": "pete@bacondarwin.com",
-      "url": "https://github.com/petebacondarwin"
-    },
-    {
-      "name": "Cina Saffary",
-      "email": "itscina@gmail.com",
-      "url": "https://github.com/1000hz"
-    },
-    {
-      "name": "Richard Nguyen",
-      "url": "https://github.com/rnguyen17"
-    },
-    {
-      "name": "James Culveyhouse",
-      "email": "jculveyhouse@gmail.com",
-      "url": "https://github.com/jculvey"
-    },
-    {
-      "name": "Dario Piotrowicz",
-      "email": "dario.piotrowicz@gmail.com",
-      "url": "https://github.com/dario-piotrowicz"
-    }
-  ]
+	"name": "web-fragments-monorepo",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview",
+		"prettier": "prettier . --ignore-unknown",
+		"prettier:check": "pnpm run prettier --check",
+		"prettier:fix": "pnpm run prettier --write"
+	},
+	"devDependencies": {
+		"@types/node": "^20.14.2",
+		"prettier": "^3.2.5",
+		"typescript": "^5.2.2",
+		"vite": "^5.2.0"
+	},
+	"engines": {
+		"pnpm": ">=9"
+	},
+	"engineStrict": true,
+	"license": "MIT",
+	"author": "Igor Minar <i@igor.dev> (https://igor.dev)",
+	"contributors": [
+		{
+			"name": "Pete Bacon Darwin",
+			"email": "pete@bacondarwin.com",
+			"url": "https://github.com/petebacondarwin"
+		},
+		{
+			"name": "Cina Saffary",
+			"email": "itscina@gmail.com",
+			"url": "https://github.com/1000hz"
+		},
+		{
+			"name": "Richard Nguyen",
+			"url": "https://github.com/rnguyen17"
+		},
+		{
+			"name": "James Culveyhouse",
+			"email": "jculveyhouse@gmail.com",
+			"url": "https://github.com/jculvey"
+		},
+		{
+			"name": "Dario Piotrowicz",
+			"email": "dario.piotrowicz@gmail.com",
+			"url": "https://github.com/dario-piotrowicz"
+		}
+	]
 }

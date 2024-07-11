@@ -10,7 +10,7 @@ import type { RequestHandler } from "@builder.io/qwik-city";
  * reload) in the reframed context has the correct url.
  */
 export const onRequest: RequestHandler = async (requestEvent) => {
-  if (requestEvent.request.headers.get("sec-fetch-dest") === "iframe") {
-    throw requestEvent.html(200, "<!doctype html><title>");
-  }
+	if (requestEvent.request.headers.get("sec-fetch-dest") === "iframe") {
+		throw requestEvent.html(200, "<!doctype html><title>");
+	}
 };

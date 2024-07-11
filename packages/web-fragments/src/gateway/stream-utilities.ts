@@ -11,14 +11,14 @@
  * @returns a new stream
  */
 export function wrapStreamInText(
-  preStream: string,
-  postStream: string,
-  stream: ReadableStream<Uint8Array>
+	preStream: string,
+	postStream: string,
+	stream: ReadableStream<Uint8Array>
 ): ReadableStream {
-  const { writable, readable } = new TransformStream();
-  const writer = writable.getWriter();
-  writeIntoEmbeddedStream(preStream, postStream, stream, writer);
-  return readable;
+	const { writable, readable } = new TransformStream();
+	const writer = writable.getWriter();
+	writeIntoEmbeddedStream(preStream, postStream, stream, writer);
+	return readable;
 }
 
 /**
@@ -29,61 +29,61 @@ export function wrapStreamInText(
  * @returns a transformed stream
  */
 export function transformStream(
-  stream: ReadableStream<Uint8Array>,
-  transformerFn: (str: string) => string
+	stream: ReadableStream<Uint8Array>,
+	transformerFn: (str: string) => string
 ) {
-  const { writable, readable } = new TransformStream();
-  const writer = writable.getWriter();
+	const { writable, readable } = new TransformStream();
+	const writer = writable.getWriter();
 
-  const transform = async () => {
-    try {
-      const encoder = new TextEncoder();
-      const reader = stream.getReader();
+	const transform = async () => {
+		try {
+			const encoder = new TextEncoder();
+			const reader = stream.getReader();
 
-      let chunk = await reader.read();
-      while (!chunk.done) {
-        const decoder = new TextDecoder();
-        let chunkStr = decoder.decode(chunk.value);
-        chunkStr = transformerFn(chunkStr);
-        let transformedChunk = encoder.encode(chunkStr);
+			let chunk = await reader.read();
+			while (!chunk.done) {
+				const decoder = new TextDecoder();
+				let chunkStr = decoder.decode(chunk.value);
+				chunkStr = transformerFn(chunkStr);
+				let transformedChunk = encoder.encode(chunkStr);
 
-        writer.write(transformedChunk);
-        chunk = await reader.read();
-      }
+				writer.write(transformedChunk);
+				chunk = await reader.read();
+			}
 
-      reader.releaseLock();
-      writer.close();
-    } catch (error: any) {
-      writer.abort();
-    }
-  };
+			reader.releaseLock();
+			writer.close();
+		} catch (error: any) {
+			writer.abort();
+		}
+	};
 
-  transform();
-  return readable;
+	transform();
+	return readable;
 }
 
 async function writeIntoEmbeddedStream(
-  preStream: string,
-  postStream: string,
-  stream: ReadableStream<Uint8Array>,
-  writer: WritableStreamDefaultWriter<any>
+	preStream: string,
+	postStream: string,
+	stream: ReadableStream<Uint8Array>,
+	writer: WritableStreamDefaultWriter<any>
 ): Promise<void> {
-  try {
-    const encoder = new TextEncoder();
-    writer.write(encoder.encode(preStream));
+	try {
+		const encoder = new TextEncoder();
+		writer.write(encoder.encode(preStream));
 
-    const reader = stream.getReader();
-    let chunk = await reader.read();
-    while (!chunk.done) {
-      writer.write(chunk.value);
-      chunk = await reader.read();
-    }
+		const reader = stream.getReader();
+		let chunk = await reader.read();
+		while (!chunk.done) {
+			writer.write(chunk.value);
+			chunk = await reader.read();
+		}
 
-    writer.write(encoder.encode(postStream));
-    writer.close();
-  } catch (error: any) {
-    writer.abort(error);
-  }
+		writer.write(encoder.encode(postStream));
+		writer.close();
+	} catch (error: any) {
+		writer.abort(error);
+	}
 }
 
 /**
@@ -95,26 +95,26 @@ async function writeIntoEmbeddedStream(
  * @returns a new stream
  */
 export function concatenateStreams(streams: ReadableStream[]): ReadableStream {
-  async function writeStreams(
-    writer: WritableStreamDefaultWriter
-  ): Promise<void> {
-    try {
-      for (const stream of streams) {
-        const reader = stream.getReader();
-        let chunk = await reader.read();
-        while (!chunk.done) {
-          writer.write(chunk.value);
-          chunk = await reader.read();
-        }
-      }
-      writer.close();
-    } catch (error: any) {
-      writer.abort(error);
-    }
-  }
+	async function writeStreams(
+		writer: WritableStreamDefaultWriter
+	): Promise<void> {
+		try {
+			for (const stream of streams) {
+				const reader = stream.getReader();
+				let chunk = await reader.read();
+				while (!chunk.done) {
+					writer.write(chunk.value);
+					chunk = await reader.read();
+				}
+			}
+			writer.close();
+		} catch (error: any) {
+			writer.abort(error);
+		}
+	}
 
-  const { writable, readable } = new TransformStream();
-  const writer = writable.getWriter();
-  writeStreams(writer);
-  return readable;
+	const { writable, readable } = new TransformStream();
+	const writer = writable.getWriter();
+	writeStreams(writer);
+	return readable;
 }
