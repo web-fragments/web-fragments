@@ -39,9 +39,7 @@ export function getPagesMiddleware(
           matchedFragment.upstream
         );
 
-        return fetch(upstreamUrl, {
-          headers: request.headers
-        });
+        return fetch(upstreamUrl, request);
       }
     }
 
