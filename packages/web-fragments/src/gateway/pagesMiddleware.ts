@@ -78,7 +78,9 @@ export function getPagesMiddleware(
 					},
 				});
 
-				const fragmentReq: RequestInfo = { ...request, url: upstreamUrl };
+				const fragmentReq = new Request(upstreamUrl, {
+					...request,
+				});
 				let fragmentRes: Response;
 				let fragmentFailedResOrError: Response | unknown | null = null;
 				try {
