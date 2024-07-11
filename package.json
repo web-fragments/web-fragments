@@ -17,6 +17,32 @@
     "pnpm": ">=9"
   },
   "engineStrict": true,
-  "author": "Igor Minar<i@igor.dev>",
-  "license": "MIT"
+  "license": "MIT",
+  "author": "Igor Minar <i@igor.dev> (https://igor.dev)",
+  "contributors": [
+    {
+      "name": "Pete Bacon Darwin",
+      "email": "pete@bacondarwin.com",
+      "url": "https://github.com/petebacondarwin"
+    },
+    {
+      "name": "Cina Saffary",
+      "email": "itscina@gmail.com",
+      "url": "https://github.com/1000hz"
+    },
+    {
+      "name": "Richard Nguyen",
+      "url": "https://github.com/rnguyen17"
+    },
+    {
+      "name": "James Culveyhouse",
+      "email": "jculveyhouse@gmail.com",
+      "url": "https://github.com/jculvey"
+    },
+    {
+      "name": "Dario Piotrowicz",
+      "email": "dario.piotrowicz@gmail.com",
+      "url": "https://github.com/dario-piotrowicz"
+    }
+  ]
 }
