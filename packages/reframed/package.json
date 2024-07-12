@@ -12,7 +12,7 @@
 	"sideEffects": false,
 	"license": "MIT",
 	"devDependencies": {
-		"writable-dom": "github:IgorMinar/writable-dom#reframed-support",
+		"writable-dom": "github:web-fragments/writable-dom#reframed-support",
 		"typescript": "^5.5.0",
 		"vite": "^5.2.0"
 	},
