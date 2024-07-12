@@ -4,9 +4,7 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "pnpm run --stream --parallel '/^dev:.*/'",
-		"dev:pages": "wrangler pages dev --binding DEV_MODE=true",
-		"dev:vite": "vite build -w",
+		"dev": "NODE_ENV='development' vite build -w",
 		"build": "tsc -b && vite build",
 		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
 		"preview": "vite preview"
