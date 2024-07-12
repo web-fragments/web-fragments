@@ -2,7 +2,7 @@ lockfileVersion: '9.0'
 
 settings:
   autoInstallPeers: true
-  excludeLinksFromLockfile:   false
+  excludeLinksFromLockfile: false
 
 importers:
 
@@ -289,8 +289,8 @@ importers:
         specifier: ^5.2.0
         version: 5.3.3(@types/node@20.14.9)
       writable-dom:
-        specifier: github:IgorMinar/writable-dom#reframed-support
-        version: https://codeload.github.com/IgorMinar/writable-dom/tar.gz/44edbf52357edd5bb3d47e6b1df3f60e5a72bca6
+        specifier: github:web-fragments/writable-dom#reframed-support
+        version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/2e794f3cb4c6bd1486310adb23ab8f8c15564640
 
   packages/web-fragments:
     devDependencies:
@@ -4668,8 +4668,8 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  writable-dom@https://codeload.github.com/IgorMinar/writable-dom/tar.gz/44edbf52357edd5bb3d47e6b1df3f60e5a72bca6:
-    resolution: {tarball: https://codeload.github.com/IgorMinar/writable-dom/tar.gz/44edbf52357edd5bb3d47e6b1df3f60e5a72bca6}
+  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/2e794f3cb4c6bd1486310adb23ab8f8c15564640:
+    resolution: {tarball: https://codeload.github.com/web-fragments/writable-dom/tar.gz/2e794f3cb4c6bd1486310adb23ab8f8c15564640}
     version: 1.0.0
 
   ws@7.5.10:
@@ -10198,7 +10198,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  writable-dom@https://codeload.github.com/IgorMinar/writable-dom/tar.gz/44edbf52357edd5bb3d47e6b1df3f60e5a72bca6: {}
+  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/2e794f3cb4c6bd1486310adb23ab8f8c15564640: {}
 
   ws@7.5.10: {}
 
