@@ -78,9 +78,12 @@ export function getPagesMiddleware(
 					},
 				});
 
-				const fragmentReq = new Request(upstreamUrl, {
-					...request,
-				});
+				const fragmentReq = new Request(upstreamUrl, request);
+				// Note: we don't want to forward the sec-fetch-dest since we usually need
+				//       custom logic so that we avoid returning full htmls if the header is
+				//       not set to 'document'
+				fragmentReq.headers.set("sec-fetch-dest", "empty");
+
 				let fragmentRes: Response;
 				let fragmentFailedResOrError: Response | unknown | null = null;
 				try {
