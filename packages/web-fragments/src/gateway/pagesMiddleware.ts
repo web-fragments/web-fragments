@@ -84,6 +84,12 @@ export function getPagesMiddleware(
 				//       not set to 'document'
 				fragmentReq.headers.set("sec-fetch-dest", "empty");
 
+				if (mode === "development") {
+					// brotli is not currently supported during local development (with `wrangler (pages) dev`)
+					// so we set the accept-encoding to gzip to avoid problems with it
+					fragmentReq.headers.set("Accept-Encoding", "gzip");
+				}
+
 				let fragmentRes: Response;
 				let fragmentFailedResOrError: Response | unknown | null = null;
 				try {
