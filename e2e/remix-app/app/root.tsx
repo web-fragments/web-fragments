@@ -36,7 +36,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		(async () => {
-			if (!(document as unknown as { unreframedBody: unknown }).unreframedBody) {
+			if (
+				!(document as unknown as { unreframedBody: unknown }).unreframedBody
+			) {
 				setShouldReframe(true);
 			}
 
