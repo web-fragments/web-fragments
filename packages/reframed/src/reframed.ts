@@ -98,14 +98,14 @@ async function reframeWithFetch(
 			.pipeThrough(new TextDecoderStream())
 			.pipeTo(
 				new WritableDOMStream(target, {
-					scriptLoadingDocument: document,
+					scriptLoadingDocument: iframe.contentDocument!,
 				})
 			)
 			.finally(() => {
 				console.log("reframing done (reframeWithFetch)!", {
 					source: reframedSrc,
 					target,
-					title: document.defaultView!.document.title,
+					title: iframe.contentDocument?.title,
 				});
 				resolve();
 			});

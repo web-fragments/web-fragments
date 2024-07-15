@@ -14,9 +14,8 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
         z-index: 9999999999999999999999999999999;
     
         &.remix {
-            bottom: 14%;
-            left: 50%;
-            translate: -50% 0;
+            bottom: 16%;
+            left: 15%;
         }
       }
     </style>`,
