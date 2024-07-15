@@ -293,7 +293,7 @@ importers:
         version: 5.3.3(@types/node@20.14.9)
       writable-dom:
         specifier: github:web-fragments/writable-dom#reframed-support
-        version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/2e794f3cb4c6bd1486310adb23ab8f8c15564640
+        version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/d8c96af41e71448ace4c8387391bc678dce143bd
 
   packages/web-fragments:
     dependencies:
@@ -4891,8 +4891,8 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/2e794f3cb4c6bd1486310adb23ab8f8c15564640:
-    resolution: {tarball: https://codeload.github.com/web-fragments/writable-dom/tar.gz/2e794f3cb4c6bd1486310adb23ab8f8c15564640}
+  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/d8c96af41e71448ace4c8387391bc678dce143bd:
+    resolution: {tarball: https://codeload.github.com/web-fragments/writable-dom/tar.gz/d8c96af41e71448ace4c8387391bc678dce143bd}
     version: 1.0.0
 
   ws@7.5.10:
@@ -10748,7 +10748,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/2e794f3cb4c6bd1486310adb23ab8f8c15564640: {}
+  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/d8c96af41e71448ace4c8387391bc678dce143bd: {}
 
   ws@7.5.10: {}
 
