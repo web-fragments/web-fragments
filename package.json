@@ -5,17 +5,19 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc && vite build",
+		"build": "pnpm --filter reframed --filter web-fragments build",
 		"preview": "vite preview",
 		"prettier": "prettier . --ignore-unknown",
 		"prettier:check": "pnpm run prettier --check",
-		"prettier:fix": "pnpm run prettier --write"
+		"prettier:fix": "pnpm run prettier --write",
+		"release": "pnpm build && pnpm changeset publish"
 	},
 	"devDependencies": {
 		"@types/node": "^20.14.2",
 		"prettier": "^3.2.5",
 		"typescript": "^5.2.2",
-		"vite": "^5.2.0"
+		"vite": "^5.2.0",
+		"@changesets/cli": "^2.27.7"
 	},
 	"engines": {
 		"pnpm": ">=9"
