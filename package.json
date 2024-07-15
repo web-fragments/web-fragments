@@ -11,10 +11,7 @@
 		"release": "pnpm build && pnpm changeset publish"
 	},
 	"devDependencies": {
-		"@types/node": "^20.14.2",
 		"prettier": "^3.2.5",
-		"typescript": "^5.2.2",
-		"vite": "^5.2.0",
 		"@changesets/cli": "^2.27.7"
 	},
 	"engines": {
