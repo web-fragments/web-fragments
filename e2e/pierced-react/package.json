@@ -1,7 +1,6 @@
 {
 	"name": "pierced-react",
 	"private": true,
-	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
 		"dev": "NODE_ENV='development' vite build -w",
