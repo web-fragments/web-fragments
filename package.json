@@ -9,7 +9,8 @@
 		"preview": "vite preview",
 		"prettier": "prettier . --ignore-unknown",
 		"prettier:check": "pnpm run prettier --check",
-		"prettier:fix": "pnpm run prettier --write"
+		"prettier:fix": "pnpm run prettier --write",
+		"release": "pnpm build && pnpm changeset publish"
 	},
 	"devDependencies": {
 		"@types/node": "^20.14.2",
