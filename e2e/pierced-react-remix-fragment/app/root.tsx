@@ -10,15 +10,6 @@ import {
 import "./tailwind.css";
 import { LoaderFunctionArgs } from "@remix-run/node";
 
-/**
- * This is a hack to work around an issue with WritableDOM not populating
- * the contents of the last script element (which just so happens to be responsible
- * for hydrating the application). We noticed that if that script tag wasn't the last
- * child of the body, its contents were inserted correctly. We're adding this empty
- * div here to make the script tag before it no longer be the last child.
- */
-const HackDiv = () => <div />;
-
 function isDocumentRequest(request: Request) {
 	return request.headers.get("sec-fetch-dest") === "document";
 }
@@ -48,7 +39,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<ScrollRestoration />
 				<Scripts />
 			</body>
-			<HackDiv />
 		</html>
 	) : (
 		<div>
@@ -59,7 +49,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			{children}
 			<ScrollRestoration />
 			<Scripts />
-			<HackDiv />
 		</div>
 	);
 }
