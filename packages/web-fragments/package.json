@@ -28,7 +28,8 @@
 	],
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build"
+		"build": "vite build",
+		"types:check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"reframed": "workspace:*"

@@ -6,6 +6,7 @@
 	"scripts": {
 		"build": "pnpm --filter reframed --filter web-fragments build",
 		"prettier": "prettier . --ignore-unknown",
+		"types:check": "pnpm --filter '*' types:check",
 		"prettier:check": "pnpm run prettier --check",
 		"prettier:fix": "pnpm run prettier --write",
 		"release": "pnpm build && pnpm changeset publish"
