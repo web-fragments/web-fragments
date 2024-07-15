@@ -4,9 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "vite",
 		"build": "pnpm --filter reframed --filter web-fragments build",
-		"preview": "vite preview",
 		"prettier": "prettier . --ignore-unknown",
 		"prettier:check": "pnpm run prettier --check",
 		"prettier:fix": "pnpm run prettier --write",
