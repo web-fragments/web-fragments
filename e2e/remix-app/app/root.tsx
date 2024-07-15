@@ -10,6 +10,7 @@ import {
 import { useRef, useState, useEffect } from "react";
 import "./tailwind.css";
 import "./global.css";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 
 function isDocumentRequest(request: Request) {
 	return request.headers.get("sec-fetch-dest") === "document";
@@ -26,14 +27,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	const [shouldReframe, setShouldReframe] = useState(false);
-	const { standaloneMode } = useRouteLoaderData<typeof loader>("root");
+	const loaderData = useRouteLoaderData<typeof loader>("root");
+
+	const standaloneMode = !!loaderData?.standaloneMode;
 
 	const ref = useRef<HTMLElement>(null);
 	const reframingWasTriggered = useRef<boolean>(false);
 
 	useEffect(() => {
 		(async () => {
-			if (!document.unreframedBody) {
+			if (
+				!(document as unknown as { unreframedBody: unknown }).unreframedBody
+			) {
 				setShouldReframe(true);
 			}
 

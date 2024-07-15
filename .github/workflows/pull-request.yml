@@ -8,7 +8,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  prettier-checks:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
@@ -33,3 +33,7 @@ jobs:
       - name: Run prettier check
         shell: bash
         run: pnpm prettier:check
+
+      - name: Run types check
+        shell: bash
+        run: pnpm types:check

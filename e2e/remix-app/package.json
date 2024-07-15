@@ -8,7 +8,7 @@
 		"dev": "remix vite:dev",
 		"lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
 		"start": "remix-serve ./build/server/index.js",
-		"typecheck": "tsc"
+		"types:check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@remix-run/node": "^2.9.2",

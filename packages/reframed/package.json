@@ -19,7 +19,8 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"types:check": "tsc --noEmit"
 	},
 	"author": "Igor Minar <i@igor.dev> (https://igor.dev)",
 	"contributors": [

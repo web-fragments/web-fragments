@@ -28,7 +28,8 @@
 	],
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build"
+		"build": "vite build",
+		"types:check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"reframed": "workspace:*"
@@ -38,7 +39,8 @@
 		"@cloudflare/workers-types": "^4.20240620.0",
 		"vite-plugin-dts": "^3.9.1",
 		"@vitejs/plugin-react": "^4.3.1",
-		"vite": "^5.3.3"
+		"vite": "^5.3.3",
+		"typescript": "^5.5.3"
 	},
 	"author": "Igor Minar<i@igor.dev>",
 	"contributors": [
