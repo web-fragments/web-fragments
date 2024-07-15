@@ -11,8 +11,8 @@
 		"reframed": "workspace:*"
 	},
 	"devDependencies": {
-		"typescript": "link:../../node_modules/typescript",
-		"vite": "link:../../node_modules/vite",
-		"@types/node": "link:../../node_modules/@types/node"
+		"typescript": "^5.5.3",
+		"vite": "^5.3.3",
+		"@types/node": "^20.14.10"
 	}
 }
