@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
