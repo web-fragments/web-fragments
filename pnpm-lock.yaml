@@ -301,6 +301,9 @@ importers:
       path-to-regexp:
         specifier: ^6.2.2
         version: 6.2.2
+      typescript:
+        specifier: ^5.5.3
+        version: 5.5.3
       vite:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.9)
