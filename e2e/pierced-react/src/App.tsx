@@ -5,6 +5,11 @@ import "./App.css";
 
 function App() {
 	const [count, setCount] = useState(0);
+	const [showHost, setShowHost] = useState(false);
+
+	const toggleShowHost = () => {
+		setShowHost(!showHost);
+	};
 
 	return (
 		<>
@@ -21,13 +26,30 @@ function App() {
 				<button onClick={() => setCount((count) => count + 1)}>
 					count is {count}
 				</button>
-				<br />
-				<br />
-				<br />
 			</div>
-			{/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-			{/* @ts-ignore */}
-			<fragment-outlet fragment-id="remix" />
+
+			<section style={{ display: "flex", justifyContent: "center" }}>
+				<div className="fragment-container pierced">
+					<h2>Reframed - from target</h2>
+					<fragment-outlet fragment-id="remix" />
+				</div>
+				<div className="fragment-container">
+					<div style={{ width: "100%" }}>
+						<h2>Reframed - with fetch</h2>
+						<button
+							onClick={toggleShowHost}
+							style={{
+								background: "AliceBlue",
+								padding: "0.5rem",
+								color: "black",
+							}}
+						>
+							Toggle host
+						</button>
+					</div>
+					{showHost && <fragment-host></fragment-host>}
+				</div>
+			</section>
 		</>
 	);
 }

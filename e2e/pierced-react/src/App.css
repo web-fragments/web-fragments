@@ -41,11 +41,18 @@
 	color: #888;
 }
 
-fragment-outlet[fragment-id="remix"] {
-	outline: 3px dashed red;
+.fragment-container {
+	outline: 3px dashed #fff;
 	display: block;
-	height: 10rem;
-	width: 20rem;
-	display: grid;
-	place-content: center;
+	height: 20rem;
+	width: 25rem;
+	margin: 1rem;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	box-sizing: border-box;
+}
+
+.fragment-container.pierced {
+	outline: 3px dashed red;
 }

@@ -37,23 +37,28 @@ export default function Index() {
           }
         }
   `}</style>
-				<p>Remix Counter</p>
-				<div className="counter">
-					<button
-						onClick={() => {
-							setCounter((counter) => counter - 1);
-						}}
-					>
-						-
-					</button>
-					<span>{counter}</span>
-					<button
-						onClick={() => {
-							setCounter((counter) => counter + 1);
-						}}
-					>
-						+
-					</button>
+				<div style={{ maxHeight: "10rem", overflow: "auto" }}>
+					<p>Remix Counter</p>
+					<div className="counter">
+						<button
+							onClick={() => {
+								setCounter((counter) => counter - 1);
+							}}
+						>
+							-
+						</button>
+						<span>{counter}</span>
+						<button
+							onClick={() => {
+								setCounter((counter) => counter + 1);
+							}}
+						>
+							+
+						</button>
+					</div>
+					{new Array(1000).fill(undefined).map((_element, idx) => (
+						<div key={idx}>I am the {idx} element in this list of divs</div>
+					))}
 				</div>
 			</div>
 		</>
