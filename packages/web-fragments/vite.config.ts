@@ -19,7 +19,7 @@ export default defineConfig({
 			formats: ["es"],
 		},
 		rollupOptions: {
-			external: ["react", "react-dom"],
+			external: ["react", "react-dom", "reframed"],
 			output: {
 				globals: {
 					react: "React",

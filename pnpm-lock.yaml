@@ -296,6 +296,10 @@ importers:
         version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/2e794f3cb4c6bd1486310adb23ab8f8c15564640
 
   packages/web-fragments:
+    dependencies:
+      reframed:
+        specifier: workspace:*
+        version: link:../reframed
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240620.0
@@ -306,9 +310,6 @@ importers:
       path-to-regexp:
         specifier: ^6.2.2
         version: 6.2.2
-      reframed:
-        specifier: workspace:*
-        version: link:../reframed
       vite:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.9)
