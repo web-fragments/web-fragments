@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc && vite build",
+		"build": "pnpm --filter reframed --filter web-fragments build",
 		"preview": "vite preview",
 		"prettier": "prettier . --ignore-unknown",
 		"prettier:check": "pnpm run prettier --check",
