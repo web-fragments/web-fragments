@@ -1,4 +1,4 @@
-import type { FragmentGateway } from "./fragment-gateway";
+import type { FragmentGateway } from "../fragment-gateway";
 
 const fragmentHostInitialization = ({
 	content,
@@ -11,7 +11,7 @@ const fragmentHostInitialization = ({
   <template shadowrootmode="open">${content}</template>
 </fragment-host>`;
 
-export function getPagesMiddleware(
+export function getMiddleware(
 	gateway: FragmentGateway,
 	mode: "production" | "development" = "development"
 ): PagesFunction<unknown> {

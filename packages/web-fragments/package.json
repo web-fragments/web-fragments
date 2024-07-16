@@ -6,6 +6,9 @@
 		"./gateway": {
 			"import": "./src/gateway/index.ts"
 		},
+		"./gateway/middlewares/cloudflare-pages": {
+			"import": "./src/gateway/middlewares/cloudflare-pages.ts"
+		},
 		"./elements": {
 			"import": "./src/elements/index.ts"
 		}
@@ -15,6 +18,10 @@
 			"./gateway": {
 				"import": "./dist/gateway.js",
 				"types": "./dist/gateway.d.ts"
+			},
+			"./gateway/middlewares/cloudflare-pages": {
+				"import": "./dist/gateway/middlewares/cloudflare-pages.js",
+				"types": "./dist/gateway/middlewares/cloudflare-pages.d.ts"
 			},
 			"./elements": {
 				"import": "./dist/elements.js",
@@ -36,11 +43,18 @@
 	},
 	"devDependencies": {
 		"path-to-regexp": "^6.2.2",
-		"@cloudflare/workers-types": "^4.20240620.0",
 		"vite-plugin-dts": "^3.9.1",
 		"@vitejs/plugin-react": "^4.3.1",
 		"vite": "^5.3.3",
 		"typescript": "^5.5.3"
+	},
+	"peerDependencies": {
+		"@cloudflare/workers-types": "^4.20240620.0"
+	},
+	"peerDependenciesMeta": {
+		"@cloudflare/workers-types": {
+			"optional": true
+		}
 	},
 	"author": "Igor Minar<i@igor.dev>",
 	"contributors": [
