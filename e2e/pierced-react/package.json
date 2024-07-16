@@ -10,9 +10,10 @@
 		"types:check": "tsc --noEmit"
 	},
 	"dependencies": {
-		"web-fragments": "workspace:*",
 		"react": "^18.3.1",
-		"react-dom": "^18.3.1"
+		"react-dom": "^18.3.1",
+		"react-router-dom": "^6.25.0",
+		"web-fragments": "workspace:*"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20240620.0",
