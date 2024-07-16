@@ -69,6 +69,9 @@ export class FragmentHost extends HTMLElement {
 		// We need to do the same when we move <fragment-host> into <fragment-outlet>
 		this.neutralizeScriptTags();
 
+		// Preserve the existing stylesheets to avoid a FOUC when reinserting this element into the DOM
+		this.preserveStylesheets();
+
 		// Move <fragment-host> into <fragment-outlet> and set a flag to return early in the disconnectedCallback
 		this.isPortaling = true;
 		const hostElement = event.target as HTMLElement;
@@ -77,6 +80,19 @@ export class FragmentHost extends HTMLElement {
 		// Restore the initial type attributes of the script tags
 		this.restoreScriptTags();
 		this.removeAttribute("data-piercing");
+	}
+
+	preserveStylesheets() {
+		if (this.shadowRoot) {
+			this.shadowRoot.adoptedStyleSheets = Array.from(
+				this.shadowRoot.styleSheets,
+				(sheet) => {
+					const clone = new CSSStyleSheet();
+					[...sheet.cssRules].forEach((rule) => clone.insertRule(rule.cssText));
+					return clone;
+				}
+			);
+		}
 	}
 
 	neutralizeScriptTags() {
