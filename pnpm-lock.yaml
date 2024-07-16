@@ -288,13 +288,13 @@ importers:
 
   packages/web-fragments:
     dependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240620.0
+        version: 4.20240620.0
       reframed:
         specifier: workspace:*
         version: link:../reframed
     devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20240620.0
-        version: 4.20240620.0
       '@vitejs/plugin-react':
         specifier: ^4.3.1
         version: 4.3.1(vite@5.3.3(@types/node@20.14.10))
