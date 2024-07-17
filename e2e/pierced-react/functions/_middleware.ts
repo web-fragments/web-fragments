@@ -25,12 +25,26 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
 	gateway.registerFragment({
 		fragmentId: "remix",
 		prePiercingClassNames: ["remix"],
-		routePatterns: ["/", "/_fragment/remix/:_*"],
-		// Note: make sure to run the pierced-react-remix-fragment (with remix-serve)
+		routePatterns: ["/remix-page", "/_fragment/remix/:_*"],
+		// Note: the pierced-react-remix-fragment has to be available on port 3000
 		upstream: "http://localhost:3000",
 		onSsrFetchError: () => {
 			return new Response(
 				"<p id='remix-fragment-not-found'><style>#remix-fragment-not-found { color: red; font-size: 2rem; }</style>Remix fragment not found</p>",
+				{ headers: [["content-type", "text/html"]] }
+			);
+		},
+	});
+
+	gateway.registerFragment({
+		fragmentId: "qwik",
+		prePiercingClassNames: ["qwik"],
+		routePatterns: ["/qwik-page", "/_fragment/qwik/:_*"],
+		// Note: the pierced-react-qwik-fragment has to be available on port 8123
+		upstream: "http://localhost:8123",
+		onSsrFetchError: () => {
+			return new Response(
+				"<p id='qwik-fragment-not-found'><style>#qwik-fragment-not-found { color: red; font-size: 2rem; }</style>Qwik fragment not found</p>",
 				{ headers: [["content-type", "text/html"]] }
 			);
 		},
