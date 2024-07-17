@@ -103,12 +103,27 @@ export function getMiddleware(
 					fragmentFailedResOrError = e;
 				}
 
+				/**
+				 * If the fetch for the fragment fails, we need to be able to handle that response gracefully.
+				 * Each fragment can define it's own error handling callback which returns a Response to be then embedded
+				 * in the initial SSR response coming from the downstream route handler.
+				 *
+				 * For scenarios where you want to completely overwrite the response on error,
+				 * return an object from the callback with property {overwriteResponse: true}
+				 */
 				if (fragmentFailedResOrError) {
 					if (matchedFragment.onSsrFetchError) {
-						fragmentRes = await matchedFragment.onSsrFetchError(
-							fragmentReq,
-							fragmentFailedResOrError
-						);
+						const { response, overrideResponse } =
+							await matchedFragment.onSsrFetchError(
+								fragmentReq,
+								fragmentFailedResOrError
+							);
+
+						if (overrideResponse) {
+							return response;
+						}
+
+						fragmentRes = response;
 					} else {
 						fragmentRes = new Response(
 							mode === "development"

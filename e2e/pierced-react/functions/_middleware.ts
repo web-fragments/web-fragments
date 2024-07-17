@@ -29,10 +29,12 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
 		// Note: the pierced-react-remix-fragment has to be available on port 3000
 		upstream: "http://localhost:3000",
 		onSsrFetchError: () => {
-			return new Response(
-				"<p id='remix-fragment-not-found'><style>#remix-fragment-not-found { color: red; font-size: 2rem; }</style>Remix fragment not found</p>",
-				{ headers: [["content-type", "text/html"]] }
-			);
+			return {
+				response: new Response(
+					"<p id='remix-fragment-not-found'><style>#remix-fragment-not-found { color: red; font-size: 2rem; }</style>Remix fragment not found</p>",
+					{ headers: [["content-type", "text/html"]] }
+				),
+			};
 		},
 	});
 
@@ -43,10 +45,12 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
 		// Note: the pierced-react-qwik-fragment has to be available on port 8123
 		upstream: "http://localhost:8123",
 		onSsrFetchError: () => {
-			return new Response(
-				"<p id='qwik-fragment-not-found'><style>#qwik-fragment-not-found { color: red; font-size: 2rem; }</style>Qwik fragment not found</p>",
-				{ headers: [["content-type", "text/html"]] }
-			);
+			return {
+				response: new Response(
+					"<p id='qwik-fragment-not-found'><style>#qwik-fragment-not-found { color: red; font-size: 2rem; }</style>Qwik fragment not found</p>",
+					{ headers: [["content-type", "text/html"]] }
+				),
+			};
 		},
 	});
 

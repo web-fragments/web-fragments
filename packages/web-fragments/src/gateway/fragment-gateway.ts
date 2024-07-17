@@ -1,5 +1,10 @@
 import { MatchFunction, match } from "path-to-regexp";
 
+interface SSRFetchErrorResponse {
+	response: Response;
+	overrideResponse?: boolean;
+}
+
 /**
  * Configuration object for the registration of a fragment in the app's gateway worker.
  */
@@ -39,7 +44,7 @@ export interface FragmentConfig {
 	onSsrFetchError?: (
 		req: RequestInfo,
 		failedResOrError: Response | unknown
-	) => Response | Promise<Response>;
+	) => SSRFetchErrorResponse | Promise<SSRFetchErrorResponse>;
 }
 
 type FragmentGatewayConfig = {
