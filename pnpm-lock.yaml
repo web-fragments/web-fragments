@@ -67,7 +67,7 @@ importers:
         specifier: ^3.63.1
         version: 3.63.1(@cloudflare/workers-types@4.20240620.0)
 
-  e2e/pierced-react-qwik-fragment:
+  e2e/pierced-react/fragments/qwik:
     devDependencies:
       '@builder.io/qwik':
         specifier: 1.7.1
@@ -94,7 +94,7 @@ importers:
         specifier: ^3.63.1
         version: 3.63.1(@cloudflare/workers-types@4.20240620.0)
 
-  e2e/pierced-react-remix-fragment:
+  e2e/pierced-react/fragments/remix:
     dependencies:
       '@remix-run/node':
         specifier: ^2.10.2

@@ -1,5 +1,5 @@
 {
-	"name": "pierced-react-remix-fragment",
+	"name": "pierced-react___remix-fragment",
 	"private": true,
 	"sideEffects": false,
 	"type": "module",
@@ -8,6 +8,7 @@
 		"dev": "remix vite:dev",
 		"lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
 		"start": "remix-serve ./build/server/index.js",
+		"buildAndServe": "pnpm build && pnpm start",
 		"types:check": "tsc --noEmit"
 	},
 	"dependencies": {

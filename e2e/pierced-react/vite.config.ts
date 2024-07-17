@@ -3,8 +3,9 @@ import { Plugin, defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 if (process.env.NODE_ENV === "development") {
-	serveRemixFragment();
-	serveQwikFragment();
+	buildAndServeFragment("qwik");
+	buildAndServeFragment("remix");
+
 	// let's sleep for a bit in an effort to make the vite output the last one
 	spawnSync("sleep", ["5"]);
 }
@@ -43,23 +44,13 @@ function wranglerPagesDevWithReload(): Plugin[] {
 	];
 }
 
-function serveRemixFragment() {
-	// build the remix fragment
-	spawnSync("pnpm", ["--filter", "pierced-react-remix-fragment", "build"], {
-		stdio: ["ignore", "inherit", "inherit"],
-	});
-
-	// serve the remix fragment (in production mode)
-	spawn("pnpm", ["--filter", "pierced-react-remix-fragment", "start"], {
-		stdio: ["ignore", "inherit", "inherit"],
-		env: { ...process.env, NODE_ENV: "production" },
-	});
-}
-
-function serveQwikFragment() {
-	// build and serve the qwik fragment
-	spawn("pnpm", ["--filter", "pierced-react-qwik-fragment", "buildAndServe"], {
-		stdio: ["inherit", "inherit", "inherit"],
-		env: { ...process.env, NODE_ENV: "production" },
-	});
+function buildAndServeFragment(fragment: "remix" | "qwik") {
+	spawn(
+		"pnpm",
+		["--filter", `pierced-react___${fragment}-fragment`, "buildAndServe"],
+		{
+			stdio: ["ignore", "inherit", "inherit"],
+			env: { ...process.env, NODE_ENV: "production" },
+		}
+	);
 }

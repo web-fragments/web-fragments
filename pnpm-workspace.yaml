@@ -2,3 +2,4 @@ packages:
   - reframed # TODO: move reframed under packages/
   - packages/*
   - e2e/*
+  - e2e/*/fragments/*
