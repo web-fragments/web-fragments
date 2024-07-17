@@ -1,3 +1,10 @@
 pnpm-lock.yaml
 
-**/build
+# wrangler tmp directory
+.wrangler
+
+# output for qwik apps
+server
+
+# output for remix apps
+build
