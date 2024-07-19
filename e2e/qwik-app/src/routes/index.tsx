@@ -1,4 +1,4 @@
-import { component$, useOnDocument, $ } from "@builder.io/qwik";
+import { component$, useVisibleTask$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 
 import { reframed } from "reframed";
@@ -9,14 +9,12 @@ import Infobox from "../components/starter/infobox/infobox";
 import Starter from "../components/starter/next-steps/next-steps";
 
 export default component$(() => {
-	useOnDocument(
-		"DOMContentLoaded",
-		$(async () => {
-			if ((document as any).unreframedBody) return;
-			const reframedContainer = document.getElementById("flower")!;
-			await reframed("/demo/flower/blue", { container: reframedContainer });
-		})
-	);
+	// eslint-disable-next-line qwik/no-use-visible-task
+	useVisibleTask$(() => {
+		if ((document as any).unreframedBody) return;
+		const reframedContainer = document.getElementById("flower")!;
+		reframed("/demo/flower/blue", { container: reframedContainer });
+	});
 
 	return (
 		<>
