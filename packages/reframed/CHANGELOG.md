@@ -1,5 +1,11 @@
 # reframed
 
+## 0.0.8
+
+### Patch Changes
+
+- 469a67f: Fix global event listeners added by monkeyPatchIframeDocument() not being cleaned up on iframe removal
+
 ## 0.0.7
 
 ### Patch Changes
