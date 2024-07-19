@@ -367,6 +367,8 @@ function monkeyPatchIFrameDocument(
 		},
 	} satisfies Record<keyof Document, any>);
 
+	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
+
 	const domCreateProperties: (keyof Pick<
 		Document,
 		| "createAttributeNS"
