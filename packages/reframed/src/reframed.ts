@@ -457,6 +457,138 @@ function monkeyPatchIFrameDocument(
 		});
 	}
 
+	// Patch DOM insertion methods to execute scripts in reframed context
+	// Note: methods that parse text containing HTML (e.g. `Element.insertAdjacentHTML()`,
+	// `Element.setHTMLUnsafe()`) do not execute any parsed script elements,
+	// so they do not need to be patched.
+	const _Element__replaceWith = Element.prototype.replaceWith;
+
+	// This function relies on the fact that scripts follow exactly-once execution semantics.
+	// Scripts contain an internal `already started` flag to track whether they have already
+	// been executed, and this flag survives cloning operations. So, this function ensures
+	// that the exactly-once execution happens in the reframed context, then replaces the original
+	// script instance with its already-executed clone in whatever node tree it might be within.
+	// It also returns the already-executed clone so that the caller can update any
+	// direct references they might be holding that point to the original script.
+	function executeScriptInReframedContext<T extends Node>(
+		script: T & HTMLScriptElement
+	) {
+		const scriptToExecute = iframeDocument.importNode(script, true);
+		unpatchedIframeBody.appendChild(scriptToExecute);
+		const alreadyStartedScript = document.importNode(scriptToExecute, true);
+		_Element__replaceWith.call(script, alreadyStartedScript);
+		return alreadyStartedScript;
+	}
+
+	function executeAnyChildScripts(element: Node) {
+		const scripts = (element as Element).querySelectorAll?.("script") ?? [];
+		scripts.forEach(executeScriptInReframedContext);
+	}
+
+	const _Node__appendChild = Node.prototype.appendChild;
+	Node.prototype.appendChild = function appendChild(node) {
+		executeAnyChildScripts(node);
+		if (node instanceof HTMLScriptElement) {
+			node = arguments[0] = executeScriptInReframedContext(node);
+		}
+		return _Node__appendChild.apply(this, arguments as any) as any;
+	};
+
+	const _Node__insertBefore = Node.prototype.insertBefore;
+	Node.prototype.insertBefore = function insertBefore(node, child) {
+		executeAnyChildScripts(node);
+		if (node instanceof HTMLScriptElement) {
+			node = arguments[0] = executeScriptInReframedContext(node);
+		}
+		return _Node__insertBefore.apply(this, arguments as any) as any;
+	};
+
+	const _Node__replaceChild = Node.prototype.replaceChild;
+	Node.prototype.replaceChild = function replaceChild(node, child) {
+		executeAnyChildScripts(node);
+		if (node instanceof HTMLScriptElement) {
+			node = arguments[0] = executeScriptInReframedContext(node);
+		}
+		return _Node__replaceChild.apply(this, arguments as any) as any;
+	};
+
+	const _Element__after = Element.prototype.after;
+	Element.prototype.after = function after(...nodes) {
+		nodes.forEach((node, index) => {
+			if (typeof node !== "string") {
+				executeAnyChildScripts(node);
+				if (node instanceof HTMLScriptElement) {
+					node = arguments[index] = executeScriptInReframedContext(node);
+				}
+			}
+		});
+		return _Element__after.apply(this, arguments as any) as any;
+	};
+
+	const _Element__append = Element.prototype.append;
+	Element.prototype.append = function append(...nodes) {
+		nodes.forEach((node, index) => {
+			if (typeof node !== "string") {
+				executeAnyChildScripts(node);
+				if (node instanceof HTMLScriptElement) {
+					node = arguments[index] = executeScriptInReframedContext(node);
+				}
+			}
+		});
+		return _Element__append.apply(this, arguments as any) as any;
+	};
+
+	const _Element__insertAdjacentElement =
+		Element.prototype.insertAdjacentElement;
+	Element.prototype.insertAdjacentElement = function insertAdjacentElement(
+		where,
+		element
+	) {
+		executeAnyChildScripts(element);
+		if (element instanceof HTMLScriptElement) {
+			element = arguments[1] = executeScriptInReframedContext(element);
+		}
+		return _Element__insertAdjacentElement.apply(this, arguments as any) as any;
+	};
+
+	const _Element__prepend = Element.prototype.prepend;
+	Element.prototype.prepend = function prepend(...nodes) {
+		nodes.forEach((node, index) => {
+			if (typeof node !== "string") {
+				executeAnyChildScripts(node);
+				if (node instanceof HTMLScriptElement) {
+					node = arguments[index] = executeScriptInReframedContext(node);
+				}
+			}
+		});
+		return _Element__prepend.apply(this, arguments as any) as any;
+	};
+
+	const _Element__replaceChildren = Element.prototype.replaceChildren;
+	Element.prototype.replaceChildren = function replaceChildren(...nodes) {
+		nodes.forEach((node, index) => {
+			if (typeof node !== "string") {
+				executeAnyChildScripts(node);
+				if (node instanceof HTMLScriptElement) {
+					node = arguments[index] = executeScriptInReframedContext(node);
+				}
+			}
+		});
+		return _Element__replaceChildren.apply(this, arguments as any) as any;
+	};
+
+	Element.prototype.replaceWith = function replaceWith(...nodes) {
+		nodes.forEach((node, index) => {
+			if (typeof node !== "string") {
+				executeAnyChildScripts(node);
+				if (node instanceof HTMLScriptElement) {
+					node = arguments[index] = executeScriptInReframedContext(node);
+				}
+			}
+		});
+		return _Element__replaceWith.apply(this, arguments as any) as any;
+	};
+
 	// window.location is read-only and non-configurable, so we can't patch it
 	//
 	// additionally in a browsing context with one or more iframes, the history
