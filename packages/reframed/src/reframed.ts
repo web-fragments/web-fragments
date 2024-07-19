@@ -16,16 +16,26 @@ export function reframed(
 	iframe: HTMLIFrameElement;
 	container: HTMLElement;
 	// TODO: revert back to Promise<void> once ready promise is cleaned up
-	ready: Promise<[() => void, void]>;
+	ready: Promise<() => void>;
 } {
+	const reframeMetadata: ReframedMetadata = {
+		iframeDocumentReadyState: "loading",
+	};
+
 	// create the reframed container
-	const reframedContainer =
+	const reframedContainer = (
 		"container" in options
 			? options.container
-			: document.createElement(options.containerTagName);
-	const reframedContainerShadowRoot =
+			: document.createElement(options.containerTagName)
+	) as ReframedContainer;
+
+	const reframedContainerShadowRoot = Object.assign(
 		reframedContainer.shadowRoot ??
-		reframedContainer.attachShadow({ mode: "open" });
+			reframedContainer.attachShadow({ mode: "open" }),
+		{
+			[reframedMetadataSymbol]: reframeMetadata,
+		}
+	);
 
 	/**
 	 * Create the iframe that we'll use to load scripts into, but hide it from the viewport.
@@ -77,10 +87,34 @@ export function reframed(
 	//       has added the various load event listeners
 	document.body.insertAdjacentElement("beforeend", iframe);
 
+	const ready = Promise.all([monkeyPatchReady, reframeReady]).then(
+		([cleanup]) => {
+			reframedContainer.shadowRoot[
+				reframedMetadataSymbol
+			].iframeDocumentReadyState = "interactive";
+			reframedContainer.shadowRoot!.dispatchEvent(
+				new Event("readystatechange")
+			);
+			// TODO: this should be called when reframed async loading activities finish
+			//        (note: the 2s delay is completely arbitrary, this is a very temporary solution anyways)
+			//       (see: https://github.com/web-fragments/web-fragments/issues/36)
+			setTimeout(() => {
+				reframedContainer.shadowRoot[
+					reframedMetadataSymbol
+				].iframeDocumentReadyState = "complete";
+				reframedContainer.shadowRoot.dispatchEvent(
+					new Event("readystatechange")
+				);
+			}, 2_000);
+
+			return cleanup;
+		}
+	);
+
 	return {
 		iframe,
 		container: reframedContainer,
-		ready: Promise.all([monkeyPatchReady, reframeReady]),
+		ready,
 	};
 }
 
@@ -175,7 +209,7 @@ async function reframeFromTarget(
  */
 function monkeyPatchIFrameDocument(
 	iframeDocument: Document,
-	shadowRoot: ShadowRoot
+	shadowRoot: ReframedShadowRoot
 ): () => void {
 	const iframeDocumentPrototype = Object.getPrototypeOf(
 		Object.getPrototypeOf(iframeDocument)
@@ -204,6 +238,20 @@ function monkeyPatchIFrameDocument(
 			},
 			set: function (newTitle: string) {
 				updatedIframeTitle = newTitle;
+			},
+		},
+
+		readyState: {
+			get() {
+				if (
+					shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState ===
+					"complete"
+				) {
+					console.warn(
+						"reframed warning: `document.readyState` possibly returned `'complete'` prematurely. If your app is not working correctly, please see https://github.com/web-fragments/web-fragments/issues/36  and comment on this issue so that we can prioritize fixing it."
+					);
+				}
+				return shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState;
 			},
 		},
 
@@ -318,6 +366,8 @@ function monkeyPatchIFrameDocument(
 			},
 		},
 	} satisfies Record<keyof Document, any>);
+
+	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
 
 	const domCreateProperties: (keyof Pick<
 		Document,
@@ -545,3 +595,23 @@ function isReframedDocument(
 ): document is ReframedDocument {
 	return "unreframedBody" in document;
 }
+
+type ReframedMetadata = {
+	/**
+	 * Indicates what the value the iframe's document readyState should be.
+	 *
+	 * Note that we can't simply monkey patch this to the main document (since the iframe needs to have its own behavior regarding this state),
+	 * so we need to directly manage this state ourselves.
+	 */
+	iframeDocumentReadyState: DocumentReadyState;
+};
+
+const reframedMetadataSymbol = Symbol("reframedMetadata");
+
+type ReframedShadowRoot = ShadowRoot & {
+	[reframedMetadataSymbol]: ReframedMetadata;
+};
+
+type ReframedContainer = HTMLElement & {
+	shadowRoot: ReframedShadowRoot;
+};

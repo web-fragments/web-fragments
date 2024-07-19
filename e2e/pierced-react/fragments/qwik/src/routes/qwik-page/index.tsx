@@ -1,8 +1,17 @@
-import { component$, useSignal, useStyles$ } from "@builder.io/qwik";
+import {
+	component$,
+	useSignal,
+	useStyles$,
+	useVisibleTask$,
+} from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 
 export default component$(() => {
 	const counter = useSignal(0);
+
+	useVisibleTask$(() => {
+		counter.value += 50;
+	});
 
 	useStyles$(`
     .qwik-counter-page {
