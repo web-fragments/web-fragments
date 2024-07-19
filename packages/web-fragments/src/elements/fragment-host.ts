@@ -2,7 +2,7 @@ import { reframed } from "reframed";
 
 export class FragmentHost extends HTMLElement {
 	iframe: HTMLIFrameElement | undefined;
-	ready: Promise<void> | undefined;
+	ready: Promise<[() => void, void]> | undefined;
 	isInitialized = false;
 	isPortaling = false;
 
@@ -19,15 +19,15 @@ export class FragmentHost extends HTMLElement {
 		if (!this.isInitialized) {
 			this.isInitialized = true;
 
-			const reframedResult = reframed(
+			const { iframe, ready } = reframed(
 				this.shadowRoot ?? document.location.href,
 				{
 					container: this,
 				}
 			);
 
-			this.iframe = reframedResult.iframe;
-			this.ready = reframedResult.ready;
+			this.iframe = iframe;
+			this.ready = ready;
 
 			/**
 			 * <fragment-outlet> will dispatch the fragment-outlet-ready event.
@@ -45,7 +45,12 @@ export class FragmentHost extends HTMLElement {
 			return;
 		}
 
-		await this.ready;
+		// TODO: Figure out a better way to handle restoring side effects from calling reframed()
+		// It feels wrong for the fragment-host to handle this in the disconnected callback
+		if (this.ready) {
+			const [restoreMonkeyPatchSideEffects] = await this.ready;
+			restoreMonkeyPatchSideEffects();
+		}
 
 		if (this.iframe && !this.isPortaling) {
 			this.iframe.remove();

@@ -15,7 +15,8 @@ export function reframed(
 ): {
 	iframe: HTMLIFrameElement;
 	container: HTMLElement;
-	ready: Promise<void>;
+	// TODO: revert back to Promise<void> once ready promise is cleaned up
+	ready: Promise<[() => void, void]>;
 } {
 	// create the reframed container
 	const reframedContainer =
@@ -26,35 +27,50 @@ export function reframed(
 		reframedContainer.shadowRoot ??
 		reframedContainer.attachShadow({ mode: "open" });
 
-	// create the iframe
+	/**
+	 * Create the iframe that we'll use to load scripts into, but hide it from the viewport.
+	 * It's important that we set the src of the iframe before we insert the element into the body
+	 * in order to prevent loading the iframe twice when the src is changed later on.
+	 */
 	const iframe = document.createElement("iframe");
-
-	// hide the iframe that we use to isolate JavaScript scripts
 	iframe.hidden = true;
 
-	let { promise: monkeyPatchPromise, resolve: resolveMonkeyPatchPromise } =
-		Promise.withResolvers<void>();
+	if (typeof reframedSrcOrSourceShadowRoot === "string") {
+		iframe.name = reframedSrcOrSourceShadowRoot;
+		iframe.src = reframedSrcOrSourceShadowRoot;
+	}
+
+	/**
+	 * Initialize a promise and resolver for monkeyPatchIFrameDocument.
+	 * We need to know when monkeyPatchIFrameDocument resolves so we can return from reframe()
+	 * since this happens after the iframe loads.
+	 */
+	let { promise: monkeyPatchReady, resolve: resolveMonkeyPatchReady } =
+		Promise.withResolvers<() => void>();
 
 	iframe.addEventListener("load", () => {
 		const iframeDocument = iframe.contentDocument;
 		assert(iframeDocument !== null, "iframe.contentDocument is defined");
 
-		monkeyPatchIFrameDocument(iframeDocument, reframedContainerShadowRoot);
-		resolveMonkeyPatchPromise();
+		const restoreParentWindow = monkeyPatchIFrameDocument(
+			iframeDocument,
+			reframedContainerShadowRoot
+		);
+		resolveMonkeyPatchReady(restoreParentWindow);
 	});
 
-	let ready: Promise<void>;
+	let reframeReady: Promise<void>;
 
 	if (typeof reframedSrcOrSourceShadowRoot === "string") {
 		const reframedSrc = reframedSrcOrSourceShadowRoot;
 		reframedContainer.setAttribute("reframed-src", reframedSrc);
-		ready = reframeWithFetch(
+		reframeReady = reframeWithFetch(
 			reframedSrcOrSourceShadowRoot,
 			reframedContainer.shadowRoot as ParentNode,
 			iframe
 		);
 	} else {
-		ready = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe);
+		reframeReady = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe);
 	}
 
 	// Note: this line needs to be here as it needs to be added before all the reframing logic
@@ -64,7 +80,7 @@ export function reframed(
 	return {
 		iframe,
 		container: reframedContainer,
-		ready: Promise.all([monkeyPatchPromise, ready]).then(() => {}),
+		ready: Promise.all([monkeyPatchReady, reframeReady]),
 	};
 }
 
@@ -87,9 +103,6 @@ async function reframeWithFetch(
 						reframedHtmlResponse.status
 					})<hr>${await reframedHtmlResponse.text()}`
 				);
-
-	iframe.name = reframedSrc;
-	iframe.src = reframedSrc;
 
 	const { promise, resolve } = Promise.withResolvers<void>();
 
@@ -163,7 +176,7 @@ async function reframeFromTarget(
 function monkeyPatchIFrameDocument(
 	iframeDocument: Document,
 	shadowRoot: ShadowRoot
-): void {
+): () => void {
 	const iframeDocumentPrototype = Object.getPrototypeOf(
 		Object.getPrototypeOf(iframeDocument)
 	);
@@ -392,97 +405,112 @@ function monkeyPatchIFrameDocument(
 				);
 			},
 		});
-
-		// window.location is read-only and non-configurable, so we can't patch it
-		//
-		// additionally in a browsing context with one or more iframes, the history
-		// all frames contribute to the joint history: https://www.w3.org/TR/2011/WD-html5-20110525/history.html#joint-session-history
-		// this means that we need to be careful not to add duplicate entries to the
-		// history stack via pushState within the iframe as that would double the
-		// number of history entries that back/forward button would have to work through
-		//
-		// therefore we do the following:
-		// - intercept all history.pushState history.replaceState calls and replay
-		//   them in the main window
-		// - update the window.location within the iframe via history.replaceState
-		// - intercept window.addEventListener('popstate', ...) registration and forward it onto the main window
-		const originalHistoryFns = new Map();
-		["back", "forward", "go", "pushState", "replaceState"].forEach((prop) => {
-			originalHistoryFns.set(
-				prop,
-				Object.getPrototypeOf(iframeWindow.history)[prop]
-			);
-			Object.defineProperty(Object.getPrototypeOf(iframeWindow.history), prop, {
-				get: () => {
-					return function reframedHistoryGetter() {
-						console.log(
-							prop,
-							"history length",
-							mainWindow.history.length,
-							iframeWindow.history.length
-						);
-
-						switch (prop) {
-							case "pushState": {
-								Reflect.apply(
-									originalHistoryFns.get("replaceState"),
-									iframeWindow.history,
-									arguments
-								);
-								const args = [...arguments] as Parameters<History["pushState"]>;
-								mainWindow.history.pushState(...args);
-								break;
-							}
-							case "replaceState": {
-								Reflect.apply(
-									originalHistoryFns.get("replaceState"),
-									iframeWindow.history,
-									arguments
-								);
-								const args = [...arguments] as Parameters<
-									History["replaceState"]
-								>;
-								mainWindow.history.replaceState(...args);
-								break;
-							}
-							default: {
-								Reflect.apply(
-									// @ts-ignore
-									mainWindow.history[prop],
-									mainWindow.history,
-									arguments
-								);
-							}
-						}
-					};
-				},
-				// QwikCity tries to monkey-patch `pushState` and `replaceState`
-				// which results in a runtime error:
-				//   TypeError: Cannot set property pushState of #<History> which only has a getter
-				// so we need to add a no-op setter.
-				// TODO: come up with a better workaround that doesn't break Qwik.
-				// https://github.com/QwikDev/qwik/blob/3c5e5a7614c3f64cbf89f1304dd59609053eddf0/packages/qwik-city/runtime/src/spa-init.ts#L127-L135
-				set: () => {},
-			});
-		});
-
-		// keep window.location and history.state in sync with the ones in the parent window
-		mainWindow.addEventListener("popstate", () => {
-			Reflect.apply(
-				originalHistoryFns.get("replaceState"),
-				Object.getPrototypeOf(iframeWindow.history),
-				[mainWindow.history.state, null, mainWindow.location.href]
-			);
-		});
-
-		["length", "scrollRestoration", "state"].forEach((prop) => {
-			Object.defineProperty(Object.getPrototypeOf(iframeWindow.history), prop, {
-				get: () => {
-					return Reflect.get(mainWindow.history, prop);
-				},
-			});
-		});
 	}
+
+	// window.location is read-only and non-configurable, so we can't patch it
+	//
+	// additionally in a browsing context with one or more iframes, the history
+	// all frames contribute to the joint history: https://www.w3.org/TR/2011/WD-html5-20110525/history.html#joint-session-history
+	// this means that we need to be careful not to add duplicate entries to the
+	// history stack via pushState within the iframe as that would double the
+	// number of history entries that back/forward button would have to work through
+	//
+	// therefore we do the following:
+	// - intercept all history.pushState history.replaceState calls and replay
+	//   them in the main window
+	// - update the window.location within the iframe via history.replaceState
+	// - intercept window.addEventListener('popstate', ...) registration and forward it onto the main window
+	const originalHistoryFns = new Map();
+	["back", "forward", "go", "pushState", "replaceState"].forEach((prop) => {
+		originalHistoryFns.set(
+			prop,
+			Object.getPrototypeOf(iframeWindow.history)[prop]
+		);
+		Object.defineProperty(Object.getPrototypeOf(iframeWindow.history), prop, {
+			get: () => {
+				return function reframedHistoryGetter() {
+					console.log(
+						prop,
+						"history length",
+						mainWindow.history.length,
+						iframeWindow.history.length
+					);
+
+					switch (prop) {
+						case "pushState": {
+							Reflect.apply(
+								originalHistoryFns.get("replaceState"),
+								iframeWindow.history,
+								arguments
+							);
+							const args = [...arguments] as Parameters<History["pushState"]>;
+							mainWindow.history.pushState(...args);
+							break;
+						}
+						case "replaceState": {
+							Reflect.apply(
+								originalHistoryFns.get("replaceState"),
+								iframeWindow.history,
+								arguments
+							);
+							const args = [...arguments] as Parameters<
+								History["replaceState"]
+							>;
+							mainWindow.history.replaceState(...args);
+							break;
+						}
+						default: {
+							Reflect.apply(
+								// @ts-ignore
+								mainWindow.history[prop],
+								mainWindow.history,
+								arguments
+							);
+						}
+					}
+				};
+			},
+			// QwikCity tries to monkey-patch `pushState` and `replaceState`
+			// which results in a runtime error:
+			//   TypeError: Cannot set property pushState of #<History> which only has a getter
+			// so we need to add a no-op setter.
+			// TODO: come up with a better workaround that doesn't break Qwik.
+			// https://github.com/QwikDev/qwik/blob/3c5e5a7614c3f64cbf89f1304dd59609053eddf0/packages/qwik-city/runtime/src/spa-init.ts#L127-L135
+			set: () => {},
+		});
+	});
+
+	["length", "scrollRestoration", "state"].forEach((prop) => {
+		Object.defineProperty(Object.getPrototypeOf(iframeWindow.history), prop, {
+			get: () => {
+				return Reflect.get(mainWindow.history, prop);
+			},
+		});
+	});
+
+	// keep window.location and history.state in sync with the ones in the parent window
+	const syncIframeHistoryWithParent = () => {
+		Reflect.apply(
+			originalHistoryFns.get("replaceState"),
+			Object.getPrototypeOf(iframeWindow.history),
+			[mainWindow.history.state, null, mainWindow.location.href]
+		);
+	};
+
+	mainWindow.addEventListener("popstate", syncIframeHistoryWithParent);
+
+	/**
+	 * TODO:
+	 * We need a better way to handle removing event listeners applied to the main window when the iframe is destroyed.
+	 * For now, return a function that the fragment-host can call in its disconnectedCallback();
+	 *
+	 * Maybe create a MutationObserver instead and watch for the iframe node removal?
+	 */
+	const restoreParentWindow = () => {
+		mainWindow.removeEventListener("popstate", syncIframeHistoryWithParent);
+	};
+
+	return restoreParentWindow;
 }
 
 /**
