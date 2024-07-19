@@ -1,12 +1,10 @@
+import { Link } from "react-router-dom";
+
 function App() {
 	return (
 		<div className="index-page">
-			<a href="/remix-page" target="_blank" rel="noopener noreferrer">
-				Remix Page
-			</a>
-			<a href="/qwik-page" target="_blank" rel="noopener noreferrer">
-				Qwik Page
-			</a>
+			<Link to="/remix-page">Remix Page</Link>
+			<Link to="/qwik-page">Qwik Page</Link>
 		</div>
 	);
 }
