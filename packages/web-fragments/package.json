@@ -17,7 +17,7 @@
 		"exports": {
 			"./gateway": {
 				"import": "./dist/gateway.js",
-				"types": "./dist/gateway.d.ts"
+				"types": "./dist/gateway/index.d.ts"
 			},
 			"./gateway/middlewares/cloudflare-pages": {
 				"import": "./dist/gateway/middlewares/cloudflare-pages.js",
@@ -25,7 +25,7 @@
 			},
 			"./elements": {
 				"import": "./dist/elements.js",
-				"types": "./dist/elements.d.ts"
+				"types": "./dist/elements/index.d.ts"
 			}
 		}
 	},
@@ -35,15 +35,19 @@
 	],
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build",
-		"types:check": "tsc --noEmit"
+		"build": "pnpm types && vite build",
+		"types:elements": "tsc -p src/elements",
+		"types:gateway": "tsc -p src/gateway",
+		"types:middlewares": "tsc -p src/gateway/middlewares/tsconfig.cloudflare.json",
+		"types:root": "tsc -p .",
+		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
+		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\""
 	},
 	"dependencies": {
 		"reframed": "workspace:*"
 	},
 	"devDependencies": {
 		"path-to-regexp": "^6.2.2",
-		"vite-plugin-dts": "^3.9.1",
 		"@vitejs/plugin-react": "^4.3.1",
 		"vite": "^5.3.3",
 		"typescript": "^5.5.3"

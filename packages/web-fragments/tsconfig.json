@@ -1,21 +1,11 @@
 {
+	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
-		"target": "ESNext",
-		"useDefineForClassFields": true,
-		"lib": ["DOM", "DOM.Iterable", "ESNext"],
-		"allowJs": true,
-		"skipLibCheck": true,
-		"esModuleInterop": false,
-		"allowSyntheticDefaultImports": true,
-		"strict": true,
-		"forceConsistentCasingInFileNames": true,
-		"module": "ESNext",
-		"moduleResolution": "Bundler",
-		"resolveJsonModule": true,
-		"isolatedModules": true,
+		"declaration": false,
+		"emitDeclarationOnly": false,
 		"noEmit": true,
-		"jsx": "react-jsx",
-		"types": ["@cloudflare/workers-types"]
+		"rootDir": ".",
+		"lib": ["ESNext"]
 	},
-	"include": ["src"]
+	"files": ["vite.config.ts"]
 }
