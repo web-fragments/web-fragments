@@ -1,21 +1,15 @@
 import { defineConfig } from "vite";
-import dts from "vite-plugin-dts";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-	plugins: [
-		react(),
-		dts({
-			insertTypesEntry: true,
-		}),
-	],
+	plugins: [react()],
 	build: {
 		emptyOutDir: false,
 		lib: {
 			entry: {
 				gateway: new URL("src/gateway/index.ts", import.meta.url).pathname,
 				"gateway/middlewares/cloudflare-pages": new URL(
-					"src/gateway/middlewares/cloudflare-pages.ts",
+					"src/gateway/middlewares/cloudflare-pages/index.ts",
 					import.meta.url
 				).pathname,
 				elements: new URL("src/elements/index.ts", import.meta.url).pathname,

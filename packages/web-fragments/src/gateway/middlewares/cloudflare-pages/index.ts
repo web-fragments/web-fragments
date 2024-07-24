@@ -1,4 +1,4 @@
-import type { FragmentGateway } from "../fragment-gateway";
+import type { FragmentGateway } from "../../fragment-gateway";
 
 const fragmentHostInitialization = ({
 	content,
