@@ -1,8 +1,7 @@
 {
-	"extends": "../../../tsconfig.base.json",
+	"extends": "../../../../tsconfig.base.json",
 	"compilerOptions": {
 		"lib": ["ESNext"],
 		"types": ["@cloudflare/workers-types"]
-	},
-	"files": ["./cloudflare-pages.ts"]
+	}
 }
