@@ -1,5 +1,17 @@
 # web-fragments
 
+## 0.0.9
+
+### Patch Changes
+
+- 05f3fc0: patch main window history to dispatch popstate events for reframed iframes to trigger UI updates. These patches are reverted when the iframe is destroyed
+- b74969b: fix: remove unnecessary `qinit` dispatching from `fragment-outlet`
+- Updated dependencies [45df910]
+- Updated dependencies [af60115]
+- Updated dependencies [05f3fc0]
+- Updated dependencies [af0e8b2]
+  - reframed@0.0.9
+
 ## 0.0.8
 
 ### Patch Changes

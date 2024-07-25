@@ -1,5 +1,14 @@
 # reframed
 
+## 0.0.9
+
+### Patch Changes
+
+- 45df910: fix: patch the iframe's document `readyState` (and also dispatch `readystatechange` event)
+- af60115: fix: patch iframe's window `IntersectionObserver`
+- 05f3fc0: patch main window history to dispatch popstate events for reframed iframes to trigger UI updates. These patches are reverted when the iframe is destroyed
+- af0e8b2: DOM insertion methods now result in inserted scripts being executed in the reframed context.
+
 ## 0.0.8
 
 ### Patch Changes
