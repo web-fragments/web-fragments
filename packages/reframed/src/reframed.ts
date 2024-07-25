@@ -481,7 +481,7 @@ function monkeyPatchIFrameDocument(
 	// Note: methods that parse text containing HTML (e.g. `Element.insertAdjacentHTML()`,
 	// `Element.setHTMLUnsafe()`) do not execute any parsed script elements,
 	// so they do not need to be patched.
-	const _Element__replaceWith = iframeWindow.Element.prototype.replaceWith;
+	const _Element__replaceWith = Element.prototype.replaceWith;
 
 	// This function relies on the fact that scripts follow exactly-once execution semantics.
 	// Scripts contain an internal `already started` flag to track whether they have already
@@ -505,8 +505,8 @@ function monkeyPatchIFrameDocument(
 		scripts.forEach(executeScriptInReframedContext);
 	}
 
-	const _Node__appendChild = iframeWindow.Node.prototype.appendChild;
-	iframeWindow.Node.prototype.appendChild = function appendChild(node) {
+	const _Node__appendChild = Node.prototype.appendChild;
+	Node.prototype.appendChild = function appendChild(node) {
 		executeAnyChildScripts(node);
 		if (node instanceof HTMLScriptElement) {
 			node = arguments[0] = executeScriptInReframedContext(node);
@@ -514,11 +514,8 @@ function monkeyPatchIFrameDocument(
 		return _Node__appendChild.apply(this, arguments as any) as any;
 	};
 
-	const _Node__insertBefore = iframeWindow.Node.prototype.insertBefore;
-	iframeWindow.Node.prototype.insertBefore = function insertBefore(
-		node,
-		child
-	) {
+	const _Node__insertBefore = Node.prototype.insertBefore;
+	Node.prototype.insertBefore = function insertBefore(node, child) {
 		executeAnyChildScripts(node);
 		if (node instanceof HTMLScriptElement) {
 			node = arguments[0] = executeScriptInReframedContext(node);
@@ -526,11 +523,8 @@ function monkeyPatchIFrameDocument(
 		return _Node__insertBefore.apply(this, arguments as any) as any;
 	};
 
-	const _Node__replaceChild = iframeWindow.Node.prototype.replaceChild;
-	iframeWindow.Node.prototype.replaceChild = function replaceChild(
-		node,
-		child
-	) {
+	const _Node__replaceChild = Node.prototype.replaceChild;
+	Node.prototype.replaceChild = function replaceChild(node, child) {
 		executeAnyChildScripts(node);
 		if (node instanceof HTMLScriptElement) {
 			node = arguments[0] = executeScriptInReframedContext(node);
@@ -538,8 +532,8 @@ function monkeyPatchIFrameDocument(
 		return _Node__replaceChild.apply(this, arguments as any) as any;
 	};
 
-	const _Element__after = iframeWindow.Element.prototype.after;
-	iframeWindow.Element.prototype.after = function after(...nodes) {
+	const _Element__after = Element.prototype.after;
+	Element.prototype.after = function after(...nodes) {
 		nodes.forEach((node, index) => {
 			if (typeof node !== "string") {
 				executeAnyChildScripts(node);
@@ -551,8 +545,8 @@ function monkeyPatchIFrameDocument(
 		return _Element__after.apply(this, arguments as any) as any;
 	};
 
-	const _Element__append = iframeWindow.Element.prototype.append;
-	iframeWindow.Element.prototype.append = function append(...nodes) {
+	const _Element__append = Element.prototype.append;
+	Element.prototype.append = function append(...nodes) {
 		nodes.forEach((node, index) => {
 			if (typeof node !== "string") {
 				executeAnyChildScripts(node);
@@ -565,21 +559,20 @@ function monkeyPatchIFrameDocument(
 	};
 
 	const _Element__insertAdjacentElement =
-		iframeWindow.Element.prototype.insertAdjacentElement;
-	iframeWindow.Element.prototype.insertAdjacentElement =
-		function insertAdjacentElement(where, element) {
-			executeAnyChildScripts(element);
-			if (element instanceof HTMLScriptElement) {
-				element = arguments[1] = executeScriptInReframedContext(element);
-			}
-			return _Element__insertAdjacentElement.apply(
-				this,
-				arguments as any
-			) as any;
-		};
+		Element.prototype.insertAdjacentElement;
+	Element.prototype.insertAdjacentElement = function insertAdjacentElement(
+		where,
+		element
+	) {
+		executeAnyChildScripts(element);
+		if (element instanceof HTMLScriptElement) {
+			element = arguments[1] = executeScriptInReframedContext(element);
+		}
+		return _Element__insertAdjacentElement.apply(this, arguments as any) as any;
+	};
 
-	const _Element__prepend = iframeWindow.Element.prototype.prepend;
-	iframeWindow.Element.prototype.prepend = function prepend(...nodes) {
+	const _Element__prepend = Element.prototype.prepend;
+	Element.prototype.prepend = function prepend(...nodes) {
 		nodes.forEach((node, index) => {
 			if (typeof node !== "string") {
 				executeAnyChildScripts(node);
@@ -591,11 +584,8 @@ function monkeyPatchIFrameDocument(
 		return _Element__prepend.apply(this, arguments as any) as any;
 	};
 
-	const _Element__replaceChildren =
-		iframeWindow.Element.prototype.replaceChildren;
-	iframeWindow.Element.prototype.replaceChildren = function replaceChildren(
-		...nodes
-	) {
+	const _Element__replaceChildren = Element.prototype.replaceChildren;
+	Element.prototype.replaceChildren = function replaceChildren(...nodes) {
 		nodes.forEach((node, index) => {
 			if (typeof node !== "string") {
 				executeAnyChildScripts(node);
@@ -607,7 +597,7 @@ function monkeyPatchIFrameDocument(
 		return _Element__replaceChildren.apply(this, arguments as any) as any;
 	};
 
-	iframeWindow.Element.prototype.replaceWith = function replaceWith(...nodes) {
+	Element.prototype.replaceWith = function replaceWith(...nodes) {
 		nodes.forEach((node, index) => {
 			if (typeof node !== "string") {
 				executeAnyChildScripts(node);
@@ -618,7 +608,6 @@ function monkeyPatchIFrameDocument(
 		});
 		return _Element__replaceWith.apply(this, arguments as any) as any;
 	};
-
 	// methods to manage window event listeners
 	const mainWindowEventListeners: Parameters<Window["addEventListener"]>[] = [];
 	Object.defineProperties(Object.getPrototypeOf(iframeWindow), {
