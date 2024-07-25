@@ -64,11 +64,11 @@ export class FragmentHost extends HTMLElement {
 	}
 
 	async handlePiercing(event: Event) {
-		// Call preventDefault() so that dispatchEvent returns false.
-		// The fragment outlet will conditionally run reframe() if no subscriber calls preventDefault()
+		// Call preventDefault() to signal the fragment-outlet that
+		// we will pierce this fragment-host into it, so it shouldn't render its own.
 		event.preventDefault();
 
-		// Wait for reframe to finish reframing and resolve with the iframe;
+		// Wait until reframed() has signaled that the new iframe context is ready.
 		await this.ready;
 
 		// Any script tags injected into the <fragment-host> via reframe have already been made inert through writeable-dom.
@@ -78,10 +78,22 @@ export class FragmentHost extends HTMLElement {
 		// Preserve the existing stylesheets to avoid a FOUC when reinserting this element into the DOM
 		this.preserveStylesheets();
 
+		const activeElement = this.shadowRoot?.activeElement;
+		const selectionRange = this.getSelectionRange();
+
 		// Move <fragment-host> into <fragment-outlet> and set a flag to return early in the disconnectedCallback
 		this.isPortaling = true;
-		const hostElement = event.target as HTMLElement;
-		hostElement.replaceChildren(this);
+		const targetElement = event.target as HTMLElement;
+		targetElement.replaceChildren(this);
+
+		// Restore focus to any element that was previously focused inside the shadow root
+		if (activeElement) {
+			(activeElement as HTMLElement).focus();
+		}
+
+		if (selectionRange) {
+			this.setSelectionRange(selectionRange);
+		}
 
 		// Restore the initial type attributes of the script tags
 		this.restoreScriptTags();
@@ -118,5 +130,29 @@ export class FragmentHost extends HTMLElement {
 			originalType && script.setAttribute("type", originalType);
 			script.removeAttribute("data-script-type");
 		});
+	}
+
+	// Make a best-effort attempt at capturing selection state.
+	// Note that ShadowRoot.getSelection() is only supported in Chromium browsers.
+	// Also, Selection.getRangeAt() has unspecified behavior for selections that
+	// span across shadow root boundaries. We can utilize
+	// https://developer.mozilla.org/en-US/docs/Web/API/Selection/getComposedRanges
+	// to help with this once it gets more browser support.
+	getSelectionRange() {
+		try {
+			return (this.shadowRoot as unknown as Document)
+				.getSelection()
+				?.getRangeAt(0);
+		} catch {
+			return null;
+		}
+	}
+
+	setSelectionRange(range: Range) {
+		try {
+			const selection = (this.shadowRoot as unknown as Document).getSelection();
+			selection?.removeAllRanges();
+			selection?.addRange(range);
+		} catch {}
 	}
 }
