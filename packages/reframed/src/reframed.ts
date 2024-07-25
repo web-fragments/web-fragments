@@ -508,7 +508,7 @@ function monkeyPatchIFrameDocument(
 	const _Node__appendChild = Node.prototype.appendChild;
 	Node.prototype.appendChild = function appendChild(node) {
 		executeAnyChildScripts(node);
-		if (node instanceof HTMLScriptElement) {
+		if (node instanceof HTMLScriptElement && shadowRoot.contains(node)) {
 			node = arguments[0] = executeScriptInReframedContext(node);
 		}
 		return _Node__appendChild.apply(this, arguments as any) as any;
@@ -517,7 +517,7 @@ function monkeyPatchIFrameDocument(
 	const _Node__insertBefore = Node.prototype.insertBefore;
 	Node.prototype.insertBefore = function insertBefore(node, child) {
 		executeAnyChildScripts(node);
-		if (node instanceof HTMLScriptElement) {
+		if (node instanceof HTMLScriptElement && shadowRoot.contains(node)) {
 			node = arguments[0] = executeScriptInReframedContext(node);
 		}
 		return _Node__insertBefore.apply(this, arguments as any) as any;
@@ -526,7 +526,7 @@ function monkeyPatchIFrameDocument(
 	const _Node__replaceChild = Node.prototype.replaceChild;
 	Node.prototype.replaceChild = function replaceChild(node, child) {
 		executeAnyChildScripts(node);
-		if (node instanceof HTMLScriptElement) {
+		if (node instanceof HTMLScriptElement && shadowRoot.contains(node)) {
 			node = arguments[0] = executeScriptInReframedContext(node);
 		}
 		return _Node__replaceChild.apply(this, arguments as any) as any;
@@ -537,7 +537,7 @@ function monkeyPatchIFrameDocument(
 		nodes.forEach((node, index) => {
 			if (typeof node !== "string") {
 				executeAnyChildScripts(node);
-				if (node instanceof HTMLScriptElement) {
+				if (node instanceof HTMLScriptElement && shadowRoot.contains(node)) {
 					node = arguments[index] = executeScriptInReframedContext(node);
 				}
 			}
@@ -550,7 +550,7 @@ function monkeyPatchIFrameDocument(
 		nodes.forEach((node, index) => {
 			if (typeof node !== "string") {
 				executeAnyChildScripts(node);
-				if (node instanceof HTMLScriptElement) {
+				if (node instanceof HTMLScriptElement && shadowRoot.contains(node)) {
 					node = arguments[index] = executeScriptInReframedContext(node);
 				}
 			}
@@ -565,7 +565,7 @@ function monkeyPatchIFrameDocument(
 		element
 	) {
 		executeAnyChildScripts(element);
-		if (element instanceof HTMLScriptElement) {
+		if (element instanceof HTMLScriptElement && shadowRoot.contains(element)) {
 			element = arguments[1] = executeScriptInReframedContext(element);
 		}
 		return _Element__insertAdjacentElement.apply(this, arguments as any) as any;
@@ -576,7 +576,7 @@ function monkeyPatchIFrameDocument(
 		nodes.forEach((node, index) => {
 			if (typeof node !== "string") {
 				executeAnyChildScripts(node);
-				if (node instanceof HTMLScriptElement) {
+				if (node instanceof HTMLScriptElement && shadowRoot.contains(node)) {
 					node = arguments[index] = executeScriptInReframedContext(node);
 				}
 			}
@@ -589,7 +589,7 @@ function monkeyPatchIFrameDocument(
 		nodes.forEach((node, index) => {
 			if (typeof node !== "string") {
 				executeAnyChildScripts(node);
-				if (node instanceof HTMLScriptElement) {
+				if (node instanceof HTMLScriptElement && shadowRoot.contains(node)) {
 					node = arguments[index] = executeScriptInReframedContext(node);
 				}
 			}
@@ -601,7 +601,7 @@ function monkeyPatchIFrameDocument(
 		nodes.forEach((node, index) => {
 			if (typeof node !== "string") {
 				executeAnyChildScripts(node);
-				if (node instanceof HTMLScriptElement) {
+				if (node instanceof HTMLScriptElement && shadowRoot.contains(node)) {
 					node = arguments[index] = executeScriptInReframedContext(node);
 				}
 			}
