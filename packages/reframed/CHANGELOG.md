@@ -1,5 +1,11 @@
 # reframed
 
+## 0.0.10
+
+### Patch Changes
+
+- 8d7d522: Fixed DOM insertion patching issue. We were accidentally patching the main context's prototypes instead of the reframed context prototypes.
+
 ## 0.0.9
 
 ### Patch Changes
