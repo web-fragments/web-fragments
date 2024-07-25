@@ -631,12 +631,15 @@ function monkeyPatchIFrameDocument(
 					// This will become unnecessary once libraries rely on Navigate API instead of History and pushState,
 					// and subsequently the popstate event for changes to location
 					if (eventName === "popstate") {
+						//@ts-ignore todo: fix qwik-app tsconfig brings in web-worker lib
 						mainWindow.addEventListener.apply(iframeWindow, listenerArgs);
 						return;
 					}
 
 					// Store these event listeners so we can remove them later in an explicit cleanup function returned by monkeyPatchIframe()
 					mainWindowEventListeners.push(listenerArgs);
+
+					//@ts-ignore todo: fix qwik-app tsconfig brings in web-worker lib
 					return mainWindow.addEventListener.apply(mainWindow, listenerArgs);
 				};
 			},
@@ -652,6 +655,7 @@ function monkeyPatchIFrameDocument(
 
 					// Explicitly remove event listeners attached to iframe window that weren't patched to be added to main window
 					if (eventName === "popstate") {
+						//@ts-ignore todo: fix qwik-app tsconfig brings in web-worker lib
 						mainWindow.removeEventListener.apply(iframeWindow, listenerArgs);
 						return;
 					}
@@ -666,6 +670,7 @@ function monkeyPatchIFrameDocument(
 					}
 
 					// Remove the event listener on main window normally
+					//@ts-ignore todo: fix qwik-app tsconfig brings in web-worker lib
 					return mainWindow.removeEventListener.apply(mainWindow, listenerArgs);
 				};
 			},
