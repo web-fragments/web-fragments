@@ -9,7 +9,9 @@
 	"files": [
 		"dist"
 	],
-	"sideEffects": false,
+	"sideEffects": [
+		"dist/reframed.js"
+	],
 	"license": "MIT",
 	"devDependencies": {
 		"writable-dom": "github:web-fragments/writable-dom#reframed-support",
