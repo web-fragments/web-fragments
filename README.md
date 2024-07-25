@@ -9,8 +9,9 @@ Documentation is scarce right now, but you can check out the demos present in th
 We blogged about the philosophy of our approach and published some early research on the Cloudflare blog. You can check out a post introducing the previous generation of Web Fragments: https://blog.cloudflare.com/better-micro-frontends.
 
 We also blogged about how Web Fragments can enable incremental adoption of micro-frontends: https://blog.cloudflare.com/fragment-piercing
+
 > Incremental adoption of micro-frontends with Cloudflare Workers
-> 
+>
 > Large frontend applications are often hard to improve without major investments. With Cloudflare Workers, our fragment-based micro-frontend architecture, and fragment piercing technique, engineering teams can incrementally improve large frontends in a fraction of the time, yielding significant user and developer experience gains.
 
 This research and development is sponsored by Cloudflare:
