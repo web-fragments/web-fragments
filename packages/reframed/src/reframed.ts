@@ -477,7 +477,6 @@ function monkeyPatchIFrameDocument(
 		});
 	}
 
-<<<<<<< HEAD
 	// Patch DOM insertion methods to execute scripts in reframed context
 	// Note: methods that parse text containing HTML (e.g. `Element.insertAdjacentHTML()`,
 	// `Element.setHTMLUnsafe()`) do not execute any parsed script elements,
@@ -609,7 +608,6 @@ function monkeyPatchIFrameDocument(
 		});
 		return _Element__replaceWith.apply(this, arguments as any) as any;
 	};
-=======
 	// methods to manage window event listeners
 	const mainWindowEventListeners: Parameters<Window["addEventListener"]>[] = [];
 	Object.defineProperties(Object.getPrototypeOf(iframeWindow), {
@@ -676,7 +674,6 @@ function monkeyPatchIFrameDocument(
 			},
 		},
 	});
->>>>>>> 4d9ae32 (fix: make main window history patches more idempotent)
 
 	/**
 	 * window.location is read-only and non-configurable, so we can't patch it
