@@ -15,7 +15,6 @@ export function reframed(
 ): {
 	iframe: HTMLIFrameElement;
 	container: HTMLElement;
-	// TODO: revert back to Promise<void> once ready promise is cleaned up
 	ready: Promise<() => void>;
 } {
 	const reframeMetadata: ReframedMetadata = {
@@ -45,11 +44,6 @@ export function reframed(
 	const iframe = document.createElement("iframe");
 	iframe.hidden = true;
 
-	if (typeof reframedSrcOrSourceShadowRoot === "string") {
-		iframe.name = reframedSrcOrSourceShadowRoot;
-		iframe.src = reframedSrcOrSourceShadowRoot;
-	}
-
 	/**
 	 * Initialize a promise and resolver for monkeyPatchIFrameDocument.
 	 * We need to know when monkeyPatchIFrameDocument resolves so we can return from reframe()
@@ -61,6 +55,16 @@ export function reframed(
 	iframe.addEventListener("load", () => {
 		const iframeDocument = iframe.contentDocument;
 		assert(iframeDocument !== null, "iframe.contentDocument is defined");
+
+		// When an iframe element is added to the page, it always triggers a load event
+		// even if the src is empty. In this case, don't monkey patch the iframe document
+		// because we will end up doing it twice.
+		if (
+			iframeDocument.defaultView?.location.origin === "null" &&
+			iframeDocument.defaultView?.location.protocol === "about:"
+		) {
+			return;
+		}
 
 		const restoreParentWindow = monkeyPatchIFrameDocument(
 			iframeDocument,
@@ -139,6 +143,11 @@ async function reframeWithFetch(
 				);
 
 	const { promise, resolve } = Promise.withResolvers<void>();
+
+	// It is important to set the src of the iframe AFTER we get the html stream response.
+	// Doing so after ensures that the "iframe" load event triggers properly after content is streamed.
+	iframe.src = reframedSrc;
+	iframe.name = reframedSrc;
 
 	iframe.addEventListener("load", () => {
 		reframedHtmlStream
@@ -589,78 +598,113 @@ function monkeyPatchIFrameDocument(
 		return _Element__replaceWith.apply(this, arguments as any) as any;
 	};
 
-	// window.location is read-only and non-configurable, so we can't patch it
-	//
-	// additionally in a browsing context with one or more iframes, the history
-	// all frames contribute to the joint history: https://www.w3.org/TR/2011/WD-html5-20110525/history.html#joint-session-history
-	// this means that we need to be careful not to add duplicate entries to the
-	// history stack via pushState within the iframe as that would double the
-	// number of history entries that back/forward button would have to work through
-	//
-	// therefore we do the following:
-	// - intercept all history.pushState history.replaceState calls and replay
-	//   them in the main window
-	// - update the window.location within the iframe via history.replaceState
-	// - intercept window.addEventListener('popstate', ...) registration and forward it onto the main window
-	const originalHistoryFns = new Map();
-	["back", "forward", "go", "pushState", "replaceState"].forEach((prop) => {
-		originalHistoryFns.set(
-			prop,
-			Object.getPrototypeOf(iframeWindow.history)[prop]
-		);
-		Object.defineProperty(Object.getPrototypeOf(iframeWindow.history), prop, {
-			get: () => {
-				return function reframedHistoryGetter() {
-					console.log(
-						prop,
-						"history length",
-						mainWindow.history.length,
-						iframeWindow.history.length
-					);
+	/**
+	 * window.location is read-only and non-configurable, so we can't patch it
+	 *
+	 * In a browsing context with one or more iframes, the history all frames contribute to
+	 * is the joint history: https://www.w3.org/TR/2011/WD-html5-20110525/history.html#joint-session-history.
+	 * This means that we need to be careful not to add duplicate entries to the
+	 * history stack via pushState within the iframe as that would double the
+	 * number of history entries that back/forward button would have to work through
+	 *
+	 * Therefore we do the following:
+	 * - Store all the original history functions for both the iframe and the main window.
+	 * - intercept all history.pushState history.replaceState calls and replay them in the main window
+	 * - update the window.location within the iframe via history.replaceState
+	 * - intercept window.addEventListener('popstate', ...) registration and forward it onto the main window
+	 * - restore the main window history prototype when the iframe is removed
+	 */
+	const iframeHistoryPrototype = Object.getPrototypeOf(iframeWindow.history);
+	const mainWindowHistoryPrototype = Object.getPrototypeOf(mainWindow.history);
 
-					switch (prop) {
-						case "pushState": {
-							Reflect.apply(
-								originalHistoryFns.get("replaceState"),
-								iframeWindow.history,
-								arguments
-							);
-							const args = [...arguments] as Parameters<History["pushState"]>;
-							mainWindow.history.pushState(...args);
-							break;
-						}
-						case "replaceState": {
-							Reflect.apply(
-								originalHistoryFns.get("replaceState"),
-								iframeWindow.history,
-								arguments
-							);
-							const args = [...arguments] as Parameters<
-								History["replaceState"]
-							>;
-							mainWindow.history.replaceState(...args);
-							break;
-						}
-						default: {
-							Reflect.apply(
-								// @ts-ignore
-								mainWindow.history[prop],
-								mainWindow.history,
-								arguments
-							);
-						}
-					}
-				};
-			},
-			// QwikCity tries to monkey-patch `pushState` and `replaceState`
-			// which results in a runtime error:
+	type HistoryFns = History[
+		| "pushState"
+		| "replaceState"
+		| "back"
+		| "forward"
+		| "go"];
+
+	const originalHistoryFns = {
+		iframe: new Map<keyof History, HistoryFns>(),
+		mainWindow: new Map<keyof History, HistoryFns>(),
+	};
+
+	const historyMethods: (keyof History)[] = [
+		"pushState",
+		"replaceState",
+		"back",
+		"forward",
+		"go",
+	];
+
+	historyMethods.forEach((prop) => {
+		originalHistoryFns.iframe.set(prop, iframeHistoryPrototype[prop]);
+		originalHistoryFns.mainWindow.set(prop, mainWindowHistoryPrototype[prop]);
+
+		patchHistoryMethod(iframeWindow, mainWindow, prop);
+		patchHistoryMethod(mainWindow, iframeWindow, prop);
+	});
+
+	function patchHistoryMethod(
+		src: Window,
+		target: Window,
+		prop: keyof History
+	) {
+		Object.defineProperty(Object.getPrototypeOf(src.history), prop, {
+			// TODO: come up with a better workaround that a no-op setter that doesn't break Qwik.
+			// QwikCity tries to monkey-patch `pushState` and `replaceState` which results in a runtime error:
 			//   TypeError: Cannot set property pushState of #<History> which only has a getter
-			// so we need to add a no-op setter.
-			// TODO: come up with a better workaround that doesn't break Qwik.
 			// https://github.com/QwikDev/qwik/blob/3c5e5a7614c3f64cbf89f1304dd59609053eddf0/packages/qwik-city/runtime/src/spa-init.ts#L127-L135
 			set: () => {},
+			get: () => {
+				return function reframedHistoryGetter() {
+					interceptAndReplayHistoryMethod(prop, target, ...arguments);
+				};
+			},
 		});
-	});
+	}
+
+	function interceptAndReplayHistoryMethod(
+		prop: keyof History,
+		target: Window,
+		...args: IArguments[]
+	) {
+		// TODO: remove this console.log once history patch is stabilized
+		// For now, keep the log so that it's easy to see which history methods are intercepted
+		console.log(
+			`Intercepting ${prop} from ${target === mainWindow ? "iframe" : "main window"} and replaying to ${target === mainWindow ? "main window" : "iframe"}`
+		);
+
+		// All history methods should replace the state in the iframe since the iframe and the main window share a joint history session
+		// Proxy all history methods to the main window instead so that the browser URL is updated only once
+		Reflect.apply(
+			originalHistoryFns.iframe.get("replaceState")!,
+			iframeWindow.history,
+			args as Parameters<History["pushState"]>
+		);
+
+		Reflect.apply(
+			originalHistoryFns.mainWindow.get(prop)!,
+			mainWindow.history,
+			args
+		);
+
+		// Dispatch a popstate event to the target window (i.e if we call history.pushState() from iframe, we need to dispatch popstate event to window).
+		// This is because react-router does not directly listen to window.history, but actually a history (npm package) instance
+		// and subscribes to the "popstate" event to update the UI on history state changes.
+		target.dispatchEvent(new PopStateEvent("popstate"));
+	}
+
+	const forwardPopstateEventToIframe = () => {
+		Reflect.apply(
+			originalHistoryFns.iframe.get("replaceState")!,
+			iframeWindow.history,
+			[mainWindow.history.state, null, mainWindow.location.href]
+		);
+		iframeWindow.dispatchEvent(new PopStateEvent("popstate"));
+	};
+
+	mainWindow.addEventListener("popstate", forwardPopstateEventToIframe);
 
 	["length", "scrollRestoration", "state"].forEach((prop) => {
 		Object.defineProperty(Object.getPrototypeOf(iframeWindow.history), prop, {
@@ -670,17 +714,6 @@ function monkeyPatchIFrameDocument(
 		});
 	});
 
-	// keep window.location and history.state in sync with the ones in the parent window
-	const syncIframeHistoryWithParent = () => {
-		Reflect.apply(
-			originalHistoryFns.get("replaceState"),
-			Object.getPrototypeOf(iframeWindow.history),
-			[mainWindow.history.state, null, mainWindow.location.href]
-		);
-	};
-
-	mainWindow.addEventListener("popstate", syncIframeHistoryWithParent);
-
 	/**
 	 * TODO:
 	 * We need a better way to handle removing event listeners applied to the main window when the iframe is destroyed.
@@ -688,11 +721,26 @@ function monkeyPatchIFrameDocument(
 	 *
 	 * Maybe create a MutationObserver instead and watch for the iframe node removal?
 	 */
-	const restoreParentWindow = () => {
-		mainWindow.removeEventListener("popstate", syncIframeHistoryWithParent);
+	const restoreParentWindowHistory = () => {
+		mainWindow.removeEventListener("popstate", forwardPopstateEventToIframe);
+
+		// Restore all the history patches we made to main window.history
+		historyMethods.forEach((method) => {
+			Object.defineProperty(Object.getPrototypeOf(mainWindow.history), method, {
+				get: () => {
+					return function restoreHistoryGetter() {
+						Reflect.apply(
+							originalHistoryFns.mainWindow.get(method)!,
+							mainWindow.history,
+							arguments
+						);
+					};
+				},
+			});
+		});
 	};
 
-	return restoreParentWindow;
+	return restoreParentWindowHistory;
 }
 
 /**

@@ -45,16 +45,17 @@ export class FragmentHost extends HTMLElement {
 			return;
 		}
 
-		// TODO: Figure out a better way to handle restoring side effects from calling reframed()
-		// It feels wrong for the fragment-host to handle this in the disconnected callback
-		if (this.ready) {
-			const restoreMonkeyPatchSideEffects = await this.ready;
-			restoreMonkeyPatchSideEffects();
-		}
-
 		if (this.iframe && !this.isPortaling) {
 			this.iframe.remove();
 			this.iframe = undefined;
+
+			// TODO: Figure out a better way to handle restoring side effects from calling reframed()
+			// It feels wrong for the fragment-host to handle this in the disconnected callback
+			if (this.ready) {
+				const restoreMonkeyPatchSideEffects = await this.ready;
+				restoreMonkeyPatchSideEffects();
+			}
+
 			document.removeEventListener(
 				"fragment-outlet-ready",
 				this.handlePiercing
