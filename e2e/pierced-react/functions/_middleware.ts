@@ -25,7 +25,7 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
 	gateway.registerFragment({
 		fragmentId: "remix",
 		prePiercingClassNames: ["remix"],
-		routePatterns: ["/remix-page", "/_fragment/remix/:_*"],
+		routePatterns: ["/remix-page/:_*", "/_fragment/remix/:_*"],
 		// Note: the pierced-react-remix-fragment has to be available on port 3000
 		upstream: "http://localhost:3000",
 		onSsrFetchError: () => {
@@ -41,7 +41,7 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
 	gateway.registerFragment({
 		fragmentId: "qwik",
 		prePiercingClassNames: ["qwik"],
-		routePatterns: ["/qwik-page", "/_fragment/qwik/:_*"],
+		routePatterns: ["/qwik-page/:_*", "/_fragment/qwik/:_*"],
 		// Note: the pierced-react-qwik-fragment has to be available on port 8123
 		upstream: "http://localhost:8123",
 		onSsrFetchError: () => {

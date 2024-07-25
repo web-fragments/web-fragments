@@ -1,5 +1,6 @@
 import type { MetaFunction } from "@remix-run/node";
 import { useState } from "react";
+import { Link } from "@remix-run/react";
 
 export const meta: MetaFunction = () => {
 	return [
@@ -38,7 +39,23 @@ export default function Index() {
         }
   `}</style>
 				<div style={{ maxHeight: "10rem", overflow: "auto" }}>
-					<p>Remix Counter</p>
+					<div style={{ display: "flex" }}>
+						<Link
+							to="/remix-page"
+							style={{
+								display: "block",
+								padding: "0.5rem",
+								margin: "1rem 0",
+								backgroundColor: "#333",
+								borderRadius: "5px",
+								fontSize: "1rem",
+								color: "#fff",
+							}}
+						>
+							Go to /remix-page 👉
+						</Link>
+					</div>
+					<p>Current Route: /remix-page/details</p>
 					<div className="counter">
 						<button
 							onClick={() => {

@@ -13,11 +13,11 @@ const router = createBrowserRouter([
 		element: <Root />,
 	},
 	{
-		path: "/qwik-page",
+		path: "/qwik-page/*",
 		element: <QwikPage />,
 	},
 	{
-		path: "/remix-page",
+		path: "/remix-page/*",
 		element: <RemixPage />,
 	},
 ]);
