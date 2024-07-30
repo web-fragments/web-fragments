@@ -19,6 +19,11 @@ export class FragmentHost extends HTMLElement {
 		if (!this.isInitialized) {
 			this.isInitialized = true;
 
+			// Use 'initial' as the default for all styling attributes to properly sandbox
+			// styles in shadow root. Otherwise, all elements with 'inherit' will have styles
+			// leaked from the global scope
+			this.setAttribute("style", "all: initial");
+
 			const { iframe, ready } = reframed(
 				this.shadowRoot ?? document.location.href,
 				{
