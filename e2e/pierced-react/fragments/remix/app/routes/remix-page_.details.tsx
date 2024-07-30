@@ -1,6 +1,7 @@
 import type { MetaFunction } from "@remix-run/node";
-import { useState } from "react";
-import { Link } from "@remix-run/react";
+import { Suspense } from "react";
+import { Link, useLoaderData, Await } from "@remix-run/react";
+import { defer } from "@remix-run/node";
 
 export const meta: MetaFunction = () => {
 	return [
@@ -9,8 +10,21 @@ export const meta: MetaFunction = () => {
 	];
 };
 
+export const loader = async () => {
+	const pendingStatus = () =>
+		new Promise<string>((resolve) => {
+			setTimeout(() => {
+				resolve("ok");
+			}, 500);
+		});
+
+	return defer({
+		status: pendingStatus(),
+	});
+};
+
 export default function Index() {
-	const [counter, setCounter] = useState(0);
+	const data = useLoaderData<typeof loader>();
 
 	return (
 		<>
@@ -56,26 +70,11 @@ export default function Index() {
 						</Link>
 					</div>
 					<p>Current Route: /remix-page/details</p>
-					<div className="counter">
-						<button
-							onClick={() => {
-								setCounter((counter) => counter - 1);
-							}}
-						>
-							-
-						</button>
-						<span>{counter}</span>
-						<button
-							onClick={() => {
-								setCounter((counter) => counter + 1);
-							}}
-						>
-							+
-						</button>
-					</div>
-					{new Array(1000).fill(undefined).map((_element, idx) => (
-						<div key={idx}>I am the {idx} element in this list of divs</div>
-					))}
+					<Suspense fallback={<p>Pending status...</p>}>
+						<Await resolve={data.status}>
+							{(status) => <p>Success status: {status}</p>}
+						</Await>
+					</Suspense>
 				</div>
 			</div>
 		</>

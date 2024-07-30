@@ -17,8 +17,17 @@ export function reframed(
 	container: HTMLElement;
 	ready: Promise<() => void>;
 } {
+	/**
+	 * Create the iframe that we'll use to load scripts into, but hide it from the viewport.
+	 * It's important that we set the src of the iframe before we insert the element into the body
+	 * in order to prevent loading the iframe twice when the src is changed later on.
+	 */
+	const iframe = document.createElement("iframe");
+	iframe.hidden = true;
+
 	const reframeMetadata: ReframedMetadata = {
 		iframeDocumentReadyState: "loading",
+		iframe,
 	};
 
 	// create the reframed container
@@ -35,14 +44,6 @@ export function reframed(
 			[reframedMetadataSymbol]: reframeMetadata,
 		}
 	);
-
-	/**
-	 * Create the iframe that we'll use to load scripts into, but hide it from the viewport.
-	 * It's important that we set the src of the iframe before we insert the element into the body
-	 * in order to prevent loading the iframe twice when the src is changed later on.
-	 */
-	const iframe = document.createElement("iframe");
-	iframe.hidden = true;
 
 	/**
 	 * Initialize a promise and resolver for monkeyPatchIFrameDocument.
@@ -477,148 +478,6 @@ function monkeyPatchIFrameDocument(
 		});
 	}
 
-	// Patch DOM insertion methods to execute scripts in reframed context
-	// Note: methods that parse text containing HTML (e.g. `Element.insertAdjacentHTML()`,
-	// `Element.setHTMLUnsafe()`) do not execute any parsed script elements,
-	// so they do not need to be patched.
-	const _Element__replaceWith = iframeWindow.Element.prototype.replaceWith;
-
-	// This function relies on the fact that scripts follow exactly-once execution semantics.
-	// Scripts contain an internal `already started` flag to track whether they have already
-	// been executed, and this flag survives cloning operations. So, this function ensures
-	// that the exactly-once execution happens in the reframed context, then replaces the original
-	// script instance with its already-executed clone in whatever node tree it might be within.
-	// It also returns the already-executed clone so that the caller can update any
-	// direct references they might be holding that point to the original script.
-	function executeScriptInReframedContext<T extends Node>(
-		script: T & HTMLScriptElement
-	) {
-		const scriptToExecute = iframeDocument.importNode(script, true);
-		unpatchedIframeBody.appendChild(scriptToExecute);
-		const alreadyStartedScript = document.importNode(scriptToExecute, true);
-		_Element__replaceWith.call(script, alreadyStartedScript);
-		return alreadyStartedScript;
-	}
-
-	function executeAnyChildScripts(element: Node) {
-		const scripts = (element as Element).querySelectorAll?.("script") ?? [];
-		scripts.forEach(executeScriptInReframedContext);
-	}
-
-	const _Node__appendChild = iframeWindow.Node.prototype.appendChild;
-	iframeWindow.Node.prototype.appendChild = function appendChild(node) {
-		executeAnyChildScripts(node);
-		if (node instanceof HTMLScriptElement) {
-			node = arguments[0] = executeScriptInReframedContext(node);
-		}
-		return _Node__appendChild.apply(this, arguments as any) as any;
-	};
-
-	const _Node__insertBefore = iframeWindow.Node.prototype.insertBefore;
-	iframeWindow.Node.prototype.insertBefore = function insertBefore(
-		node,
-		child
-	) {
-		executeAnyChildScripts(node);
-		if (node instanceof HTMLScriptElement) {
-			node = arguments[0] = executeScriptInReframedContext(node);
-		}
-		return _Node__insertBefore.apply(this, arguments as any) as any;
-	};
-
-	const _Node__replaceChild = iframeWindow.Node.prototype.replaceChild;
-	iframeWindow.Node.prototype.replaceChild = function replaceChild(
-		node,
-		child
-	) {
-		executeAnyChildScripts(node);
-		if (node instanceof HTMLScriptElement) {
-			node = arguments[0] = executeScriptInReframedContext(node);
-		}
-		return _Node__replaceChild.apply(this, arguments as any) as any;
-	};
-
-	const _Element__after = iframeWindow.Element.prototype.after;
-	iframeWindow.Element.prototype.after = function after(...nodes) {
-		nodes.forEach((node, index) => {
-			if (typeof node !== "string") {
-				executeAnyChildScripts(node);
-				if (node instanceof HTMLScriptElement) {
-					node = arguments[index] = executeScriptInReframedContext(node);
-				}
-			}
-		});
-		return _Element__after.apply(this, arguments as any) as any;
-	};
-
-	const _Element__append = iframeWindow.Element.prototype.append;
-	iframeWindow.Element.prototype.append = function append(...nodes) {
-		nodes.forEach((node, index) => {
-			if (typeof node !== "string") {
-				executeAnyChildScripts(node);
-				if (node instanceof HTMLScriptElement) {
-					node = arguments[index] = executeScriptInReframedContext(node);
-				}
-			}
-		});
-		return _Element__append.apply(this, arguments as any) as any;
-	};
-
-	const _Element__insertAdjacentElement =
-		iframeWindow.Element.prototype.insertAdjacentElement;
-	iframeWindow.Element.prototype.insertAdjacentElement =
-		function insertAdjacentElement(where, element) {
-			executeAnyChildScripts(element);
-			if (element instanceof HTMLScriptElement) {
-				element = arguments[1] = executeScriptInReframedContext(element);
-			}
-			return _Element__insertAdjacentElement.apply(
-				this,
-				arguments as any
-			) as any;
-		};
-
-	const _Element__prepend = iframeWindow.Element.prototype.prepend;
-	iframeWindow.Element.prototype.prepend = function prepend(...nodes) {
-		nodes.forEach((node, index) => {
-			if (typeof node !== "string") {
-				executeAnyChildScripts(node);
-				if (node instanceof HTMLScriptElement) {
-					node = arguments[index] = executeScriptInReframedContext(node);
-				}
-			}
-		});
-		return _Element__prepend.apply(this, arguments as any) as any;
-	};
-
-	const _Element__replaceChildren =
-		iframeWindow.Element.prototype.replaceChildren;
-	iframeWindow.Element.prototype.replaceChildren = function replaceChildren(
-		...nodes
-	) {
-		nodes.forEach((node, index) => {
-			if (typeof node !== "string") {
-				executeAnyChildScripts(node);
-				if (node instanceof HTMLScriptElement) {
-					node = arguments[index] = executeScriptInReframedContext(node);
-				}
-			}
-		});
-		return _Element__replaceChildren.apply(this, arguments as any) as any;
-	};
-
-	iframeWindow.Element.prototype.replaceWith = function replaceWith(...nodes) {
-		nodes.forEach((node, index) => {
-			if (typeof node !== "string") {
-				executeAnyChildScripts(node);
-				if (node instanceof HTMLScriptElement) {
-					node = arguments[index] = executeScriptInReframedContext(node);
-				}
-			}
-		});
-		return _Element__replaceWith.apply(this, arguments as any) as any;
-	};
-
 	// methods to manage window event listeners
 	const mainWindowEventListeners: Parameters<Window["addEventListener"]>[] = [];
 	Object.defineProperties(Object.getPrototypeOf(iframeWindow), {
@@ -785,6 +644,224 @@ function monkeyPatchIFrameDocument(
 	return cleanup;
 }
 
+function monkeyPatchDOMInsertionMethods() {
+	// Patch DOM insertion methods to execute scripts in reframed context
+	// Note: methods that parse text containing HTML (e.g. `Element.insertAdjacentHTML()`,
+	// `Element.setHTMLUnsafe()`) do not execute any parsed script elements,
+	// so they do not need to be patched.
+	const _Element__replaceWith = Element.prototype.replaceWith;
+
+	// This function relies on the fact that scripts follow exactly-once execution semantics.
+	// Scripts contain an internal `already started` flag to track whether they have already
+	// been executed, and this flag survives cloning operations. So, this function ensures
+	// that the exactly-once execution happens in the reframed context, then replaces the original
+	// script instance with its already-executed clone in whatever node tree it might be within.
+	// It also returns the already-executed clone so that the caller can update any
+	// direct references they might be holding that point to the original script.
+	function executeScriptInReframedContext<T extends Node>(
+		script: T & HTMLScriptElement,
+		reframedContext: ReframedMetadata
+	) {
+		const iframe = reframedContext.iframe;
+		assert(
+			iframe.contentDocument !== null,
+			"iframe.contentDocument is not defined"
+		);
+		const scriptToExecute = iframe.contentDocument.importNode(script, true);
+		(iframe.contentDocument as ReframedDocument).unreframedBody.appendChild(
+			scriptToExecute
+		);
+		const alreadyStartedScript = document.importNode(scriptToExecute, true);
+		_Element__replaceWith.call(script, alreadyStartedScript);
+		return alreadyStartedScript;
+	}
+
+	function executeAnyChildScripts(
+		element: Node,
+		reframedContext: ReframedMetadata
+	) {
+		const scripts = (element as Element).querySelectorAll?.("script") ?? [];
+		scripts.forEach((script) =>
+			executeScriptInReframedContext(script, reframedContext)
+		);
+	}
+
+	function isWithinReframedDOM(node: Node) {
+		const root = node.getRootNode();
+		return isReframedShadowRoot(root);
+	}
+
+	function getReframedMetadata(node: Node) {
+		const root = node.getRootNode();
+
+		if (!isReframedShadowRoot(root)) {
+			throw new Error("Missing reframed metadata!");
+		}
+
+		return root[reframedMetadataSymbol];
+	}
+
+	const _Node__appendChild = Node.prototype.appendChild;
+	Node.prototype.appendChild = function appendChild(node) {
+		if (isWithinReframedDOM(this)) {
+			const reframedContext = getReframedMetadata(this);
+			executeAnyChildScripts(node, reframedContext);
+			if (node instanceof HTMLScriptElement) {
+				node = arguments[0] = executeScriptInReframedContext(
+					node,
+					reframedContext
+				);
+			}
+		}
+		return _Node__appendChild.apply(this, arguments as any) as any;
+	};
+
+	const _Node__insertBefore = Node.prototype.insertBefore;
+	Node.prototype.insertBefore = function insertBefore(node, child) {
+		if (isWithinReframedDOM(this)) {
+			const reframedContext = getReframedMetadata(this);
+			executeAnyChildScripts(node, reframedContext);
+			if (node instanceof HTMLScriptElement) {
+				node = arguments[0] = executeScriptInReframedContext(
+					node,
+					reframedContext
+				);
+			}
+		}
+		return _Node__insertBefore.apply(this, arguments as any) as any;
+	};
+
+	const _Node__replaceChild = Node.prototype.replaceChild;
+	Node.prototype.replaceChild = function replaceChild(node, child) {
+		if (isWithinReframedDOM(this)) {
+			const reframedContext = getReframedMetadata(this);
+
+			executeAnyChildScripts(node, reframedContext);
+			if (node instanceof HTMLScriptElement && isWithinReframedDOM(node)) {
+				node = arguments[0] = executeScriptInReframedContext(
+					node,
+					reframedContext
+				);
+			}
+		}
+		return _Node__replaceChild.apply(this, arguments as any) as any;
+	};
+
+	const _Element__after = Element.prototype.after;
+	Element.prototype.after = function after(...nodes) {
+		if (isWithinReframedDOM(this)) {
+			const reframedContext = getReframedMetadata(this);
+			nodes.forEach((node, index) => {
+				if (typeof node !== "string") {
+					executeAnyChildScripts(node, reframedContext);
+					if (node instanceof HTMLScriptElement) {
+						node = arguments[index] = executeScriptInReframedContext(
+							node,
+							reframedContext
+						);
+					}
+				}
+			});
+		}
+		return _Element__after.apply(this, arguments as any) as any;
+	};
+
+	const _Element__append = Element.prototype.append;
+	Element.prototype.append = function append(...nodes) {
+		if (isWithinReframedDOM(this)) {
+			const reframedContext = getReframedMetadata(this);
+			nodes.forEach((node, index) => {
+				if (typeof node !== "string") {
+					executeAnyChildScripts(node, reframedContext);
+					if (node instanceof HTMLScriptElement) {
+						node = arguments[index] = executeScriptInReframedContext(
+							node,
+							reframedContext
+						);
+					}
+				}
+			});
+		}
+		return _Element__append.apply(this, arguments as any) as any;
+	};
+
+	const _Element__insertAdjacentElement =
+		Element.prototype.insertAdjacentElement;
+	Element.prototype.insertAdjacentElement = function insertAdjacentElement(
+		where,
+		element
+	) {
+		if (isWithinReframedDOM(this)) {
+			const reframedContext = getReframedMetadata(this);
+
+			executeAnyChildScripts(element, reframedContext);
+			if (element instanceof HTMLScriptElement) {
+				element = arguments[1] = executeScriptInReframedContext(
+					element,
+					reframedContext
+				);
+			}
+		}
+		return _Element__insertAdjacentElement.apply(this, arguments as any) as any;
+	};
+
+	const _Element__prepend = Element.prototype.prepend;
+	Element.prototype.prepend = function prepend(...nodes) {
+		if (isWithinReframedDOM(this)) {
+			const reframedContext = getReframedMetadata(this);
+			nodes.forEach((node, index) => {
+				if (typeof node !== "string") {
+					executeAnyChildScripts(node, reframedContext);
+					if (node instanceof HTMLScriptElement) {
+						node = arguments[index] = executeScriptInReframedContext(
+							node,
+							reframedContext
+						);
+					}
+				}
+			});
+		}
+		return _Element__prepend.apply(this, arguments as any) as any;
+	};
+
+	const _Element__replaceChildren = Element.prototype.replaceChildren;
+	Element.prototype.replaceChildren = function replaceChildren(...nodes) {
+		if (isWithinReframedDOM(this)) {
+			const reframedContext = getReframedMetadata(this);
+			nodes.forEach((node, index) => {
+				if (typeof node !== "string") {
+					executeAnyChildScripts(node, reframedContext);
+					if (node instanceof HTMLScriptElement) {
+						node = arguments[index] = executeScriptInReframedContext(
+							node,
+							reframedContext
+						);
+					}
+				}
+			});
+		}
+		return _Element__replaceChildren.apply(this, arguments as any) as any;
+	};
+
+	Element.prototype.replaceWith = function replaceWith(...nodes) {
+		if (isWithinReframedDOM(this)) {
+			const reframedContext = getReframedMetadata(this);
+			nodes.forEach((node, index) => {
+				if (typeof node !== "string") {
+					executeAnyChildScripts(node, reframedContext);
+					if (node instanceof HTMLScriptElement) {
+						node = arguments[index] = executeScriptInReframedContext(
+							node,
+							reframedContext
+						);
+					}
+				}
+			});
+		}
+		return _Element__replaceWith.apply(this, arguments as any) as any;
+	};
+}
+
 /**
  * Utility to convert a string to a ReadableStream.
  */
@@ -826,6 +903,7 @@ type ReframedMetadata = {
 	 * so we need to directly manage this state ourselves.
 	 */
 	iframeDocumentReadyState: DocumentReadyState;
+	iframe: HTMLIFrameElement;
 };
 
 const reframedMetadataSymbol = Symbol("reframed:metadata");
@@ -834,6 +912,13 @@ const reframedHistoryPatchSymbol = Symbol("reframed:history_patch");
 type ReframedShadowRoot = ShadowRoot & {
 	[reframedMetadataSymbol]: ReframedMetadata;
 };
+
+function isReframedShadowRoot(node: Node): node is ReframedShadowRoot {
+	return (
+		node instanceof ShadowRoot &&
+		(node as ReframedShadowRoot)[reframedMetadataSymbol] !== undefined
+	);
+}
 
 type ReframedContainer = HTMLElement & {
 	shadowRoot: ReframedShadowRoot;
@@ -844,3 +929,6 @@ declare global {
 		[reframedHistoryPatchSymbol]: number;
 	}
 }
+
+// WARNING!! This is side-effectful!
+monkeyPatchDOMInsertionMethods();
