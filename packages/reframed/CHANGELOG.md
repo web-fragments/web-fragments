@@ -1,5 +1,15 @@
 # reframed
 
+## 0.0.11
+
+### Patch Changes
+
+- a19c318: Refactored how event listeners added to the parent execution context are cleaned up. These are now removed automatically when the associated reframed iframe is unloaded.
+- a19c318: Refactored how patches to the History API are applied to the parent execution context.
+- 9511b7b: Another attempt at fixing DOM insertion method patching.
+
+  Our previous assumptions in [#42](https://github.com/web-fragments/web-fragments/pull/42) turned out to be wrong. We do indeed need to patch the main execution context's insertion methods. We now patch them to check if the node the insertion method is being called on is within a reframed container, and if so execute any potential script elements within the associated reframed context.
+
 ## 0.0.10
 
 ### Patch Changes
