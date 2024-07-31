@@ -15,8 +15,10 @@ export function reframed(
 ): {
 	iframe: HTMLIFrameElement;
 	container: HTMLElement;
-	ready: Promise<() => void>;
+	ready: Promise<void>;
 } {
+	initializeParentExecutionContext();
+
 	/**
 	 * Create the iframe that we'll use to load scripts into, but hide it from the viewport.
 	 * It's important that we set the src of the iframe before we insert the element into the body
@@ -51,7 +53,7 @@ export function reframed(
 	 * since this happens after the iframe loads.
 	 */
 	let { promise: monkeyPatchReady, resolve: resolveMonkeyPatchReady } =
-		Promise.withResolvers<() => void>();
+		Promise.withResolvers<void>();
 
 	iframe.addEventListener("load", () => {
 		const iframeDocument = iframe.contentDocument;
@@ -67,11 +69,8 @@ export function reframed(
 			return;
 		}
 
-		const restoreParentWindow = monkeyPatchIFrameDocument(
-			iframeDocument,
-			reframedContainerShadowRoot
-		);
-		resolveMonkeyPatchReady(restoreParentWindow);
+		monkeyPatchIFrameDocument(iframeDocument, reframedContainerShadowRoot);
+		resolveMonkeyPatchReady();
 	});
 
 	let reframeReady: Promise<void>;
@@ -88,33 +87,27 @@ export function reframed(
 		reframeReady = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe);
 	}
 
+	attachNavigationListeners(iframe);
+
 	// Note: this line needs to be here as it needs to be added before all the reframing logic
 	//       has added the various load event listeners
 	document.body.insertAdjacentElement("beforeend", iframe);
 
-	const ready = Promise.all([monkeyPatchReady, reframeReady]).then(
-		([cleanup]) => {
+	const ready = Promise.all([monkeyPatchReady, reframeReady]).then(() => {
+		reframedContainer.shadowRoot[
+			reframedMetadataSymbol
+		].iframeDocumentReadyState = "interactive";
+		reframedContainer.shadowRoot!.dispatchEvent(new Event("readystatechange"));
+		// TODO: this should be called when reframed async loading activities finish
+		//        (note: the 2s delay is completely arbitrary, this is a very temporary solution anyways)
+		//       (see: https://github.com/web-fragments/web-fragments/issues/36)
+		setTimeout(() => {
 			reframedContainer.shadowRoot[
 				reframedMetadataSymbol
-			].iframeDocumentReadyState = "interactive";
-			reframedContainer.shadowRoot!.dispatchEvent(
-				new Event("readystatechange")
-			);
-			// TODO: this should be called when reframed async loading activities finish
-			//        (note: the 2s delay is completely arbitrary, this is a very temporary solution anyways)
-			//       (see: https://github.com/web-fragments/web-fragments/issues/36)
-			setTimeout(() => {
-				reframedContainer.shadowRoot[
-					reframedMetadataSymbol
-				].iframeDocumentReadyState = "complete";
-				reframedContainer.shadowRoot.dispatchEvent(
-					new Event("readystatechange")
-				);
-			}, 2_000);
-
-			return cleanup;
-		}
-	);
+			].iframeDocumentReadyState = "complete";
+			reframedContainer.shadowRoot.dispatchEvent(new Event("readystatechange"));
+		}, 2_000);
+	});
 
 	return {
 		iframe,
@@ -213,6 +206,33 @@ async function reframeFromTarget(
 	return promise;
 }
 
+function attachNavigationListeners(iframe: HTMLIFrameElement) {
+	const controller = new AbortController();
+	const signal = controller.signal;
+
+	// When a navigation event occurs on the main window, either programmatically through the History API or by the back/forward button,
+	// we need to reflect those changes onto the iframe's history via replaceState().
+	// replaceState() is used in order to avoid adding duplicate entries to the shared history stack.
+	// Finally, dispatch a PopStateEvent so that fragments that are listening to popstate event re-trigger render updates
+	const handleNavigate = () => {
+		iframe.contentWindow?.history.replaceState(
+			window.history.state,
+			"",
+			window.location.href
+		);
+		iframe.contentWindow?.dispatchEvent(new PopStateEvent("popstate"));
+	};
+
+	// reframed:navigate event is triggered by the patched main window.history methods
+	window.addEventListener("reframed:navigate", handleNavigate, { signal });
+
+	// Forward the popstate event triggered on the main window to every registered iframe window
+	window.addEventListener("popstate", handleNavigate, { signal });
+
+	// cleanup event listeners attached to the window when the iframe gets destroyed
+	iframe.contentWindow?.addEventListener("unload", () => controller.abort());
+}
+
 /**
  * Apply monkey-patches to the source iframe so that we trick code running in it to behave as if it
  * was running in the main frame.
@@ -220,23 +240,15 @@ async function reframeFromTarget(
 function monkeyPatchIFrameDocument(
 	iframeDocument: Document,
 	shadowRoot: ReframedShadowRoot
-): () => void {
+) {
 	const iframeDocumentPrototype = Object.getPrototypeOf(
 		Object.getPrototypeOf(iframeDocument)
 	);
 	const mainDocument = shadowRoot.ownerDocument;
-	const mainDocumentPrototype = Object.getPrototypeOf(
-		Object.getPrototypeOf(mainDocument)
-	);
 	const mainWindow = mainDocument.defaultView!;
 	const iframeWindow = iframeDocument.defaultView!;
-	let updatedIframeTitle: string | undefined = undefined;
-
-	const unpatchedIframeDocumentPrototypeProps =
-		Object.getOwnPropertyDescriptors(iframeDocumentPrototype);
 	const unpatchedIframeBody = iframeDocument.body;
-
-	const iframeHistory = iframeWindow.history;
+	let updatedIframeTitle: string | undefined = undefined;
 
 	Object.defineProperties(iframeDocumentPrototype, {
 		title: {
@@ -544,7 +556,9 @@ function monkeyPatchIFrameDocument(
 			},
 		},
 	});
+}
 
+function monkeyPatchHistoryAPI() {
 	/**
 	 * window.location is read-only and non-configurable, so we can't patch it
 	 *
@@ -564,8 +578,6 @@ function monkeyPatchIFrameDocument(
 	 * Make sure we only patch main window history once
 	 */
 
-	mainWindow.history[reframedHistoryPatchSymbol] ??= 0;
-
 	const historyMethods: (keyof Omit<History, "length">)[] = [
 		"pushState",
 		"replaceState",
@@ -574,74 +586,24 @@ function monkeyPatchIFrameDocument(
 		"go",
 	];
 
-	if (mainWindow.history[reframedHistoryPatchSymbol] === 0) {
-		historyMethods.forEach((historyMethod) => {
-			const originalFn = mainWindow.history[historyMethod];
+	historyMethods.forEach((historyMethod) => {
+		const originalFn = window.history[historyMethod];
 
-			Object.defineProperty(mainWindow.history, historyMethod, {
-				// TODO: come up with a better workaround that a no-op setter that doesn't break Qwik.
-				// QwikCity tries to monkey-patch `pushState` and `replaceState` which results in a runtime error:
-				//   TypeError: Cannot set property pushState of #<History> which only has a getter
-				// https://github.com/QwikDev/qwik/blob/3c5e5a7614c3f64cbf89f1304dd59609053eddf0/packages/qwik-city/runtime/src/spa-init.ts#L127-L135
-				set: () => {},
-				get: () => {
-					return function reframedHistoryGetter() {
-						Reflect.apply(originalFn, mainWindow.history, arguments);
-						mainWindow.dispatchEvent(new CustomEvent("reframed:navigate"));
-					};
-				},
-				configurable: true,
-			});
+		Object.defineProperty(window.history, historyMethod, {
+			// TODO: come up with a better workaround that a no-op setter that doesn't break Qwik.
+			// QwikCity tries to monkey-patch `pushState` and `replaceState` which results in a runtime error:
+			//   TypeError: Cannot set property pushState of #<History> which only has a getter
+			// https://github.com/QwikDev/qwik/blob/3c5e5a7614c3f64cbf89f1304dd59609053eddf0/packages/qwik-city/runtime/src/spa-init.ts#L127-L135
+			set: () => {},
+			get: () => {
+				return function reframedHistoryGetter() {
+					Reflect.apply(originalFn, window.history, arguments);
+					window.dispatchEvent(new CustomEvent("reframed:navigate"));
+				};
+			},
+			configurable: true,
 		});
-	}
-
-	mainWindow.history[reframedHistoryPatchSymbol]++;
-
-	// When a navigation event occurs on the main window, either programmatically through the History API or by the back/forward button,
-	// we need to reflect those changes onto the iframe's history via replaceState().
-	// replaceState() is used in order to avoid adding duplicate entries to the shared history stack.
-	// Finally, dispatch a PopStateEvent so that fragments that are listening to popstate event re-trigger render updates
-	const handleNavigate = () => {
-		iframeHistory.replaceState(
-			mainWindow.history.state,
-			"",
-			mainWindow.location.href
-		);
-		iframeWindow.dispatchEvent(new PopStateEvent("popstate"));
-	};
-
-	// reframed:navigate event is triggered by the patched main window.history methods
-	mainWindow.addEventListener("reframed:navigate", handleNavigate);
-
-	// Forward the popstate event triggered on the main window to every registered iframe window
-	mainWindow.addEventListener("popstate", handleNavigate);
-
-	/**
-	 * TODO:
-	 * We need a better way to handle removing event listeners applied to the main window when the iframe is destroyed.
-	 * For now, return a function that the fragment-host can call in its disconnectedCallback();
-	 *
-	 * Maybe create a MutationObserver instead and watch for the iframe node removal?
-	 */
-	const cleanup = () => {
-		mainWindow.removeEventListener("reframed:navigate", handleNavigate);
-		mainWindow.removeEventListener("popstate", handleNavigate);
-
-		// Restore all the history patches we made to main window.history
-		mainWindow.history[reframedHistoryPatchSymbol]--;
-		if (!mainWindow.history[reframedHistoryPatchSymbol]) {
-			historyMethods.forEach((method) => {
-				delete mainWindow.history[method];
-			});
-		}
-
-		// remove all event listeners added to main window
-		mainWindowEventListeners.forEach((listenerArgs) => {
-			mainWindow.removeEventListener(...listenerArgs);
-		});
-	};
-
-	return cleanup;
+	});
 }
 
 function monkeyPatchDOMInsertionMethods() {
@@ -862,6 +824,14 @@ function monkeyPatchDOMInsertionMethods() {
 	};
 }
 
+function initializeParentExecutionContext() {
+	if (!(reframedInitializedSymbol in window)) {
+		Object.assign(window, { [reframedInitializedSymbol]: true });
+		monkeyPatchDOMInsertionMethods();
+		monkeyPatchHistoryAPI();
+	}
+}
+
 /**
  * Utility to convert a string to a ReadableStream.
  */
@@ -906,8 +876,8 @@ type ReframedMetadata = {
 	iframe: HTMLIFrameElement;
 };
 
+const reframedInitializedSymbol = Symbol("reframed:initialized");
 const reframedMetadataSymbol = Symbol("reframed:metadata");
-const reframedHistoryPatchSymbol = Symbol("reframed:history_patch");
 
 type ReframedShadowRoot = ShadowRoot & {
 	[reframedMetadataSymbol]: ReframedMetadata;
@@ -923,12 +893,3 @@ function isReframedShadowRoot(node: Node): node is ReframedShadowRoot {
 type ReframedContainer = HTMLElement & {
 	shadowRoot: ReframedShadowRoot;
 };
-
-declare global {
-	interface History {
-		[reframedHistoryPatchSymbol]: number;
-	}
-}
-
-// WARNING!! This is side-effectful!
-monkeyPatchDOMInsertionMethods();
