@@ -331,7 +331,7 @@ function monkeyPatchIFrameDocument(
 			},
 		},
 
-		stylesheets: {
+		styleSheets: {
 			get: () => {
 				return shadowRoot.styleSheets;
 			},
