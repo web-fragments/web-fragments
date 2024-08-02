@@ -878,6 +878,7 @@ type ReframedMetadata = {
 
 const reframedInitializedSymbol = Symbol("reframed:initialized");
 const reframedMetadataSymbol = Symbol("reframed:metadata");
+const reframedReferencesSymbol = Symbol("reframed:references");
 
 type ReframedShadowRoot = ShadowRoot & {
 	[reframedMetadataSymbol]: ReframedMetadata;
@@ -888,6 +889,25 @@ function isReframedShadowRoot(node: Node): node is ReframedShadowRoot {
 		node instanceof ShadowRoot &&
 		(node as ReframedShadowRoot)[reframedMetadataSymbol] !== undefined
 	);
+}
+
+function setInternalReference<T extends object>(target: T, key: keyof T) {
+	(target as any)[reframedReferencesSymbol] ??= {};
+	(target as any)[reframedReferencesSymbol][key] = Reflect.get(target, key);
+}
+
+function getInternalReference<T extends object, K extends keyof T>(
+	target: T,
+	key: K
+): T[K] {
+	const references = (target as any)[reframedReferencesSymbol];
+	if (!references || references[key] === undefined) {
+		throw new Error(
+			`Attempted to access internal reference "${String(key)}" before it was set.`
+		);
+	}
+
+	return references[key];
 }
 
 type ReframedContainer = HTMLElement & {
