@@ -56,20 +56,7 @@ export function reframed(
 		Promise.withResolvers<void>();
 
 	iframe.addEventListener("load", () => {
-		const iframeDocument = iframe.contentDocument;
-		assert(iframeDocument !== null, "iframe.contentDocument is defined");
-
-		// When an iframe element is added to the page, it always triggers a load event
-		// even if the src is empty. In this case, don't monkey patch the iframe document
-		// because we will end up doing it twice.
-		if (
-			iframeDocument.defaultView?.location.origin === "null" &&
-			iframeDocument.defaultView?.location.protocol === "about:"
-		) {
-			return;
-		}
-
-		monkeyPatchIFrameDocument(iframeDocument, reframedContainerShadowRoot);
+		monkeyPatchIFrameEnvironment(iframe, reframedContainerShadowRoot);
 		resolveMonkeyPatchReady();
 	});
 
@@ -86,8 +73,6 @@ export function reframed(
 	} else {
 		reframeReady = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe);
 	}
-
-	attachNavigationListeners(iframe);
 
 	// Note: this line needs to be here as it needs to be added before all the reframing logic
 	//       has added the various load event listeners
@@ -205,48 +190,38 @@ async function reframeFromTarget(
 	return promise;
 }
 
-function attachNavigationListeners(iframe: HTMLIFrameElement) {
-	const controller = new AbortController();
-	const signal = controller.signal;
-
-	// When a navigation event occurs on the main window, either programmatically through the History API or by the back/forward button,
-	// we need to reflect those changes onto the iframe's history via replaceState().
-	// replaceState() is used in order to avoid adding duplicate entries to the shared history stack.
-	// Finally, dispatch a PopStateEvent so that fragments that are listening to popstate event re-trigger render updates
-	const handleNavigate = () => {
-		iframe.contentWindow?.history.replaceState(
-			window.history.state,
-			"",
-			window.location.href
-		);
-		iframe.contentWindow?.dispatchEvent(new PopStateEvent("popstate"));
-	};
-
-	// reframed:navigate event is triggered by the patched main window.history methods
-	window.addEventListener("reframed:navigate", handleNavigate, { signal });
-
-	// Forward the popstate event triggered on the main window to every registered iframe window
-	window.addEventListener("popstate", handleNavigate, { signal });
-
-	// cleanup event listeners attached to the window when the iframe gets destroyed
-	iframe.contentWindow?.addEventListener("unload", () => controller.abort());
-}
-
 /**
  * Apply monkey-patches to the source iframe so that we trick code running in it to behave as if it
  * was running in the main frame.
  */
-function monkeyPatchIFrameDocument(
-	iframeDocument: Document,
+function monkeyPatchIFrameEnvironment(
+	iframe: HTMLIFrameElement,
 	shadowRoot: ReframedShadowRoot
 ) {
+	assert(
+		iframe.contentWindow !== null && iframe.contentDocument !== null,
+		"attempted to patch iframe before it was ready"
+	);
+
+	const iframeWindow = iframe.contentWindow as Window & typeof globalThis;
+	const iframeDocument = iframe.contentDocument;
+
+	// When an iframe element is added to the page, it always triggers a load event
+	// even if the src is empty. In this case, don't monkey patch the iframe document
+	// because we will end up doing it twice.
+	if (
+		iframeWindow?.location.origin === "null" &&
+		iframeWindow?.location.protocol === "about:"
+	) {
+		return;
+	}
+
 	const iframeDocumentPrototype = Object.getPrototypeOf(
 		Object.getPrototypeOf(iframeDocument)
 	);
 	const mainDocument = shadowRoot.ownerDocument;
 	const mainWindow = mainDocument.defaultView!;
-	const iframeWindow = iframeDocument.defaultView!;
-	const unpatchedIframeBody = iframeDocument.body;
+
 	let updatedIframeTitle: string | undefined = undefined;
 
 	setInternalReference(iframeDocument, "body");
@@ -324,13 +299,6 @@ function monkeyPatchIFrameDocument(
 			},
 		},
 
-		// @ts-ignore -- TODO: hack
-		unreframedBody: {
-			get: () => {
-				return unpatchedIframeBody;
-			},
-		},
-
 		styleSheets: {
 			get: () => {
 				return shadowRoot.styleSheets;
@@ -390,13 +358,42 @@ function monkeyPatchIFrameDocument(
 				return shadowRoot.firstChild;
 			},
 		},
-	} satisfies Record<keyof Document, any>);
+	} satisfies Partial<Record<keyof Document, any>>);
+
+	// TODO: we've started depending on this property in writable-dom,
+	// but we should stop doing that and remove this.
+	Object.defineProperty(iframeDocumentPrototype, "unreframedBody", {
+		get: () => {
+			return getInternalReference(iframeDocument, "body");
+		},
+	});
 
 	// iframe window patches
+	setInternalReference(iframeWindow, "history");
+
+	const historyProxy = new Proxy(mainWindow.history, {
+		get(target, property, receiver) {
+			const value = target[property as keyof typeof target];
+			if (value instanceof Function) {
+				return function (this: unknown, ...args: Parameters<typeof value>) {
+					const result = value.apply(this === receiver ? target : this, args);
+
+					// dispatch a popstate event on the main window to inform listeners of a location change
+					mainWindow.dispatchEvent(new PopStateEvent("popstate"));
+					return result;
+				};
+			}
+			return value;
+		},
+		set(target, property, receiver) {
+			return Reflect.set(target, property, receiver);
+		},
+	});
+
 	Object.defineProperties(iframeWindow, {
 		history: {
 			get() {
-				return mainWindow.history;
+				return historyProxy;
 			},
 		},
 	});
@@ -468,95 +465,106 @@ function monkeyPatchIFrameDocument(
 		});
 	}
 
-	// methods to manage document listeners
-	const domListenerProperties: (keyof Pick<
-		Document,
-		"addEventListener" | "removeEventListener"
-	>)[] = ["addEventListener", "removeEventListener"];
-	for (const listenerProperty of domListenerProperties) {
-		const originalDocumentFn = document[listenerProperty];
-		Object.defineProperty(iframeDocumentPrototype, listenerProperty, {
-			value: function reframedListenerFn(eventName: string) {
-				if (eventName === "DOMContentLoaded") {
-					// @ts-expect-error WTD?!?
-					return originalDocumentFn.apply(document, arguments);
+	// Create an abort controller we'll use to remove event listeners when the iframe is destroyed
+	const controller = new AbortController();
+
+	// A list of events for which we don't want to retarget listeners.
+	// Event listeners for these events should be added normally
+	// instead of being redirected to other event targets.
+	// TODO: there are probably a lot more events we don't want to redirect, e.g. "pagehide" / "pageshow"
+	const nonRedirectedEvents = ["DOMContentLoaded", "popstate", "unload"];
+
+	// Redirect event listeners (except for the events listed above)
+	// from the iframe window or document to the main window or shadow root respectively.
+	// We also inject an abort signal into the provided options
+	// to handle cleanup of these listeners when the iframe is destroyed.
+	iframeWindow.EventTarget.prototype.addEventListener = new Proxy(
+		iframeWindow.EventTarget.prototype.addEventListener,
+		{
+			apply(target, thisArg, argumentsList) {
+				const [eventName, listener, optionsOrCapture] =
+					argumentsList as Parameters<typeof target>;
+
+				const options =
+					typeof optionsOrCapture === "boolean"
+						? { capture: optionsOrCapture }
+						: typeof optionsOrCapture === "object"
+							? optionsOrCapture
+							: {};
+
+				// coalesce any provided signal with the one from our abort controller
+				const signal = AbortSignal.any(
+					[controller.signal, options.signal].filter((signal) => signal != null)
+				);
+
+				const modifiedArgumentsList = [
+					eventName,
+					listener,
+					{ ...options, signal },
+				];
+
+				// redirect event listeners added to window and document unless the event is allowlisted
+				if (!nonRedirectedEvents.includes(eventName)) {
+					if (thisArg === iframeWindow) {
+						thisArg = mainWindow;
+					} else if (thisArg === iframeDocument) {
+						thisArg = shadowRoot;
+					}
 				}
 
-				return shadowRoot[listenerProperty].apply(
-					shadowRoot,
-					// @ts-expect-error WTD?!?
-					arguments
-				);
+				return Reflect.apply(target, thisArg, modifiedArgumentsList);
 			},
-		});
-	}
+		}
+	);
 
-	// methods to manage window event listeners
-	const mainWindowEventListeners: Parameters<Window["addEventListener"]>[] = [];
-	Object.defineProperties(Object.getPrototypeOf(iframeWindow), {
-		addEventListener: {
-			get() {
-				return function addEventListener(
-					...[eventName]: Parameters<Window["addEventListener"]>
-				) {
-					const listenerArgs = [...arguments] as Parameters<
-						Window["addEventListener"]
-					>;
+	iframeWindow.EventTarget.prototype.removeEventListener = new Proxy(
+		iframeWindow.EventTarget.prototype.removeEventListener,
+		{
+			apply(target, thisArg, argumentsList) {
+				const [eventName] = argumentsList as Parameters<typeof target>;
 
-					// Do not attach the popstate event listener to the main window. Instead, keep it on the iframe window.
-					// This is because we have patched window.history to dispatch a popstate event to the iframe window when:
-					//   1. a popstate event is triggered on the main window; forward that event to the iframe window
-					//   2. history.pushState or history.replaceState is called; a custom event (reframed:navigate) is triggered
-					//      which in turn dispatches a popstate event on iframe window
-					//
-					// This will become unnecessary once libraries rely on Navigate API instead of History and pushState,
-					// and subsequently the popstate event for changes to location
-					if (eventName === "popstate") {
-						//@ts-ignore todo: fix qwik-app tsconfig brings in web-worker lib
-						mainWindow.addEventListener.apply(iframeWindow, listenerArgs);
-						return;
+				// redirect event listener removal unless the event is allowlisted
+				if (!nonRedirectedEvents.includes(eventName)) {
+					if (thisArg === iframeWindow) {
+						thisArg = mainWindow;
+					} else if (thisArg === iframeDocument) {
+						thisArg = shadowRoot;
 					}
+				}
 
-					// Store these event listeners so we can remove them later in an explicit cleanup function returned by monkeyPatchIframe()
-					mainWindowEventListeners.push(listenerArgs);
-
-					//@ts-ignore todo: fix qwik-app tsconfig brings in web-worker lib
-					return mainWindow.addEventListener.apply(mainWindow, listenerArgs);
-				};
+				return Reflect.apply(target, thisArg, argumentsList);
 			},
-		},
-		removeEventListener: {
-			get() {
-				return function removeEventListener(
-					...[eventName]: Parameters<Window["removeEventListener"]>
-				) {
-					const listenerArgs = [...arguments] as Parameters<
-						Window["addEventListener"]
-					>;
+		}
+	);
 
-					// Explicitly remove event listeners attached to iframe window that weren't patched to be added to main window
-					if (eventName === "popstate") {
-						//@ts-ignore todo: fix qwik-app tsconfig brings in web-worker lib
-						mainWindow.removeEventListener.apply(iframeWindow, listenerArgs);
-						return;
-					}
+	// When a navigation event occurs on the main window, either programmatically through the History API or by the back/forward button,
+	// we need to reflect those changes onto the iframe's location via history.replaceState().
+	// Finally, dispatch a PopStateEvent so that fragments that are listening to popstate event are
+	// made aware of a location change and retrigger their render updates.
+	const handleNavigate = () => {
+		getInternalReference(iframeWindow, "history").replaceState(
+			window.history.state,
+			"",
+			window.location.href
+		);
 
-					// Remove reference to main window event listener stored in-memory
-					const index = mainWindowEventListeners.findIndex((args) =>
-						args.every((arg, index) => arg === arguments[index])
-					);
+		iframeWindow.dispatchEvent(new PopStateEvent("popstate"));
+	};
 
-					if (index >= 0) {
-						mainWindowEventListeners.splice(index, 1);
-					}
-
-					// Remove the event listener on main window normally
-					//@ts-ignore todo: fix qwik-app tsconfig brings in web-worker lib
-					return mainWindow.removeEventListener.apply(mainWindow, listenerArgs);
-				};
-			},
-		},
+	// reframed:navigate event is triggered by the patched main window.history methods
+	window.addEventListener("reframed:navigate", handleNavigate, {
+		signal: controller.signal,
 	});
+
+	// Forward the popstate event triggered on the main window to every registered iframe window
+	window.addEventListener("popstate", handleNavigate, {
+		signal: controller.signal,
+	});
+
+	// cleanup event listeners attached to the window when the iframe gets destroyed.
+	// TODO: using the "pagehide" event would be preferred over the discouraged "unload" event,
+	// but we'd need to figure out how to restore the previously attached event if the page is resumed from the bfcache
+	iframeWindow.addEventListener("unload", () => controller.abort());
 }
 
 function monkeyPatchHistoryAPI() {
