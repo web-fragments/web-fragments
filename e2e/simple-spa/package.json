@@ -12,7 +12,7 @@
 		"reframed": "workspace:*"
 	},
 	"devDependencies": {
-		"typescript": "^5.5.3",
+		"typescript": "^5.5.4",
 		"vite": "^5.3.3",
 		"@types/node": "^20.14.10"
 	}
