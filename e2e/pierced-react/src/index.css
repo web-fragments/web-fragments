@@ -4,11 +4,8 @@
 	font-weight: 400;
 
 	color-scheme: light dark;
+	color: rgba(255, 255, 255, 0.87);
 	background-color: #242424;
-
-	/* Intentionally wacky styling defaults to test out fragment reset */
-	color: red;
-	font-size: 32px;
 
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
