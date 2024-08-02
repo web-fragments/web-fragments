@@ -186,12 +186,11 @@ async function reframeFromTarget(
 			}
 
 			assert(
-				!!(
-					iframe.contentDocument && isReframedDocument(iframe.contentDocument)
-				),
-				"iframe.contentDocument is not a reframed document"
+				iframe.contentDocument !== null,
+				"iframe.contentDocument is not defined"
 			);
-			iframe.contentDocument.unreframedBody.appendChild(
+
+			getInternalReference(iframe.contentDocument, "body").appendChild(
 				iframe.contentDocument.importNode(script, true)
 			);
 		});
@@ -249,6 +248,8 @@ function monkeyPatchIFrameDocument(
 	const iframeWindow = iframeDocument.defaultView!;
 	const unpatchedIframeBody = iframeDocument.body;
 	let updatedIframeTitle: string | undefined = undefined;
+
+	setInternalReference(iframeDocument, "body");
 
 	Object.defineProperties(iframeDocumentPrototype, {
 		title: {
@@ -630,7 +631,7 @@ function monkeyPatchDOMInsertionMethods() {
 			"iframe.contentDocument is not defined"
 		);
 		const scriptToExecute = iframe.contentDocument.importNode(script, true);
-		(iframe.contentDocument as ReframedDocument).unreframedBody.appendChild(
+		getInternalReference(iframe.contentDocument, "body").appendChild(
 			scriptToExecute
 		);
 		const alreadyStartedScript = document.importNode(scriptToExecute, true);
@@ -852,17 +853,6 @@ const stringToStream = (str: string): ReadableStream => {
  */
 function assert(value: boolean, message: string): asserts value {
 	console.assert(value, message);
-}
-
-type ReframedDocument = Document & {
-	// TODO: this is a hack and needs to be removed
-	unreframedBody: HTMLBodyElement;
-};
-
-function isReframedDocument(
-	document: Document & { unreframedBody?: HTMLBodyElement }
-): document is ReframedDocument {
-	return "unreframedBody" in document;
 }
 
 type ReframedMetadata = {
