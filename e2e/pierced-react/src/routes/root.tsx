@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import "../init";
 
 function App() {
 	const goTo = (url: string) => {
