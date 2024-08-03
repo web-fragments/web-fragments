@@ -13,7 +13,7 @@
 	"license": "MIT",
 	"devDependencies": {
 		"writable-dom": "github:web-fragments/writable-dom#reframed-support",
-		"typescript": "^5.5.0",
+		"typescript": "^5.5.4",
 		"vite": "^5.2.0"
 	},
 	"scripts": {
