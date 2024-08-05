@@ -1,5 +1,12 @@
 import WritableDOMStream from "writable-dom";
 
+type ReframedOptions = (
+	| { container: HTMLElement }
+	| { containerTagName: string }
+) & {
+	headers?: HeadersInit;
+};
+
 /**
  *
  * @param reframedSrcOrSourceShadowRoot url of an http endpoint that will generate html stream to be reframed, or a shadowRoot containing the html to reframe
@@ -9,7 +16,7 @@ import WritableDOMStream from "writable-dom";
  */
 export function reframed(
 	reframedSrcOrSourceShadowRoot: string | ShadowRoot,
-	options: { container: HTMLElement } | { containerTagName: string } = {
+	options: ReframedOptions = {
 		containerTagName: "article",
 	}
 ): {
@@ -68,7 +75,8 @@ export function reframed(
 		reframeReady = reframeWithFetch(
 			reframedSrcOrSourceShadowRoot,
 			reframedContainer.shadowRoot as ParentNode,
-			iframe
+			iframe,
+			options
 		);
 	} else {
 		reframeReady = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe);
@@ -104,7 +112,8 @@ export function reframed(
 async function reframeWithFetch(
 	reframedSrc: string,
 	target: ParentNode,
-	iframe: HTMLIFrameElement
+	iframe: HTMLIFrameElement,
+	options: ReframedOptions
 ): Promise<void> {
 	console.debug("reframing (with fetch)!", {
 		source: reframedSrc,
@@ -112,8 +121,7 @@ async function reframeWithFetch(
 	});
 
 	const reframedHtmlResponse = await fetch(reframedSrc, {
-		// Add a header for signalling embedded mode
-		headers: { "x-fragment-mode": "embedded" },
+		headers: options.headers,
 	});
 
 	const reframedHtmlStream =

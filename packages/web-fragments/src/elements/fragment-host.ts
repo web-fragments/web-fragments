@@ -23,6 +23,7 @@ export class FragmentHost extends HTMLElement {
 				this.shadowRoot ?? document.location.href,
 				{
 					container: this,
+					headers: { "x-fragment-mode": "embedded" },
 				}
 			);
 
