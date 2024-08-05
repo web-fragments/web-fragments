@@ -84,6 +84,9 @@ export function getMiddleware(
 				//       not set to 'document'
 				fragmentReq.headers.set("sec-fetch-dest", "empty");
 
+				// Add a header for signalling embedded mode
+				fragmentReq.headers.set("x-fragment-mode", "embedded");
+
 				if (mode === "development") {
 					// brotli is not currently supported during local development (with `wrangler (pages) dev`)
 					// so we set the accept-encoding to gzip to avoid problems with it

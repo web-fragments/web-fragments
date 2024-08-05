@@ -111,7 +111,11 @@ async function reframeWithFetch(
 		targetContainer: target,
 	});
 
-	const reframedHtmlResponse = await fetch(reframedSrc);
+	const reframedHtmlResponse = await fetch(reframedSrc, {
+		// Add a header for signalling embedded mode
+		headers: { "x-fragment-mode": "embedded" },
+	});
+
 	const reframedHtmlStream =
 		reframedHtmlResponse.status === 200
 			? reframedHtmlResponse.body!
