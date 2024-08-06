@@ -2,17 +2,11 @@ import { useState } from "react";
 import reactLogo from "../assets/react.svg";
 import remixLogo from "../assets/remix.svg";
 import "../App.css";
-import { useNavigate } from "react-router-dom";
+import { Link, Route, Routes } from "react-router-dom";
 
 function App() {
 	const [count, setCount] = useState(0);
 	const [showHost, setShowHost] = useState(false);
-	const navigate = useNavigate();
-
-	const goToDetails = () => {
-		navigate("/remix-page/details");
-	};
-
 	const toggleShowHost = () => {
 		setShowHost(!showHost);
 	};
@@ -28,20 +22,47 @@ function App() {
 				</a>
 			</div>
 			<h1>React + Remix</h1>
-			<button
-				onClick={goToDetails}
-				style={{
-					display: "block",
-					padding: "0.5rem",
-					margin: "1rem auto",
-					backgroundColor: "#333",
-					borderRadius: "5px",
-					fontSize: "1rem",
-					color: "#fff",
-				}}
-			>
-				Go to /remix-page/details 👉
-			</button>
+			<Routes>
+				<Route
+					index
+					element={
+						<Link
+							to="/remix-page/details"
+							style={{
+								display: "inline-block",
+								padding: "0.5rem",
+								margin: "1rem auto",
+								backgroundColor: "#333",
+								borderRadius: "5px",
+								fontSize: "1rem",
+								color: "#fff",
+							}}
+						>
+							Go to /remix-page/details 👉
+						</Link>
+					}
+				/>
+				<Route
+					path="/details"
+					element={
+						<Link
+							to="/remix-page"
+							style={{
+								display: "inline-block",
+								padding: "0.5rem",
+								margin: "1rem auto",
+								backgroundColor: "#333",
+								borderRadius: "5px",
+								fontSize: "1rem",
+								color: "#fff",
+							}}
+						>
+							👈 Go to /remix-page
+						</Link>
+					}
+				/>
+			</Routes>
+
 			<p
 				style={{
 					fontSize: "1rem",

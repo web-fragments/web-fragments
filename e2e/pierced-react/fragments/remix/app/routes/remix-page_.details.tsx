@@ -66,7 +66,7 @@ export default function Index() {
 								color: "#fff",
 							}}
 						>
-							Go to /remix-page 👉
+							👈 Go to /remix-page
 						</Link>
 					</div>
 					<p>Current Route: /remix-page/details</p>
