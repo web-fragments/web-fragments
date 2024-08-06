@@ -10,16 +10,13 @@ import {
 import "./tailwind.css";
 import { LoaderFunctionArgs } from "@remix-run/node";
 
-function isDocumentRequest(request: Request) {
-	return request.headers.get("sec-fetch-dest") === "document";
+function isEmbeddedMode(request: Request) {
+	return request.headers.get("x-fragment-mode") === "embedded";
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	return json({
-		// If the request came from a direct navigation to the app (a document request)
-		// the app must be running standalone (e.g. in local dev) so we should serve a full html document.
-		// Otherwise, we should just serve a fragment that will be rendered inside of another host application.
-		standaloneMode: isDocumentRequest(request),
+		standaloneMode: !isEmbeddedMode(request),
 	});
 }
 
