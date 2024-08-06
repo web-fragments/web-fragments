@@ -1,5 +1,14 @@
 # reframed
 
+## 0.0.12
+
+### Patch Changes
+
+- 7a8f79a: Fixed issue with History API patches causing a recursive loop
+- 55ed23e: Fixed incorrect iframe `document.styleSheets` patch. We were previously defining it as `document.stylesheets`.
+- 7a8f79a: Refactored how addEventListener / removeEventListener are patched within the iframe environment to properly clean up listeners added to the document.
+- 96b66ec: feat: Add a header to signal when fragments are running in embedded mode
+
 ## 0.0.11
 
 ### Patch Changes

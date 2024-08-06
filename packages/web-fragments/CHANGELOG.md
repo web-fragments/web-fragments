@@ -1,5 +1,17 @@
 # web-fragments
 
+## 0.0.12
+
+### Patch Changes
+
+- 4f8e5c6: feat(web-fragments) Revert fix for style leakage from inherited css properties"
+- 96b66ec: feat: Add a header to signal when fragments are running in embedded mode
+- Updated dependencies [7a8f79a]
+- Updated dependencies [55ed23e]
+- Updated dependencies [7a8f79a]
+- Updated dependencies [96b66ec]
+  - reframed@0.0.12
+
 ## 0.0.11
 
 ### Patch Changes
