@@ -20,7 +20,7 @@ import Root from "./root";
 export default function (opts: RenderToStreamOptions) {
 	return renderToStream(<Root />, {
 		...opts,
-		base: "_fragment/qwik/assets/build",
+		base: "/_fragment/qwik/assets/build",
 		manifest,
 		// Use container attributes to set attributes on the html tag.
 		containerAttributes: {
@@ -30,6 +30,7 @@ export default function (opts: RenderToStreamOptions) {
 		containerTagName: "qwik-fragment",
 		serverData: {
 			...opts.serverData,
+			url: "http://localhost:8788/qwik-page",
 		},
 		prefetchStrategy: {
 			implementation: {
