@@ -2,10 +2,10 @@ name: Playwright Tests
 on:
   push:
     branches: [main, master]
-    paths: ["packages/reframed/src/**"]
+    paths: ["packages/reframed/**"]
   pull_request:
     branches: [main, master]
-    paths: ["packages/reframed/src/**"]
+    paths: ["packages/reframed/**"]
 jobs:
   test:
     timeout-minutes: 60
