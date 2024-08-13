@@ -1,10 +1,9 @@
-import { resolve } from "path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
 	build: {
 		lib: {
-			entry: resolve(import.meta.dirname, "index.ts"),
+			entry: new URL(import.meta.resolve("./index.ts")).pathname,
 			fileName: "reframed",
 			formats: ["es"],
 		},
