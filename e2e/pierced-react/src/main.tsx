@@ -4,6 +4,7 @@ import ReactDOM from "react-dom/client";
 import Root from "./routes/root";
 import QwikPage from "./routes/qwik";
 import RemixPage from "./routes/remix";
+import DashboardPage from "./routes/dashboard";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
 		path: "/remix-page/*",
 		element: <RemixPage />,
 	},
+	{
+		path: "/dashboard/*",
+		element: <DashboardPage />,
+	}
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

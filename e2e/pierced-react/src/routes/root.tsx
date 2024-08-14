@@ -19,6 +19,7 @@ function App() {
 			</p>
 			<Link to="/remix-page">Remix Page</Link>
 			<Link to="/qwik-page">Qwik Page</Link>
+			<Link to="/dashboard/">Dashboard Page</Link>
 		</div>
 	);
 }

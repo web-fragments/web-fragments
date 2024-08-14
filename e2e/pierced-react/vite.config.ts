@@ -13,6 +13,10 @@ if (process.env.NODE_ENV === "development") {
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [react(), wranglerPagesDevWithReload()],
+	build: {
+		minify: false,
+		assetsDir: "pierced-react/assets",
+	},
 });
 
 function wranglerPagesDevWithReload(): Plugin[] {

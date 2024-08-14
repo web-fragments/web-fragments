@@ -84,6 +84,16 @@ export function getMiddleware(
 				//       not set to 'document'
 				fragmentReq.headers.set("sec-fetch-dest", "empty");
 
+				// CSRF
+				fragmentReq.headers.set(
+					"x-csrf-token",
+					request.headers
+						.get("cookie")
+						?.split(";")
+						.find((c: any) => c.includes("_js_csrf"))
+						?.split("=")[1] || ""
+				);
+
 				// Add a header for signalling embedded mode
 				fragmentReq.headers.set("x-fragment-mode", "embedded");
 

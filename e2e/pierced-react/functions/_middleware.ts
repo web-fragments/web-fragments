@@ -13,13 +13,37 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
       fragment-host[data-piercing="true"] {
         position: absolute;
         z-index: 9999999999999999999999999999999;
-    
         &.remix {
             bottom: 16%;
             left: 15%;
         }
       }
     </style>`,
+	});
+
+	gateway.registerFragment({
+		fragmentId: "dashboard",
+		prePiercingClassNames: ["dashboard"],
+		routePatterns: [
+			"/dashboard/:_*",
+			"/services/:_*",
+			"/assets/:_*",
+			"/api/:_*",
+			"/v2/:_*",
+			"/1.0/:_*",
+			"/translations/:_*",
+			"/ember-cli-live-reload.js",
+		],
+		// Note: the pierced-react-remix-fragment has to be available on port 3000
+		upstream: "http://localhost:4200",
+		onSsrFetchError: () => {
+			return {
+				response: new Response(
+					"<p id='remix-fragment-not-found'><style>#remix-fragment-not-found { color: red; font-size: 2rem; }</style>Dashboard fragment not found</p>",
+					{ headers: [["content-type", "text/html"]] }
+				),
+			};
+		},
 	});
 
 	gateway.registerFragment({

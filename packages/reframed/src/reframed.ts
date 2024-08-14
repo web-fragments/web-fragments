@@ -456,26 +456,69 @@ function monkeyPatchIFrameEnvironment(
 	// methods to query for elements that can be retargeted into the reframedContainer
 	const domQueryProperties: (keyof Pick<
 		Document,
-		| "querySelector"
-		| "querySelectorAll"
-		| "getElementsByClassName"
-		| "getElementsByTagName"
-		| "getElementsByTagNameNS"
-	>)[] = [
-		"querySelector",
-		"querySelectorAll",
-		"getElementsByClassName",
-		"getElementsByTagName",
-		"getElementsByTagNameNS",
-	];
+		"querySelector" | "querySelectorAll" | "getElementsByClassName"
+	>)[] = ["querySelector", "querySelectorAll", "getElementsByClassName"];
 	for (const queryProperty of domQueryProperties) {
 		Object.defineProperty(iframeDocumentPrototype, queryProperty, {
 			value: function reframedCreateFn() {
+				// This breaks out of the shadowRoot, which dashboard needs for SqLoadingManager
+				if (arguments[0] === ":root") {
+					return mainDocument.querySelector(":root");
+				}
 				// @ts-expect-error WTD?!?
 				return shadowRoot[queryProperty].apply(shadowRoot, arguments);
 			},
 		});
 	}
+
+	iframeWindow.NodeList = mainWindow.NodeList;
+
+	const domQueryProperties2: (keyof Pick<
+		Document,
+		"getElementsByTagName" | "getElementsByTagNameNS"
+	>)[] = ["getElementsByTagName", "getElementsByTagNameNS"];
+
+	for (const queryProperty of domQueryProperties2) {
+		Object.defineProperty(iframeDocumentPrototype, queryProperty, {
+			value: function reframedCreateFn2(tagName: string) {
+				if (tagName.toUpperCase() === "HEAD") {
+					return [shadowRoot.firstElementChild];
+				}
+				return shadowRoot.querySelectorAll(`[${tagName}]`);
+			},
+		});
+	}
+
+	Object.defineProperty(iframeWindow, "getComputedStyle", {
+		value: function reframedGetComputedStyle(element: Element) {
+			return mainWindow.getComputedStyle(element);
+		},
+	});
+
+	// Ecosystem header reads window sizing properties to decide how to display
+	// The iframe is hidden so these will all be 0 unless we patch them
+	Object.defineProperty(iframeWindow, "innerWidth", {
+		get() {
+			return mainWindow.innerWidth;
+		},
+	});
+	Object.defineProperty(iframeWindow, "outerWidth", {
+		get() {
+			return mainWindow.outerWidth;
+		},
+	});
+	Object.defineProperty(iframeWindow, "innerHeight", {
+		get() {
+			return mainWindow.innerHeight;
+		},
+	});
+
+	// for market support, make sure all CSS Stylesheets are defined in the parent window scope
+	Object.defineProperty(iframeWindow, "CSSStyleSheet", {
+		get() {
+			return mainWindow.CSSStyleSheet;
+		},
+	});
 
 	// Create an abort controller we'll use to remove event listeners when the iframe is destroyed
 	const controller = new AbortController();

@@ -70,7 +70,8 @@ export class FragmentHost extends HTMLElement {
 		this.neutralizeScriptTags();
 
 		// Preserve the existing stylesheets to avoid a FOUC when reinserting this element into the DOM
-		this.preserveStylesheets();
+		// Skipping due to CORS issues with square-sans.
+		// this.preserveStylesheets();
 
 		const activeElement = this.shadowRoot?.activeElement;
 		const selectionRange = this.getSelectionRange();
