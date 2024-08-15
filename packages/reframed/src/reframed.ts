@@ -383,19 +383,32 @@ function monkeyPatchIFrameEnvironment(
 	// iframe window patches
 	setInternalReference(iframeWindow, "history");
 
+	// WARNING: Be sure this class stays declared inside of this function!
+	// We rely on each reframed context having its own instance of this constructor
+	// so we can use an instanceof check to avoid double-handling the event inside
+	// the same context it was dispatched from.
+	class SyntheticPopStateEvent extends PopStateEvent {}
+
 	const historyProxy = new Proxy(mainWindow.history, {
 		get(target, property, receiver) {
-			const value = target[property as keyof typeof target];
-			if (value instanceof Function) {
-				return function (this: unknown, ...args: Parameters<typeof value>) {
-					const result = value.apply(this === receiver ? target : this, args);
+			if (
+				typeof Object.getOwnPropertyDescriptor(History.prototype, property)
+					?.value === "function"
+			) {
+				return function (this: unknown, ...args: unknown[]) {
+					const result = Reflect.apply(
+						History.prototype[property as keyof History],
+						this === receiver ? target : this,
+						args
+					);
 
 					// dispatch a popstate event on the main window to inform listeners of a location change
-					mainWindow.dispatchEvent(new PopStateEvent("popstate"));
+					mainWindow.dispatchEvent(new SyntheticPopStateEvent("popstate"));
 					return result;
 				};
 			}
-			return value;
+
+			return Reflect.get(target, property, target);
 		},
 		set(target, property, receiver) {
 			return Reflect.set(target, property, receiver);
@@ -553,14 +566,20 @@ function monkeyPatchIFrameEnvironment(
 	// we need to reflect those changes onto the iframe's location via history.replaceState().
 	// Finally, dispatch a PopStateEvent so that fragments that are listening to popstate event are
 	// made aware of a location change and retrigger their render updates.
-	const handleNavigate = () => {
+	const handleNavigate = (e: Event) => {
 		getInternalReference(iframeWindow, "history").replaceState(
 			window.history.state,
 			"",
 			window.location.href
 		);
 
-		iframeWindow.dispatchEvent(new PopStateEvent("popstate"));
+		if (e instanceof SyntheticPopStateEvent) {
+			return;
+		}
+
+		iframeWindow.dispatchEvent(
+			new PopStateEvent("popstate", e instanceof PopStateEvent ? e : undefined)
+		);
 	};
 
 	// reframed:navigate event is triggered by the patched main window.history methods
