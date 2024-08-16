@@ -13,7 +13,7 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@playwright/test": "^1.46.0",
-		"writable-dom": "github:web-fragments/writable-dom#reframed-support",
+		"writable-dom": "github:web-fragments/writable-dom#build-improvements",
 		"typescript": "^5.5.4",
 		"vite": "^5.2.0"
 	},

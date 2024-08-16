@@ -143,11 +143,7 @@ async function reframeWithFetch(
 	iframe.addEventListener("load", () => {
 		reframedHtmlStream
 			.pipeThrough(new TextDecoderStream())
-			.pipeTo(
-				new WritableDOMStream(target, {
-					scriptLoadingDocument: iframe.contentDocument!,
-				})
-			)
+			.pipeTo(new WritableDOMStream(target))
 			.finally(() => {
 				console.log("reframing done (reframeWithFetch)!", {
 					source: reframedSrc,
@@ -653,22 +649,46 @@ function monkeyPatchDOMInsertionMethods() {
 	// so they do not need to be patched.
 	const _Element__replaceWith = Element.prototype.replaceWith;
 
-	// This function relies on the fact that scripts follow exactly-once execution semantics.
-	// Scripts contain an internal `already started` flag to track whether they have already
-	// been executed, and this flag survives cloning operations. So, this function ensures
-	// that the exactly-once execution happens in the reframed context, then replaces the original
-	// script instance with its already-executed clone in whatever node tree it might be within.
-	// It also returns the already-executed clone so that the caller can update any
-	// direct references they might be holding that point to the original script.
 	function executeScriptInReframedContext<T extends Node>(
 		script: T & HTMLScriptElement,
 		reframedContext: ReframedMetadata
 	) {
+		// If the script does not have a valid type attribute, treat the script node as a data block.
+		// We can add the data block directly to the main document instead of the iframe context.
+		const validScriptTypes = [
+			"module",
+			"text/javascript",
+			"importmap",
+			"speculationrules",
+			"",
+			null,
+		];
+		if (!validScriptTypes.includes(script.getAttribute("type"))) {
+			return script;
+		}
+
 		const iframe = reframedContext.iframe;
 		assert(
 			iframe.contentDocument !== null,
 			"iframe.contentDocument is not defined"
 		);
+
+		// Script nodes that do not have text content are not evaluated.
+		// Add a reference of the script to the iframe. If text content is added later, the script is then evaluated.
+		// Clone the empty script to the main document.
+		if (!script.textContent) {
+			const clone = document.importNode(script, true);
+			getInternalReference(iframe.contentDocument, "body").appendChild(script);
+			return clone;
+		}
+
+		// This function relies on the fact that scripts follow exactly-once execution semantics.
+		// Scripts contain an internal `already started` flag to track whether they have already
+		// been executed, and this flag survives cloning operations. So, this function ensures
+		// that the exactly-once execution happens in the reframed context, then replaces the original
+		// script instance with its already-executed clone in whatever node tree it might be within.
+		// It also returns the already-executed clone so that the caller can update any
+		// direct references they might be holding that point to the original script.
 		const scriptToExecute = iframe.contentDocument.importNode(script, true);
 		getInternalReference(iframe.contentDocument, "body").appendChild(
 			scriptToExecute
