@@ -117,7 +117,7 @@ importers:
     devDependencies:
       '@remix-run/dev':
         specifier: ^2.10.2
-        version: 2.10.2(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.2(typescript@5.5.4))(@types/node@22.1.0)(typescript@5.5.4)(vite@5.3.3(@types/node@22.1.0))(wrangler@3.63.1)
+        version: 2.10.2(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.2(typescript@5.5.4))(@types/node@22.1.0)(typescript@5.5.4)(vite@5.3.3(@types/node@22.1.0))(wrangler@3.63.1(@cloudflare/workers-types@4.20240620.0))
       '@types/react':
         specifier: ^18.2.20
         version: 18.3.3
@@ -238,7 +238,7 @@ importers:
     devDependencies:
       '@remix-run/dev':
         specifier: ^2.9.2
-        version: 2.10.2(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.2(typescript@5.5.4))(@types/node@22.1.0)(typescript@5.5.4)(vite@5.3.3(@types/node@22.1.0))(wrangler@3.63.1)
+        version: 2.10.2(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.2(typescript@5.5.4))(@types/node@22.1.0)(typescript@5.5.4)(vite@5.3.3(@types/node@22.1.0))(wrangler@3.63.1(@cloudflare/workers-types@4.20240620.0))
       '@types/react':
         specifier: ^18.2.20
         version: 18.3.3
@@ -316,8 +316,8 @@ importers:
         specifier: ^5.2.0
         version: 5.3.3(@types/node@22.1.0)
       writable-dom:
-        specifier: github:web-fragments/writable-dom#reframed-support
-        version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/d8c96af41e71448ace4c8387391bc678dce143bd
+        specifier: github:web-fragments/writable-dom#build-improvements
+        version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6
 
   packages/web-fragments:
     dependencies:
@@ -604,31 +604,31 @@ packages:
     engines: {node: '>=16.13'}
 
   '@cloudflare/workerd-darwin-64@1.20240701.0':
-    resolution: {integrity: sha512-XAZa4ZP+qyTn6JQQACCPH09hGZXP2lTnWKkmg5mPwT8EyRzCKLkczAf98vPP5bq7JZD/zORdFWRY0dOTap8zTQ==}
+    resolution: {integrity: sha512-XAZa4ZP+qyTn6JQQACCPH09hGZXP2lTnWKkmg5mPwT8EyRzCKLkczAf98vPP5bq7JZD/zORdFWRY0dOTap8zTQ==, tarball: https://registry.npmjs.org/@cloudflare/workerd-darwin-64/-/workerd-darwin-64-1.20240701.0.tgz}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [darwin]
 
   '@cloudflare/workerd-darwin-arm64@1.20240701.0':
-    resolution: {integrity: sha512-w80ZVAgfH4UwTz7fXZtk7KmS2FzlXniuQm4ku4+cIgRTilBAuKqjpOjwUCbx5g13Gqcm9NuiHce+IDGtobRTIQ==}
+    resolution: {integrity: sha512-w80ZVAgfH4UwTz7fXZtk7KmS2FzlXniuQm4ku4+cIgRTilBAuKqjpOjwUCbx5g13Gqcm9NuiHce+IDGtobRTIQ==, tarball: https://registry.npmjs.org/@cloudflare/workerd-darwin-arm64/-/workerd-darwin-arm64-1.20240701.0.tgz}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [darwin]
 
   '@cloudflare/workerd-linux-64@1.20240701.0':
-    resolution: {integrity: sha512-UWLr/Anxwwe/25nGv451MNd2jhREmPt/ws17DJJqTLAx6JxwGWA15MeitAIzl0dbxRFAJa+0+R8ag2WR3F/D6g==}
+    resolution: {integrity: sha512-UWLr/Anxwwe/25nGv451MNd2jhREmPt/ws17DJJqTLAx6JxwGWA15MeitAIzl0dbxRFAJa+0+R8ag2WR3F/D6g==, tarball: https://registry.npmjs.org/@cloudflare/workerd-linux-64/-/workerd-linux-64-1.20240701.0.tgz}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [linux]
 
   '@cloudflare/workerd-linux-arm64@1.20240701.0':
-    resolution: {integrity: sha512-3kCnF9kYgov1ggpuWbgpXt4stPOIYtVmPCa7MO2xhhA0TWP6JDUHRUOsnmIgKrvDjXuXqlK16cdg3v+EWsaPJg==}
+    resolution: {integrity: sha512-3kCnF9kYgov1ggpuWbgpXt4stPOIYtVmPCa7MO2xhhA0TWP6JDUHRUOsnmIgKrvDjXuXqlK16cdg3v+EWsaPJg==, tarball: https://registry.npmjs.org/@cloudflare/workerd-linux-arm64/-/workerd-linux-arm64-1.20240701.0.tgz}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [linux]
 
   '@cloudflare/workerd-windows-64@1.20240701.0':
-    resolution: {integrity: sha512-6IPGITRAeS67j3BH1rN4iwYWDt47SqJG7KlZJ5bB4UaNAia4mvMBSy/p2p4vA89bbXoDRjMtEvRu7Robu6O7hQ==}
+    resolution: {integrity: sha512-6IPGITRAeS67j3BH1rN4iwYWDt47SqJG7KlZJ5bB4UaNAia4mvMBSy/p2p4vA89bbXoDRjMtEvRu7Robu6O7hQ==, tarball: https://registry.npmjs.org/@cloudflare/workerd-windows-64/-/workerd-windows-64-1.20240701.0.tgz}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
@@ -4813,8 +4813,8 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/d8c96af41e71448ace4c8387391bc678dce143bd:
-    resolution: {tarball: https://codeload.github.com/web-fragments/writable-dom/tar.gz/d8c96af41e71448ace4c8387391bc678dce143bd}
+  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6:
+    resolution: {tarball: https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6}
     version: 1.0.0
 
   ws@7.5.10:
@@ -5858,7 +5858,7 @@ snapshots:
     dependencies:
       playwright: 1.46.0
 
-  '@remix-run/dev@2.10.2(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.2(typescript@5.5.4))(@types/node@22.1.0)(typescript@5.5.4)(vite@5.3.3(@types/node@22.1.0))(wrangler@3.63.1)':
+  '@remix-run/dev@2.10.2(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.2(typescript@5.5.4))(@types/node@22.1.0)(typescript@5.5.4)(vite@5.3.3(@types/node@22.1.0))(wrangler@3.63.1(@cloudflare/workers-types@4.20240620.0))':
     dependencies:
       '@babel/core': 7.24.7
       '@babel/generator': 7.24.7
@@ -10498,7 +10498,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/d8c96af41e71448ace4c8387391bc678dce143bd: {}
+  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6: {}
 
   ws@7.5.10: {}
 
