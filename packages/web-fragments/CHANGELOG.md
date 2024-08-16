@@ -1,5 +1,15 @@
 # web-fragments
 
+## 0.0.13
+
+### Patch Changes
+
+- Updated dependencies [e128ab9]
+- Updated dependencies [e128ab9]
+- Updated dependencies [4db9bf4]
+- Updated dependencies [4db9bf4]
+  - reframed@0.0.13
+
 ## 0.0.12
 
 ### Patch Changes

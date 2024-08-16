@@ -1,5 +1,14 @@
 # reframed
 
+## 0.0.13
+
+### Patch Changes
+
+- e128ab9: Now including `PopStateEvent.state` when forwarding `popstate` events from the parent window to a reframed window.
+- e128ab9: No longer dispatching an extra `popstate` event on the reframed `window` when a client-side navigation occurs in a reframed context.
+- 4db9bf4: Fixed how reframed handles script nodes with empty text content. The reference to the original script node is added to the iframe context and an inert clone is added to the main document. The original script node is then evaluated if text content is added later.
+- 4db9bf4: When scripts are executed in reframedContext, we now handle only valid scripts that can be evaluated. Script nodes that are treated as data blocks are added directly to the main document.
+
 ## 0.0.12
 
 ### Patch Changes
