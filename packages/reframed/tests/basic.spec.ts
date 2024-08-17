@@ -97,3 +97,42 @@ test("reframed scripts render content into the specified container", async ({
 	await expect(page.getByText("Hello world")).toBeVisible();
 	await expect(page.getByTestId("container")).toHaveText("Hello world");
 });
+
+test("iframe window size properties delegate to the main frame", async ({
+	page,
+}) => {
+	await page.setContent(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <script>
+          window.context = "main"
+        </script>
+      </head>
+      <body>
+        <div id="target">
+          <script type="inert">
+            window.context = "reframed"
+          </script>
+        </div>
+        <script>
+          Reframed.reframed(target)
+        </script>
+      </body>
+    </html>`);
+
+	const reframedContext = page.frames()[1];
+
+	const sizeProperties = [
+		"innerWidth",
+		"innerHeight",
+		"outerWidth",
+		"outerHeight",
+	];
+	for (const property of sizeProperties) {
+		const mainFrameValue = await page.evaluate(`window.${property}`);
+		const iframeValue = await reframedContext.evaluate(`window.${property}`);
+		expect(iframeValue).toBe(mainFrameValue);
+		expect(iframeValue).toBeGreaterThan(0);
+	}
+});
