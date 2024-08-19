@@ -34,9 +34,7 @@ export class FragmentHost extends HTMLElement {
 			 * <fragment-outlet> will dispatch the fragment-outlet-ready event.
 			 * When that happens, move the entire host element + shadowRoot into the fragment-outlet
 			 */
-			document.addEventListener("fragment-outlet-ready", this.handlePiercing, {
-				once: true,
-			});
+			document.addEventListener("fragment-outlet-ready", this.handlePiercing);
 		}
 	}
 
@@ -58,6 +56,14 @@ export class FragmentHost extends HTMLElement {
 	}
 
 	async handlePiercing(event: Event) {
+		if (
+			event.defaultPrevented ||
+			(event.target as Element).getAttribute("fragment-id") !==
+				this.getAttribute("fragment-id")
+		) {
+			return;
+		}
+
 		// Call preventDefault() to signal the fragment-outlet that
 		// we will pierce this fragment-host into it, so it shouldn't render its own.
 		event.preventDefault();

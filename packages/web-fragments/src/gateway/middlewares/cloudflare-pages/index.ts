@@ -4,6 +4,7 @@ const fragmentHostInitialization = ({
 	content,
 	classNames,
 }: {
+	fragmentId: string;
 	content: string;
 	classNames: string;
 }) => `
@@ -149,6 +150,7 @@ export function getMiddleware(
 							//       we should look into this and support streams if possible
 							element.append(
 								fragmentHostInitialization({
+									fragmentId: matchedFragment.fragmentId,
 									// TODO: what if don't get a body (i.e. can't fetch the fragment)? we should add some error handling here
 									content: await fragmentRes.text(),
 									classNames: matchedFragment.prePiercingClassNames.join(" "),
