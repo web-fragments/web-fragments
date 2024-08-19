@@ -187,3 +187,31 @@ test("custom elements registries are scoped to reframed contexts", async ({
 	await expect(page.getByText("hello from frame1")).toBeVisible();
 	await expect(page.getByText("hello from frame2")).toBeVisible();
 });
+
+test("instanceof checks in a reframed context work with objects constructed in the parent execution context", async ({
+	page,
+}) => {
+	await page.setContent(`
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <div id="target">
+          <template shadowrootmode="open">
+            <div id="element"></div>
+          </template>
+        </div>
+        <script>
+          Reframed.reframed(target.shadowRoot, { container: target })
+        </script>
+      </body>
+    </html>
+	`);
+
+	const reframedContext = page.frames()[1];
+
+	expect(
+		await reframedContext.evaluate(
+			"document.getElementById('element') instanceof Node"
+		)
+	).toBe(true);
+});

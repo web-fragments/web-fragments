@@ -227,6 +227,33 @@ function monkeyPatchIFrameEnvironment(
 	const mainDocument = shadowRoot.ownerDocument;
 	const mainWindow = mainDocument.defaultView!;
 
+	const globalConstructors: Function[] = Object.entries(
+		Object.getOwnPropertyDescriptors(iframeWindow)
+	).flatMap(([property, descriptor]) =>
+		/^[A-Z]/.test(property) && typeof descriptor.value === "function"
+			? descriptor.value
+			: []
+	);
+
+	function hasInstance(this: Function, instance: any) {
+		const parentContextConstructor: Function =
+			mainWindow[this.name as keyof typeof mainWindow];
+
+		return (
+			Function.prototype[Symbol.hasInstance].call(this, instance) ||
+			(typeof parentContextConstructor === "function" &&
+				instance instanceof parentContextConstructor)
+		);
+	}
+
+	// extend global constructors to support instanceof checks using
+	// their equivalent constructor from the parent execution context
+	globalConstructors.forEach((constructor) => {
+		Object.defineProperty(constructor, Symbol.hasInstance, {
+			value: hasInstance,
+		});
+	});
+
 	let updatedIframeTitle: string | undefined = undefined;
 
 	setInternalReference(iframeDocument, "body");
