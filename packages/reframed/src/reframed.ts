@@ -421,6 +421,18 @@ function monkeyPatchIFrameEnvironment(
 
 	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
 
+	const windowSizeProperties: (keyof Pick<
+		Window,
+		"innerHeight" | "innerWidth" | "outerHeight" | "outerWidth"
+	>)[] = ["innerHeight", "innerWidth", "outerHeight", "outerWidth"];
+	for (const windowSizeProperty of windowSizeProperties) {
+		Object.defineProperty(iframeWindow, windowSizeProperty, {
+			get: function reframedWindowSizeGetter() {
+				return mainWindow[windowSizeProperty];
+			},
+		});
+	}
+
 	const domCreateProperties: (keyof Pick<
 		Document,
 		| "createAttributeNS"
