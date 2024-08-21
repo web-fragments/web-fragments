@@ -439,8 +439,6 @@ function monkeyPatchIFrameEnvironment(
 		| "createCDATASection"
 		| "createComment"
 		| "createDocumentFragment"
-		| "createElement"
-		| "createElementNS"
 		| "createEvent"
 		| "createExpression"
 		| "createNSResolver"
@@ -454,8 +452,6 @@ function monkeyPatchIFrameEnvironment(
 		"createCDATASection",
 		"createComment",
 		"createDocumentFragment",
-		"createElement",
-		"createElementNS",
 		"createEvent",
 		"createExpression",
 		"createNSResolver",
@@ -473,6 +469,32 @@ function monkeyPatchIFrameEnvironment(
 			},
 		});
 	}
+
+	Object.defineProperties(iframeDocument, {
+		createElement: {
+			value: function createElement(
+				...[tagName]: Parameters<Document["createElement"]>
+			) {
+				return Document.prototype.createElement.apply(
+					tagName.includes("-") ? iframeDocument : mainDocument,
+					arguments as any
+				);
+			},
+		},
+		createElementNS: {
+			value: function createElementNS(
+				...[namespaceURI, tagName]: Parameters<Document["createElementNS"]>
+			) {
+				return Document.prototype.createElementNS.apply(
+					namespaceURI === "http://www.w3.org/1999/xhtml" &&
+						tagName.includes("-")
+						? iframeDocument
+						: mainDocument,
+					arguments as any
+				);
+			},
+		},
+	});
 
 	// methods to query for elements that can be retargeted into the reframedContainer
 	const domQueryProperties: (keyof Pick<
