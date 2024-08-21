@@ -224,9 +224,6 @@ function monkeyPatchIFrameEnvironment(
 		return;
 	}
 
-	const iframeDocumentPrototype = Object.getPrototypeOf(
-		Object.getPrototypeOf(iframeDocument)
-	);
 	const mainDocument = shadowRoot.ownerDocument;
 	const mainWindow = mainDocument.defaultView!;
 
@@ -234,7 +231,7 @@ function monkeyPatchIFrameEnvironment(
 
 	setInternalReference(iframeDocument, "body");
 
-	Object.defineProperties(iframeDocumentPrototype, {
+	Object.defineProperties(iframeDocument, {
 		title: {
 			get: function () {
 				return (
@@ -277,10 +274,15 @@ function monkeyPatchIFrameEnvironment(
 			},
 		},
 
-		// redirect querySelector to be a scoped reframedContainer.querySelector query
 		querySelector: {
 			value(selector: string) {
 				return shadowRoot.querySelector(selector);
+			},
+		},
+
+		querySelectorAll: {
+			value(selector: string) {
+				return shadowRoot.querySelectorAll(selector);
 			},
 		},
 
@@ -454,7 +456,7 @@ function monkeyPatchIFrameEnvironment(
 		"createTreeWalker",
 	];
 	for (const createProperty of domCreateProperties) {
-		Object.defineProperty(iframeDocumentPrototype, createProperty, {
+		Object.defineProperty(iframeDocument, createProperty, {
 			value: function reframedCreateFn() {
 				// @ts-expect-error WTD?!?
 				return mainDocument[createProperty].apply(mainDocument, arguments);
@@ -487,30 +489,6 @@ function monkeyPatchIFrameEnvironment(
 			},
 		},
 	});
-
-	// methods to query for elements that can be retargeted into the reframedContainer
-	const domQueryProperties: (keyof Pick<
-		Document,
-		| "querySelector"
-		| "querySelectorAll"
-		| "getElementsByClassName"
-		| "getElementsByTagName"
-		| "getElementsByTagNameNS"
-	>)[] = [
-		"querySelector",
-		"querySelectorAll",
-		"getElementsByClassName",
-		"getElementsByTagName",
-		"getElementsByTagNameNS",
-	];
-	for (const queryProperty of domQueryProperties) {
-		Object.defineProperty(iframeDocumentPrototype, queryProperty, {
-			value: function reframedCreateFn() {
-				// @ts-expect-error WTD?!?
-				return shadowRoot[queryProperty].apply(shadowRoot, arguments);
-			},
-		});
-	}
 
 	// Create an abort controller we'll use to remove event listeners when the iframe is destroyed
 	const controller = new AbortController();
