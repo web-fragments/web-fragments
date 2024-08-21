@@ -368,14 +368,6 @@ function monkeyPatchIFrameEnvironment(
 		},
 	} satisfies Partial<Record<keyof Document, any>>);
 
-	// TODO: we've started depending on this property in writable-dom,
-	// but we should stop doing that and remove this.
-	Object.defineProperty(iframeDocumentPrototype, "unreframedBody", {
-		get: () => {
-			return getInternalReference(iframeDocument, "body");
-		},
-	});
-
 	// iframe window patches
 	setInternalReference(iframeWindow, "history");
 
