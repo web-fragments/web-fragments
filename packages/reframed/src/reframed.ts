@@ -267,10 +267,30 @@ function monkeyPatchIFrameEnvironment(
 			},
 		},
 
-		// redirect getElementsByName to be a scoped reframedContainer.querySelector query
+		getElementsByClassName: {
+			value(names: string) {
+				return shadowRoot.firstElementChild?.getElementsByClassName(names);
+			},
+		},
+
 		getElementsByName: {
 			value(name: string) {
 				return shadowRoot.querySelector(`[name="${name}"]`);
+			},
+		},
+
+		getElementsByTagName: {
+			value(name: string) {
+				return shadowRoot.firstElementChild?.getElementsByTagName(name);
+			},
+		},
+
+		getElementsByTagNameNS: {
+			value(namespaceURI: string | null, name: string) {
+				return shadowRoot.firstElementChild?.getElementsByTagNameNS(
+					namespaceURI,
+					name
+				);
 			},
 		},
 
