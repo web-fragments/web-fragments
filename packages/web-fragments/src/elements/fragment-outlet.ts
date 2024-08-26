@@ -18,8 +18,11 @@ export class FragmentOutlet extends HTMLElement {
 			new Event("fragment-outlet-ready", { bubbles: true, cancelable: true })
 		);
 
+		// There is no <fragment-host> element mounted that needs to pierce into <fragment-outlet>.
+		// Instantiate a <fragment-host> element that can fetch the fragment via reframed
 		if (didNotPierce) {
 			const fragmentHost = document.createElement("fragment-host");
+			fragmentHost.setAttribute("fragment-id", fragmentId);
 			this.appendChild(fragmentHost);
 		}
 	}

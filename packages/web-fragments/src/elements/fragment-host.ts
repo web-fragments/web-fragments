@@ -106,7 +106,12 @@ export class FragmentHost extends HTMLElement {
 				this.shadowRoot.styleSheets,
 				(sheet) => {
 					const clone = new CSSStyleSheet();
-					[...sheet.cssRules].forEach((rule) => clone.insertRule(rule.cssText));
+
+					// CSSStyleSheet.insertRule() prepends CSS rules to the top of the stylesheet by default.
+					// We need to set the index to sheet.cssRules.length in order to append the rule and maintain specificity.
+					[...sheet.cssRules].forEach((rule) =>
+						clone.insertRule(rule.cssText, clone.cssRules.length)
+					);
 					return clone;
 				}
 			);

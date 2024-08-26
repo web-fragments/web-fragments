@@ -1,6 +1,7 @@
 import type { FragmentGateway } from "../../fragment-gateway";
 
 const fragmentHostInitialization = ({
+	fragmentId,
 	content,
 	classNames,
 }: {
@@ -8,7 +9,7 @@ const fragmentHostInitialization = ({
 	content: string;
 	classNames: string;
 }) => `
-<fragment-host class="${classNames}" data-piercing="true">
+<fragment-host class="${classNames}" fragment-id="${fragmentId}" data-piercing="true">
   <template shadowrootmode="open">${content}</template>
 </fragment-host>`;
 
