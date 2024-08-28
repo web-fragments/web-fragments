@@ -224,9 +224,6 @@ function monkeyPatchIFrameEnvironment(
 		return;
 	}
 
-	const iframeDocumentPrototype = Object.getPrototypeOf(
-		Object.getPrototypeOf(iframeDocument)
-	);
 	const mainDocument = shadowRoot.ownerDocument;
 	const mainWindow = mainDocument.defaultView!;
 
@@ -234,7 +231,7 @@ function monkeyPatchIFrameEnvironment(
 
 	setInternalReference(iframeDocument, "body");
 
-	Object.defineProperties(iframeDocumentPrototype, {
+	Object.defineProperties(iframeDocument, {
 		title: {
 			get: function () {
 				return (
@@ -270,17 +267,42 @@ function monkeyPatchIFrameEnvironment(
 			},
 		},
 
-		// redirect getElementsByName to be a scoped reframedContainer.querySelector query
+		getElementsByClassName: {
+			value(names: string) {
+				return shadowRoot.firstElementChild?.getElementsByClassName(names);
+			},
+		},
+
 		getElementsByName: {
 			value(name: string) {
 				return shadowRoot.querySelector(`[name="${name}"]`);
 			},
 		},
 
-		// redirect querySelector to be a scoped reframedContainer.querySelector query
+		getElementsByTagName: {
+			value(name: string) {
+				return shadowRoot.firstElementChild?.getElementsByTagName(name);
+			},
+		},
+
+		getElementsByTagNameNS: {
+			value(namespaceURI: string | null, name: string) {
+				return shadowRoot.firstElementChild?.getElementsByTagNameNS(
+					namespaceURI,
+					name
+				);
+			},
+		},
+
 		querySelector: {
 			value(selector: string) {
 				return shadowRoot.querySelector(selector);
+			},
+		},
+
+		querySelectorAll: {
+			value(selector: string) {
+				return shadowRoot.querySelectorAll(selector);
 			},
 		},
 
@@ -368,14 +390,6 @@ function monkeyPatchIFrameEnvironment(
 		},
 	} satisfies Partial<Record<keyof Document, any>>);
 
-	// TODO: we've started depending on this property in writable-dom,
-	// but we should stop doing that and remove this.
-	Object.defineProperty(iframeDocumentPrototype, "unreframedBody", {
-		get: () => {
-			return getInternalReference(iframeDocument, "body");
-		},
-	});
-
 	// iframe window patches
 	setInternalReference(iframeWindow, "history");
 
@@ -462,7 +476,7 @@ function monkeyPatchIFrameEnvironment(
 		"createTreeWalker",
 	];
 	for (const createProperty of domCreateProperties) {
-		Object.defineProperty(iframeDocumentPrototype, createProperty, {
+		Object.defineProperty(iframeDocument, createProperty, {
 			value: function reframedCreateFn() {
 				// @ts-expect-error WTD?!?
 				return mainDocument[createProperty].apply(mainDocument, arguments);
@@ -495,30 +509,6 @@ function monkeyPatchIFrameEnvironment(
 			},
 		},
 	});
-
-	// methods to query for elements that can be retargeted into the reframedContainer
-	const domQueryProperties: (keyof Pick<
-		Document,
-		| "querySelector"
-		| "querySelectorAll"
-		| "getElementsByClassName"
-		| "getElementsByTagName"
-		| "getElementsByTagNameNS"
-	>)[] = [
-		"querySelector",
-		"querySelectorAll",
-		"getElementsByClassName",
-		"getElementsByTagName",
-		"getElementsByTagNameNS",
-	];
-	for (const queryProperty of domQueryProperties) {
-		Object.defineProperty(iframeDocumentPrototype, queryProperty, {
-			value: function reframedCreateFn() {
-				// @ts-expect-error WTD?!?
-				return shadowRoot[queryProperty].apply(shadowRoot, arguments);
-			},
-		});
-	}
 
 	// Create an abort controller we'll use to remove event listeners when the iframe is destroyed
 	const controller = new AbortController();
