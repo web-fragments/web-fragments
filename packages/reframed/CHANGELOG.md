@@ -1,5 +1,14 @@
 # reframed
 
+## 0.1.1
+
+### Patch Changes
+
+- 57365d1: BREAKING CHANGE: Removed `document.unreframedBody` property
+- 113ce80: Fixed runtime errors when invoking `document.getElementsBy*()` methods. Fixes [#60](https://github.com/web-fragments/web-fragments/issues/60)
+- 1a83fca: Patched global constructors in the reframed context to also compare against their parent context equivalent when performing `instanceof` comparisons. Fixes [#67](https://github.com/web-fragments/web-fragments/issues/67).
+- 5107b6b: Document patches are now applied to the `document` instance itself rather than `Document.prototype`. Fixes [#73](https://github.com/web-fragments/web-fragments/issues/73)
+
 ## 0.1.0
 
 ### Minor Changes
