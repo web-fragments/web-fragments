@@ -1,5 +1,15 @@
 # reframed
 
+## 0.1.0
+
+### Minor Changes
+
+- 699b108: Patched window size getters (`innerHeight`, etc) in the reframed context to read the parent context's equivalent. Fixes [#68](https://github.com/web-fragments/web-fragments/issues/68)
+
+### Patch Changes
+
+- 14a68ea: Custom elements are now created by the reframed document so they use its custom element registry instead of the main window's registry. Refs [#72](https://github.com/web-fragments/web-fragments/issues/72).
+
 ## 0.0.13
 
 ### Patch Changes
