@@ -1,5 +1,15 @@
 # web-fragments
 
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies [57365d1]
+- Updated dependencies [113ce80]
+- Updated dependencies [1a83fca]
+- Updated dependencies [5107b6b]
+  - reframed@0.1.1
+
 ## 0.0.14
 
 ### Patch Changes
