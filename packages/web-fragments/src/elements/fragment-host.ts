@@ -109,9 +109,12 @@ export class FragmentHost extends HTMLElement {
 
 					// CSSStyleSheet.insertRule() prepends CSS rules to the top of the stylesheet by default.
 					// We need to set the index to sheet.cssRules.length in order to append the rule and maintain specificity.
-					[...sheet.cssRules].forEach((rule) =>
-						clone.insertRule(rule.cssText, clone.cssRules.length)
-					);
+					[...sheet.cssRules].forEach((rule) => {
+						// @import directives are not allowed in Constructed Stylesheets
+						if (!(rule instanceof CSSImportRule)) {
+							clone.insertRule(rule.cssText, clone.cssRules.length);
+						}
+					});
 					return clone;
 				}
 			);
