@@ -44,6 +44,7 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
 		routePatterns: ["/qwik-page/:_*", "/_fragment/qwik/:_*"],
 		// Note: the pierced-react-qwik-fragment has to be available on port 8123
 		upstream: "http://localhost:8123",
+		forwardFragmentHeaders: ["x-fragment-name"],
 		onSsrFetchError: () => {
 			return {
 				response: new Response(
