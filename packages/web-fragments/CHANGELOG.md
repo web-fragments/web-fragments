@@ -1,5 +1,11 @@
 # web-fragments
 
+## 0.0.16
+
+### Patch Changes
+
+- 2a2a9a7: Allow an optional property "forwardFragmentHeaders" when registering a fragment in the gateway. When set, forward the specified response headers from the fragment response to the gateway response.
+
 ## 0.0.15
 
 ### Patch Changes
