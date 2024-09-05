@@ -33,6 +33,10 @@ export interface FragmentConfig {
 	 */
 	upstream: string;
 	/**
+	 * An optional list of fragment response headers to forward to the gateway response.
+	 */
+	forwardFragmentHeaders?: string[];
+	/**
 	 * Handler/Fallback to apply when the fetch for a fragment ssr code fails.
 	 * It allows the gateway to serve the provided fallback response instead of an error response straight
 	 * from the server.

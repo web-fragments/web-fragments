@@ -52,19 +52,25 @@ export function getMiddleware(
 			}
 		}
 
-		const response = await next();
-		const isHTMLResponse = !!response.headers
+		const hostResponse = await next();
+		const isHTMLResponse = !!hostResponse.headers
 			.get("content-type")
 			?.startsWith("text/html");
 
 		if (isHTMLResponse) {
 			const matchedFragment = gateway.matchRequestToFragment(request);
 			if (matchedFragment) {
+				const {
+					fragmentId,
+					upstream,
+					forwardFragmentHeaders,
+					prePiercingClassNames,
+					onSsrFetchError,
+				} = matchedFragment;
 				const requestUrl = new URL(request.url);
-
 				const upstreamUrl = new URL(
 					`${requestUrl.pathname}${requestUrl.search}`,
-					matchedFragment.upstream
+					upstream
 				);
 
 				// TODO: this logic should not be here but in the reframed package (and imported and used here)
@@ -95,14 +101,18 @@ export function getMiddleware(
 					fragmentReq.headers.set("Accept-Encoding", "gzip");
 				}
 
-				let fragmentRes: Response;
+				let embeddedFragmentResponse: Response = new Response();
 				let fragmentFailedResOrError: Response | unknown | null = null;
 				try {
-					const response = await fetch(fragmentReq);
-					if (response.status >= 400 && response.status <= 599) {
-						fragmentFailedResOrError = response;
+					const fragmentResponse = await fetch(fragmentReq);
+					if (
+						fragmentResponse.status >= 400 &&
+						fragmentResponse.status <= 599
+					) {
+						fragmentFailedResOrError = fragmentResponse;
 					} else {
-						fragmentRes = scriptRewriter.transform(response);
+						embeddedFragmentResponse =
+							scriptRewriter.transform(fragmentResponse);
 					}
 				} catch (e) {
 					fragmentFailedResOrError = e;
@@ -117,22 +127,21 @@ export function getMiddleware(
 				 * return an object from the callback with property {overwriteResponse: true}
 				 */
 				if (fragmentFailedResOrError) {
-					if (matchedFragment.onSsrFetchError) {
-						const { response, overrideResponse } =
-							await matchedFragment.onSsrFetchError(
-								fragmentReq,
-								fragmentFailedResOrError
-							);
+					if (onSsrFetchError) {
+						const { response, overrideResponse } = await onSsrFetchError(
+							fragmentReq,
+							fragmentFailedResOrError
+						);
 
 						if (overrideResponse) {
 							return response;
 						}
 
-						fragmentRes = response;
+						embeddedFragmentResponse = response;
 					} else {
-						fragmentRes = new Response(
+						embeddedFragmentResponse = new Response(
 							mode === "development"
-								? `<p>Fetching fragment upstream failed: ${matchedFragment.upstream}</p>`
+								? `<p>Fetching fragment upstream failed: ${upstream}</p>`
 								: "<p>There was a problem fulfilling your request.</p>",
 							{ headers: [["content-type", "text/html"]] }
 						);
@@ -151,20 +160,31 @@ export function getMiddleware(
 							//       we should look into this and support streams if possible
 							element.append(
 								fragmentHostInitialization({
-									fragmentId: matchedFragment.fragmentId,
+									fragmentId,
 									// TODO: what if don't get a body (i.e. can't fetch the fragment)? we should add some error handling here
-									content: await fragmentRes.text(),
-									classNames: matchedFragment.prePiercingClassNames.join(" "),
+									content: await embeddedFragmentResponse.text(),
+									classNames: prePiercingClassNames.join(" "),
 								}),
 								{ html: true }
 							);
 						},
 					});
 
-				return rewriter.transform(response);
+				const gatewayResponse = rewriter.transform(hostResponse);
+
+				if (forwardFragmentHeaders?.length) {
+					forwardFragmentHeaders.forEach((header) => {
+						gatewayResponse.headers.append(
+							header,
+							embeddedFragmentResponse.headers.get(header) || ""
+						);
+					});
+				}
+
+				return gatewayResponse;
 			}
 		}
 
-		return response;
+		return hostResponse;
 	};
 }
