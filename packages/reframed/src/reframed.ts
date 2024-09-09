@@ -145,11 +145,12 @@ async function reframeWithFetch(
 			.pipeThrough(new TextDecoderStream())
 			.pipeTo(new WritableDOMStream(target))
 			.finally(() => {
-				console.log("reframing done (reframeWithFetch)!", {
-					source: reframedSrc,
-					target,
-					title: iframe.contentDocument?.title,
-				});
+				import.meta.env.DEV &&
+					console.log("reframing done (reframeWithFetch)!", {
+						source: reframedSrc,
+						target,
+						title: iframe.contentDocument?.title,
+					});
 				resolve();
 			});
 	});
@@ -188,10 +189,11 @@ async function reframeFromTarget(
 			);
 		});
 
-		console.log("reframing done (reframeFromTarget)!", {
-			source,
-			title: document.defaultView!.document.title,
-		});
+		import.meta.env.DEV &&
+			console.log("reframing done (reframeFromTarget)!", {
+				source,
+				title: document.defaultView!.document.title,
+			});
 		resolve();
 	});
 
