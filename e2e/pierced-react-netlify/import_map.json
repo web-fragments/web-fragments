@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "web-fragments/gateway/middlewares/netlify": "../../packages/web-fragments/src/gateway/middlewares/netlify/index.ts",
+    "web-fragments/gateway": "../../packages/web-fragments/src/gateway/index.ts"
+  }
+}
