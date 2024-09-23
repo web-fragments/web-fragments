@@ -9,6 +9,9 @@
 		"./gateway/middlewares/cloudflare-pages": {
 			"import": "./src/gateway/middlewares/cloudflare-pages/index.ts"
 		},
+		"./gateway/middlewares/netlify": {
+			"import": "./src/gateway/middlewares/netlify/index.ts"
+		},
 		"./elements": {
 			"import": "./src/elements/index.ts"
 		}
@@ -22,6 +25,10 @@
 			"./gateway/middlewares/cloudflare-pages": {
 				"import": "./dist/gateway/middlewares/cloudflare-pages.js",
 				"types": "./dist/gateway/middlewares/cloudflare-pages/index.d.ts"
+			},
+			"./gateway/middlewares/netlify": {
+				"import": "./dist/gateway/middlewares/netlify.js",
+				"types": "./dist/gateway/middlewares/netlify/index.d.ts"
 			},
 			"./elements": {
 				"import": "./dist/elements.js",
@@ -39,6 +46,7 @@
 		"types:elements": "tsc -p src/elements",
 		"types:gateway": "tsc -p src/gateway",
 		"types:middlewares:cloudflare-pages": "tsc -p src/gateway/middlewares/cloudflare-pages",
+		"types:middlewares:netlify": "tsc -p src/gateway/middlewares/netlify",
 		"types:root": "tsc -p .",
 		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\""
@@ -53,10 +61,14 @@
 		"typescript": "^5.5.4"
 	},
 	"peerDependencies": {
-		"@cloudflare/workers-types": "^4.20240620.0"
+		"@cloudflare/workers-types": "^4.20240620.0",
+		"@netlify/edge-functions": "^2.10.0"
 	},
 	"peerDependenciesMeta": {
 		"@cloudflare/workers-types": {
+			"optional": true
+		},
+		"@netlify/edge-functions": {
 			"optional": true
 		}
 	},
