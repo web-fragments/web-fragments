@@ -13,10 +13,17 @@ const fragmentHostInitialization = ({
   <template shadowrootmode="open">${content}</template>
 </fragment-host>`;
 
+export type FragmentMiddlewareOptions = {
+	additionalHeaders?: HeadersInit;
+	mode?: "production" | "development";
+};
+
 export function getMiddleware(
 	gateway: FragmentGateway,
-	mode: "production" | "development" = "development"
+	options: FragmentMiddlewareOptions = {}
 ): PagesFunction<unknown> {
+	const { additionalHeaders = {}, mode = "development" } = options;
+
 	return async ({ request, next }) => {
 		/**
 		 * This early return makes it so that all http requests
@@ -81,6 +88,12 @@ export function getMiddleware(
 				});
 
 				const fragmentReq = new Request(upstreamUrl, request);
+
+				// attach additionalHeaders to fragment request
+				for (const [name, value] of new Headers(additionalHeaders).entries()) {
+					fragmentReq.headers.set(name, value);
+				}
+
 				// Note: we don't want to forward the sec-fetch-dest since we usually need
 				//       custom logic so that we avoid returning full htmls if the header is
 				//       not set to 'document'
