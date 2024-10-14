@@ -100,6 +100,21 @@ export class FragmentHost extends HTMLElement {
 		this.removeAttribute("data-piercing");
 	}
 
+	// A best-effort attempt at avoiding a FOUC.
+	//
+	// Teleporting the fragment-host into the fragment-outlet requires removing then re-inserting the node from the document,
+	// which causes the browser to perform all of the steps for node removal and insertion respectively,
+	// namely unloading styles and (potentially asynchronously) reloading them. We can mostly mitigate the FOUC
+	// by copying all of the loaded style rules into Constructed Stylesheets and attaching them to the shadow root
+	// so they're synchronously available.
+	//
+	// There are major caveats with with this approach, however. Constructed Stylesheets don't allow `@import` rules,
+	// and cross-origin imported stylesheets don't allow introspection of their CSS rules, so these aren't copyable.
+	// Secondly, `adoptedStylesheets` take precedence over normal stylesheets so we have the potential to overshadow
+	// style rules that get added after we've preserved the existing styles.
+	//
+	// Until we have the ability to perform atomic move operations in the DOM (https://github.com/whatwg/dom/issues/1255)
+	// this is probably the best way we can deal with the FOUC.
 	preserveStylesheets() {
 		if (this.shadowRoot) {
 			this.shadowRoot.adoptedStyleSheets = Array.from(
@@ -109,9 +124,12 @@ export class FragmentHost extends HTMLElement {
 
 					// CSSStyleSheet.insertRule() prepends CSS rules to the top of the stylesheet by default.
 					// We need to set the index to sheet.cssRules.length in order to append the rule and maintain specificity.
-					[...sheet.cssRules].forEach((rule) =>
-						clone.insertRule(rule.cssText, clone.cssRules.length)
-					);
+					[...sheet.cssRules].forEach((rule) => {
+						// @import directives are not allowed in Constructed Stylesheets
+						if (!(rule instanceof CSSImportRule)) {
+							clone.insertRule(rule.cssText, clone.cssRules.length);
+						}
+					});
 					return clone;
 				}
 			);
