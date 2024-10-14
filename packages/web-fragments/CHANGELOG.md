@@ -1,5 +1,18 @@
 # web-fragments
 
+## 0.1.0
+
+### Minor Changes
+
+- 982c4f5: [gateway] BREAKING CHANGE: Cloudflare Pages `getMiddleware()` function's second parameter is now an `options` object rather than a single `mode: string`.
+- 982c4f5: [gateway] Cloudflare Pages `getMiddleware()` now accepts an `additionalHeaders` option that allows you to include additional headers in the request to the upstream fragment.
+
+### Patch Changes
+
+- 41b0f59: [elements] Fixed error during piercing when a fragment contained CSS using the `@import` directive. Fixes [#78](https://github.com/web-fragments/web-fragments/issues/78)
+- Updated dependencies [332c98b]
+  - reframed@0.1.2
+
 ## 0.0.16
 
 ### Patch Changes
