@@ -1,5 +1,11 @@
 # reframed
 
+## 0.1.2
+
+### Patch Changes
+
+- 332c98b: fix: #83 - only show console logs in dev mode
+
 ## 0.1.1
 
 ### Patch Changes
