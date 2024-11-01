@@ -1,5 +1,11 @@
 # web-fragments
 
+## 0.1.1
+
+### Patch Changes
+
+- db7c26c: Fixed issue with `additionalHeaders` not being included on soft-navigations to a fragment
+
 ## 0.1.0
 
 ### Minor Changes
