@@ -8,10 +8,17 @@ export default defineConfig({
 		lib: {
 			entry: {
 				gateway: new URL("src/gateway/index.ts", import.meta.url).pathname,
+
 				"gateway/middlewares/cloudflare-pages": new URL(
 					"src/gateway/middlewares/cloudflare-pages/index.ts",
 					import.meta.url
 				).pathname,
+
+				"gateway/middlewares/netlify": new URL(
+					"src/gateway/middlewares/netlify/index.ts",
+					import.meta.url
+				).pathname,
+
 				elements: new URL("src/elements/index.ts", import.meta.url).pathname,
 			},
 			formats: ["es"],

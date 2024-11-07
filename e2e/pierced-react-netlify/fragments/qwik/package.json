@@ -1,0 +1,41 @@
+{
+  "name": "pierced-react-netlify___qwik-fragment",
+  "engines": {
+    "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
+  },
+  "engines-annotation": "Mostly required by sharp which needs a Node-API v9 compatible runtime",
+  "private": true,
+  "trustedDependencies": [
+    "sharp"
+  ],
+  "trustedDependencies-annotation": "Needed for bun to allow running install scripts",
+  "type": "module",
+  "scripts": {
+    "build": "qwik build",
+    "build.client": "vite build",
+    "build.preview": "vite build --ssr src/entry.preview.tsx",
+    "build.server": "vite build -c adapters/netlify-edge/vite.config.ts",
+    "build.types": "tsc --incremental --noEmit",
+    "buildAndServe": "pnpm build && pnpm serve --port 8123",
+    "deploy": "netlify deploy --build",
+    "dev": "vite --mode ssr",
+    "dev.debug": "node --inspect-brk ./node_modules/vite/bin/vite.js --mode ssr --force",
+    "preview": "qwik build preview && vite preview --open",
+    "serve": "ntl dev --no-open ./dist ",
+    "start": "vite --open --mode ssr",
+    "types:check": "tsc --noEmit",
+    "qwik": "qwik"
+  },
+  "devDependencies": {
+    "@builder.io/qwik": "1.7.1",
+    "@builder.io/qwik-city": "1.7.1",
+    "@netlify/edge-functions": "^2.0.0",
+    "@types/node": "^20.12.7",
+    "netlify-cli": "^17.0.0",
+    "typescript": "^5.5.4",
+    "undici": "*",
+    "vite": "^5.2.10",
+    "vite-tsconfig-paths": "^4.3.2",
+    "wrangler": "^3.63.1"
+  }
+}
