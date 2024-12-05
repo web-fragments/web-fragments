@@ -1,10 +1,10 @@
 name: Gateway Tests
 on:
   push:
-    branches: [main, master]
+    branches: [main]
     paths: ['packages/web-fragments/src/gateway/**', 'packages/web-fragments/test/gateway/**']
   pull_request:
-    branches: [main, master]
+    branches: [main]
     paths: ['packages/web-fragments/src/gateway/**', 'packages/web-fragments/test/gateway/**']
 jobs:
   test:

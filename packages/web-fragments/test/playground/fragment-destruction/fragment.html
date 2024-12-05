@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>hello fragment</title>
+	</head>
+	<body>
+		<h2>hello</h2>
+		<script>
+			const counter = new URL(location.href).searchParams.get('counter') ?? '';
+			document.querySelector('h2').textContent += ` world${counter}!`;
+
+			const channel = new BroadcastChannel('fragment-destruction');
+
+			let messageCount = 0;
+			const sendMessage = function () {
+				channel.postMessage('hello' + messageCount++);
+			};
+			sendMessage();
+			setInterval(sendMessage, 100);
+
+			const garbageArray = new Array(1_000_000).fill('garbage');
+			globalThis.garbage = {
+				array: new WeakRef(garbageArray),
+				h2: new WeakRef(document.querySelector('h2')),
+			};
+		</script>
+	</body>
+</html>

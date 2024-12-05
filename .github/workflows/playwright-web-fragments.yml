@@ -1,18 +1,18 @@
-name: Reframed Tests
+name: Web Fragments Tests
 on:
   push:
     branches: [main]
-    paths: ['packages/reframed/**']
+    paths: ['packages/**']
   pull_request:
     branches: [main]
-    paths: ['packages/reframed/**']
+    paths: ['packages/**']
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: 'packages/reframed'
+        working-directory: 'packages/web-fragments'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,12 +21,12 @@ jobs:
       - name: Install dependencies
         run: npm install -g pnpm && pnpm install
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
+        run: pnpm -C test/playground exec playwright install --with-deps
       - name: Run Playwright tests
-        run: pnpm exec playwright test
+        run: pnpm test:playground
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
-          path: playwright-report/
+          path: test/playground/node_modules/.wf-playground-tests/playwright-report/
           retention-days: 30
