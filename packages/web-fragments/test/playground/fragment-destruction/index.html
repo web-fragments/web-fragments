@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF TestBed: fragment-destruction</title>
+		<style>
+			fragment-host {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF TestBed: fragment-destruction</h1>
+
+		<p>Last message from fragment: <span id="lastMessage"></span></p>
+		<p><code>performance.memory.usedJSHeapSize:</code> <span id="memoryUsage"></span></p>
+
+		<script type="module">
+			import { register } from 'web-fragments/elements';
+			register();
+		</script>
+
+		<button id="remove">remove fragment</button>
+		<!-- <button id="reset">reset fragment src</button> -->
+		<button id="add">add fragment</button>
+
+		<fragment-host></fragment-host>
+
+		<script type="module">
+			document.querySelector('button#remove').addEventListener('click', (event) => {
+				document.querySelector('fragment-host')?.remove();
+			});
+
+			// document.querySelector('button#reset').addEventListener('click', (event) => {
+			// 	document.querySelector('fragment-host').src = '';
+			// });
+
+			let fragmentCounter = 0;
+			document.querySelector('button#add').addEventListener('click', (event) => {
+				const f = document.createElement('fragment-host');
+				fragmentCounter++;
+				f.src = '/fragment-destruction/fragment?counter=' + fragmentCounter;
+				document.body.appendChild(f);
+			});
+
+			const messageSpan = document.querySelector('span#lastMessage');
+			const channel = new BroadcastChannel('fragment-destruction');
+			channel.addEventListener('message', (e) => {
+				messageSpan.textContent = e.data;
+			});
+
+			const memoryUsageSpan = document.querySelector('span#memoryUsage');
+			const refreshUsageSpan = () => {
+				const usedMemory = window.performance?.memory?.totalJSHeapSize;
+				memoryUsageSpan.textContent = usedMemory;
+			};
+			setInterval(refreshUsageSpan, 100);
+			refreshUsageSpan();
+		</script>
+	</body>
+</html>

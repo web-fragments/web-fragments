@@ -39,13 +39,16 @@
 	],
 	"scripts": {
 		"dev": "vite",
+		"dev:playground": "pnpm -C test/playground dev",
+		"preview:playground": "pnpm -C test/playground preview",
 		"build": "pnpm types && vite build",
 		"types:elements": "tsc -p src/elements",
 		"types:gateway": "tsc -p src/gateway",
 		"types:root": "tsc -p .",
 		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\"",
-		"test:gateway": "vitest test/gateway",
+		"test:gateway": "pnpm -C test/gateway test",
+		"test:playground": "pnpm -C test/playground test",
 		"test-debug:gateway": "vitest test/gateway --test-timeout=0 --no-file-parallelism"
 	},
 	"dependencies": {
@@ -53,16 +56,11 @@
 		"reframed": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/connect": "^3.4.38",
 		"@types/node": "^20.12.7",
-		"connect": "^3.7.0",
-		"express": "^4.21.2",
 		"path-to-regexp": "^6.2.2",
 		"ts-node-dev": "^2.0.0",
 		"typescript": "catalog:",
-		"vite": "catalog:",
-		"vitest": "^3.0.5",
-		"vitest-fetch-mock": "^0.4.3"
+		"vite": "catalog:"
 	},
 	"author": "Igor Minar<i@igor.dev>",
 	"contributors": [

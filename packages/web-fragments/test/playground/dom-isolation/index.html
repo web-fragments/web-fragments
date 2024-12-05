@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF TestBed: dom-isolation</title>
+		<style>
+			fragment-host {
+				border: 1px red dashed;
+			}
+			p {
+				color: rgb(0, 128, 0);
+			}
+			span {
+				color: rgb(255, 192, 203);
+			}
+			i {
+				color: white;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF TestBed: dom-isolation</h1>
+
+		<fragment-host></fragment-host>
+
+		<p>This text should be green <span>and pink</span><b>!!!</b></p>
+		<script type="module">
+			import { register, FragmentHost } from 'web-fragments/elements';
+			register();
+		</script>
+	</body>
+</html>

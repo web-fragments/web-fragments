@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF TestBed: script-isolation</title>
+		<style>
+			fragment-host {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF TestBed: script-isolation</h1>
+		<hr />
+		<fragment-host></fragment-host>
+		<!-- TODO: disabled for now since we don't support standalone fragments -->
+		<!-- <fragment-host src="/script-isolation/fragment-b"></fragment-host> -->
+		<fragment-host></fragment-host>
+		<script type="module">
+			import { register } from 'web-fragments/elements';
+			register();
+		</script>
+	</body>
+</html>

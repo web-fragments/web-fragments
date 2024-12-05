@@ -1,0 +1,17 @@
+{
+	"private": true,
+	"name": "wf-playground-tests",
+	"type": "module",
+	"devDependencies": {
+		"glob": "^11.0.1",
+		"vite": "catalog:",
+		"@playwright/test": "catalog:"
+	},
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "pnpm build && vite preview",
+		"test": "playwright test",
+		"install-browsers": "playwright install"
+	}
+}
