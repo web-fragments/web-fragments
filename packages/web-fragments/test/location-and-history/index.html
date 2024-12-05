@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF TestBed: location-and-history</title>
+		<style>
+			fragment-host {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF TestBed: location-and-history</h1>
+		<section>
+			<p>location.href: <span></span></p>
+
+			<button id="foo">go to /foo</button>
+			<button id="bar">go to /bar</button>
+		</section>
+		<script>
+			function rerenderLocationHref() {
+				document.querySelector('span').textContent = window.location.href;
+			}
+
+			setInterval(rerenderLocationHref, 100);
+
+			document.querySelector('button#foo').addEventListener('click', () => {
+				history.pushState({}, '', '/foo');
+			});
+			document.querySelector('button#bar').addEventListener('click', () => {
+				history.pushState({}, '', '/bar');
+			});
+		</script>
+
+		<!-- routable fragment -->
+		<fragment-host src="*"></fragment-host>
+
+		<!-- non-routable fragment -->
+		<fragment-host src="/location-and-history/non-routable"></fragment-host>
+
+		<script type="module">
+			import { register } from 'web-fragments/elements';
+			register();
+		</script>
+	</body>
+</html>

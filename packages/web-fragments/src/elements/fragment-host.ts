@@ -1,14 +1,45 @@
 import { reframed } from 'reframed';
 
+// TODO: separate concerns for piercing ops and client-side
 export class FragmentHost extends HTMLElement {
 	iframe: HTMLIFrameElement | undefined;
 	ready: Promise<void> | undefined;
 	isInitialized = false;
 	isPortaling = false;
 
+	#src: string | null = null;
+	#standalone: boolean = false;
+
 	constructor() {
 		super();
 		this.handlePiercing = this.handlePiercing.bind(this);
+		if (this.hasAttribute('src')) {
+			this.#src = this.getAttribute('src');
+		}
+	}
+
+	get src(): string | null {
+		return this.#src;
+	}
+
+	set src(value: string) {
+		// TODO: consider making it possible to reload a fragment by updating src
+		if (this.#src) throw new Error('fragment-host[src] cannot be modified' + this.#src + value);
+		this.#src = value;
+		if (!this.hasAttribute('src')) {
+			this.setAttribute('src', value);
+		}
+	}
+
+	get standalone() {
+		return this.#standalone;
+	}
+
+	static observedAttributes = ['src', 'fragment-id'];
+
+	attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+		if (oldValue !== null) throw new Error(`fragment ${name} cannot be modified`);
+		this.#src = newValue;
 	}
 
 	async connectedCallback() {
@@ -19,9 +50,29 @@ export class FragmentHost extends HTMLElement {
 		if (!this.isInitialized) {
 			this.isInitialized = true;
 
-			const { iframe, ready } = reframed(this.shadowRoot ?? document.location.href, {
+			// read src
+			let fragmentSrc = this.getAttribute('src') ?? this.src;
+			let fragmentId = this.getAttribute('fragment-id');
+			debugger;
+
+			if (!fragmentId) {
+				throw new Error(
+					'💥 fragment-host[fragment-id] property or attribute is required! Missing on element: ' + this.outerHTML,
+				);
+			}
+
+			// initialize a fragment
+			if (!fragmentSrc) {
+				fragmentSrc = location.href;
+			} else {
+				this.#standalone = true;
+			}
+
+			// shadowRoot applies to piercing when we are reusing an existing shadowroot created by declarative shadow dom
+			const { iframe, ready } = reframed(this.shadowRoot ?? fragmentSrc, {
 				container: this,
 				headers: { 'x-fragment-mode': 'embedded' },
+				standalone: this.#standalone,
 			});
 
 			this.iframe = iframe;

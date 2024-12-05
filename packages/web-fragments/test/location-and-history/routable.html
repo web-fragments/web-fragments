@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>routable fragment</title>
+	</head>
+	<body>
+		<h2>routable fragment</h2>
+		<p>location.href: <span></span></p>
+		<button id="foo">go to /foo</button>
+		<button id="bar">go to /bar</button>
+		<script>
+			function rerenderLocationHref() {
+				document.querySelector('span').textContent = window.location.href;
+			}
+
+			setInterval(rerenderLocationHref, 100);
+
+			document.querySelector('button#foo').addEventListener('click', () => {
+				history.pushState({}, '', '/foo');
+			});
+			document.querySelector('button#bar').addEventListener('click', () => {
+				history.pushState({}, '', '/bar');
+			});
+		</script>
+	</body>
+</html>

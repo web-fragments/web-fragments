@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>script-loading fragment</title>
+	</head>
+	<body>
+		<h2>script-loading fragment</h2>
+		<ul>
+			<li>
+				Inline sync scripts are running
+				<input id="inline-script-sync-running" type="checkbox" />
+				in reframed JS context
+				<input id="inline-script-sync-reframed" type="checkbox" />
+			</li>
+			<li>
+				Inline async scripts are running
+				<input id="inline-script-async-running" type="checkbox" />
+				in a reframed JS context
+				<input id="inline-script-async-reframed" type="checkbox" />
+			</li>
+			<li>
+				Inline module scripts are running
+				<input id="inline-script-module-running" type="checkbox" />
+				in a reframed JS context
+				<input id="inline-script-module-reframed" type="checkbox" />
+			</li>
+			<li>
+				External sync script are running
+				<input id="external-script-sync-running" type="checkbox" />
+				in a reframed JS context
+				<input id="external-script-sync-reframed" type="checkbox" />
+			</li>
+			<li>
+				External async script are running
+				<input id="external-script-async-running" type="checkbox" />
+				in a reframed JS context
+				<input id="external-script-async-reframed" type="checkbox" />
+			</li>
+			<li>
+				External defer script are running
+				<input id="external-script-defer-running" type="checkbox" />
+				in a reframed JS context
+				<input id="external-script-defer-reframed" type="checkbox" />
+			</li>
+			<li>
+				External module script are running
+				<input id="external-script-module-running" type="checkbox" />
+				in a reframed JS context
+				<input id="external-script-module-reframed" type="checkbox" />
+			</li>
+		</ul>
+		<script>
+			window.SCRIPT_CONTEXT_MARKER = '🔥';
+			window.SCRIPT_COUNTER = 1;
+			document.getElementById('inline-script-sync-running').checked = true;
+			if (window.parent !== window) {
+				document.getElementById('inline-script-sync-reframed').checked = true;
+			}
+		</script>
+		<script async>
+			document.getElementById('inline-script-async-running').checked = true;
+			if (window.parent !== window && window.SCRIPT_CONTEXT_MARKER === '🔥') {
+				document.getElementById('inline-script-async-reframed').checked = true;
+			}
+			window.SCRIPT_COUNTER++;
+		</script>
+		<script type="module" vite-ignore>
+			document.getElementById('inline-script-module-running').checked = true;
+			if (window.parent !== window && window.SCRIPT_CONTEXT_MARKER === '🔥') {
+				document.getElementById('inline-script-module-reframed').checked = true;
+			}
+			window.SCRIPT_COUNTER++;
+		</script>
+
+		<!--
+			Use vite-ignore here so that Vite doesn't bundle or otherwise interfere with these scripts.
+			
+			The scripts themeselves are stored under public/fragments/script-loading/ so that they are served without any processing.
+		-->
+		<script vite-ignore src="/script-loading/script-sync.js"></script>
+		<script vite-ignore async src="/script-loading/script-async.js"></script>
+		<script defer src="/script-loading/script-defer.js" vite-ignore></script>
+		<script vite-ignore type="module" src="/script-loading/script-module.js"></script>
+	</body>
+</html>

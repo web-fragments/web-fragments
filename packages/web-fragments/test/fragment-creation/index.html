@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF TestBed: fragment-creation</title>
+		<style>
+			fragment-host {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF TestBed: fragment-creation</h1>
+
+		<script type="module">
+			import { register } from 'web-fragments/elements';
+			register();
+		</script>
+
+		<fragment-host src="/fragment-creation/fragment"></fragment-host>
+
+		<script type="module">
+			const fragment2 = document.createElement('fragment-host');
+			fragment2.id = 'fragment2';
+			fragment2.src = '/fragment-creation/fragment';
+			document.body.appendChild(fragment2);
+		</script>
+
+		<script type="module">
+			import { FragmentHost } from 'web-fragments/elements';
+
+			const fragment3 = new FragmentHost();
+			fragment3.id = 'fragment3';
+			fragment3.src = '/fragment-creation/fragment';
+			document.body.appendChild(fragment3);
+		</script>
+
+		<script type="module">
+			import { FragmentHost } from 'web-fragments/elements';
+
+			const fragment4 = new FragmentHost();
+			fragment4.id = 'fragment4';
+			fragment4.src = '/fragment-creation/fragment?name=Natalia';
+			document.body.appendChild(fragment4);
+		</script>
+	</body>
+</html>
