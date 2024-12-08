@@ -8,3 +8,9 @@ server
 
 # output for remix apps
 build
+
+# consolidate with docs
+docs/dist
+docs/node_modules
+.github
+.changeset
