@@ -33,9 +33,17 @@ export default defineConfig({
       include: {
         tabler: ['*'],
         'flat-color-icons': [
+          'advertising',
           'approval',
           'bearish',
+          'business-contact',
+          'currency-exchange',
+          'database',
+          'document',
+          'gallery',
           'org-unit',
+          'template',
+          'voice-presentation'
         ],
       },
     }),
