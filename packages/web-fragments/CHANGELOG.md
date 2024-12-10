@@ -1,5 +1,11 @@
 # web-fragments
 
+## 0.1.2
+
+# Minor Changes
+
+- b449ed4: [gateway] BREAKING CHANGE: Fragment registration `FrgamentConfig` property `upstream` renamed to `endpoint`.
+
 ## 0.1.1
 
 ### Patch Changes
@@ -11,7 +17,7 @@
 ### Minor Changes
 
 - 982c4f5: [gateway] BREAKING CHANGE: Cloudflare Pages `getMiddleware()` function's second parameter is now an `options` object rather than a single `mode: string`.
-- 982c4f5: [gateway] Cloudflare Pages `getMiddleware()` now accepts an `additionalHeaders` option that allows you to include additional headers in the request to the upstream fragment.
+- 982c4f5: [gateway] Cloudflare Pages `getMiddleware()` now accepts an `additionalHeaders` option that allows you to include additional headers in the request to the upstream fragment's endpoint.
 
 ### Patch Changes
 
