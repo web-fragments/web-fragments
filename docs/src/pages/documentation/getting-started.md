@@ -34,6 +34,6 @@ The `<fragment-outlet>` should have a `fragment-id` and `src` attribute that wil
 
 ## Initializing and registering the fragment in the gateway
 
-Apart from registering the custom elements, `fragments` must be registeed in the [fragment gateway](./gateway). In order to do so, the gateway must be imported to the server application.
+Apart from registering the custom elements, `fragments` must be registered in the [fragment gateway](./gateway). In order to do so, the gateway must be imported to the server application.
 
 A detailed guide can be found in the [fragment gateway](./gateway) section.
