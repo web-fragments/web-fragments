@@ -5,7 +5,13 @@ To contribute, follow our [guidelines](./src/pages/contributing/guidelines.md)
 ## Building this site
 
 ´´´bash
-npm i && npm run dev
+pnpm i && pnpm dev
 ´´´
+
+## Deploying this site
+
+```bash
+pnpm build && pnpm run deploy
+```
 
 Have a great time! ❤️‍🔥
