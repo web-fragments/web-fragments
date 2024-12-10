@@ -30,7 +30,6 @@ This is a client-side library or framework responsible for managing the lifecycl
 - Handles requests and processing tasks to fetch fragments or route them to the correct destination.
 - Communicates with upstream servers if additional processing or content fetching is needed.
 
-
 ### Remote Upstream
 
 This component represents a remote application that provides the static code and assets.
@@ -67,7 +66,7 @@ Client-side components (Reframed) fetch required assets for each fragment, ensur
 
 Ensures that fragments or data are securely fetched and processed while adhering to origin security rules.
 
-![web fragments middleware](../../assets/images/wf-reframed-1.drawio.png)
+![web fragments middleware](../../assets/images/wf-middleware.drawio.png)
 
 ## Use Cases
 

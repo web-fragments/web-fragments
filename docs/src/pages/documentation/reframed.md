@@ -9,18 +9,17 @@ The `reframed` library is small program consisting of about a thousand lines of 
 
 The following diagram describes how the `reframed` mechanism works, at an architecture high level.
 
-![web fragments middleware](../../assets/images/wf-reframed.drawio.png)
-
+![web fragments middleware](../../assets/images/wf-middleware.drawio.png)
 
 ### API Reference
 
 # Reframed API Reference
 
-| **Function/Property**          | **Description**                                                                                  | **Parameters**                                                                                                                                                                                | **Example**                                                                                     |
-|---------------------------------|--------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
-| `monkeyPatchIFrameEnvironment`  | Patches iframe size properties (`innerWidth`, `outerWidth`, `innerHeight`, etc.) to match the main window's properties. | - `iframeWindow`: The window object of the iframe.<br>- `mainWindow`: The main window object providing dimension values.                                                                        | `monkeyPatchIFrameEnvironment(iframeWindow, mainWindow);`                                       |
-| `initializeMessageHandler`      | Sets up a message handler for iframe-to-parent or iframe-to-iframe communication.                | - `targetWindow`: The window where the message handler should be initialized.                                                                                                                 | `initializeMessageHandler(window);`                                                            |
-| `iframeWindowProps`             | Binds iframe dimensional properties to values from the main window for environment synchronization. | N/A                                                                                                                                                                                           | *Access through the patched iframe window environment.*                                         |
+| **Function/Property**          | **Description**                                                                                                         | **Parameters**                                                                                                           | **Example**                                               |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| `monkeyPatchIFrameEnvironment` | Patches iframe size properties (`innerWidth`, `outerWidth`, `innerHeight`, etc.) to match the main window's properties. | - `iframeWindow`: The window object of the iframe.<br>- `mainWindow`: The main window object providing dimension values. | `monkeyPatchIFrameEnvironment(iframeWindow, mainWindow);` |
+| `initializeMessageHandler`     | Sets up a message handler for iframe-to-parent or iframe-to-iframe communication.                                       | - `targetWindow`: The window where the message handler should be initialized.                                            | `initializeMessageHandler(window);`                       |
+| `iframeWindowProps`            | Binds iframe dimensional properties to values from the main window for environment synchronization.                     | N/A                                                                                                                      | _Access through the patched iframe window environment._   |
 
 ---
 
@@ -60,4 +59,4 @@ import { monkeyPatchIFrameEnvironment } from 'reframed';
 
 monkeyPatchIFrameEnvironment(iframeWindow, mainWindow);
 console.log(iframeWindow.innerWidth);
-````
+```
