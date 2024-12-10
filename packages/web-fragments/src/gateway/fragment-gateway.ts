@@ -31,7 +31,7 @@ export interface FragmentConfig {
 	 * The upstream URI of the fragment application.
 	 * This will be fetched on any request paths matching the specified `routePatterns`
 	 */
-	upstream: string;
+	endpoint: string;
 	/**
 	 * An optional list of fragment response headers to forward to the gateway response.
 	 */

@@ -68,11 +68,11 @@ export function getMiddleware(
 	};
 
 	async function fetchFragment(request: Request, fragmentConfig: FragmentConfig) {
-		const { upstream } = fragmentConfig;
+		const { endpoint } = fragmentConfig;
 		const requestUrl = new URL(request.url);
-		const upstreamUrl = new URL(`${requestUrl.pathname}${requestUrl.search}`, upstream);
+		const fragmentEndpoint = new URL(`${requestUrl.pathname}${requestUrl.search}`, endpoint);
 
-		const fragmentReq = new Request(upstreamUrl, request);
+		const fragmentReq = new Request(fragmentEndpoint, request);
 
 		// attach additionalHeaders to fragment request
 		for (const [name, value] of new Headers(additionalHeaders).entries()) {
@@ -104,11 +104,11 @@ export function getMiddleware(
 	function handleFetchErrors(fragmentRequest: Request, fragmentConfig: FragmentConfig) {
 		return async (fragmentResponseOrError: unknown) => {
 			const {
-				upstream,
+				endpoint,
 				onSsrFetchError = () => ({
 					response: new Response(
 						mode === 'development'
-							? `<p>Fetching fragment upstream failed: ${upstream}</p>`
+							? `<p>Fetching fragment from upstream endpoint URL: ${endpoint}, failed.</p>`
 							: '<p>There was a problem fulfilling your request.</p>',
 						{ headers: [['content-type', 'text/html']] },
 					),
