@@ -4,10 +4,13 @@
 	"type": "module",
 	"exports": {
 		"./gateway": {
-			"import": "./src/gateway/index.ts"
+			"import": "./src/gateway/fragment-gateway.ts"
 		},
-		"./gateway/middlewares/cloudflare-pages": {
-			"import": "./src/gateway/middlewares/cloudflare-pages/index.ts"
+		"./gateway/web": {
+			"import": "./src/gateway/middleware/web.ts"
+		},
+		"./gateway/node": {
+			"import": "./src/gateway/middleware/node.ts"
 		},
 		"./elements": {
 			"import": "./src/elements/index.ts"
@@ -19,13 +22,17 @@
 				"import": "./dist/gateway.js",
 				"types": "./dist/gateway/index.d.ts"
 			},
-			"./gateway/middlewares/cloudflare-pages": {
-				"import": "./dist/gateway/middlewares/cloudflare-pages.js",
-				"types": "./dist/gateway/middlewares/cloudflare-pages/index.d.ts"
-			},
 			"./elements": {
 				"import": "./dist/elements.js",
 				"types": "./dist/elements/index.d.ts"
+			},
+			"./gateway/web": {
+				"import": "./dist/gateway/web.js",
+				"types": "./dist/gateway/web.d.ts"
+			},
+			"./gateway/node": {
+				"import": "./dist/gateway/node.js",
+				"types": "./dist/gateway/node.d.ts"
 			}
 		}
 	},
@@ -35,22 +42,33 @@
 	],
 	"scripts": {
 		"dev": "vite",
-		"build": "pnpm types && vite build",
+		"build": "vite build",
 		"types:elements": "tsc -p src/elements",
 		"types:gateway": "tsc -p src/gateway",
-		"types:middlewares:cloudflare-pages": "tsc -p src/gateway/middlewares/cloudflare-pages",
 		"types:root": "tsc -p .",
 		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
-		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\""
+		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\"",
+		"test:gateway": "vitest test/gateway",
+		"test-debug:gateway": "vitest test/gateway --test-timeout=0 --no-file-parallelism"
 	},
 	"dependencies": {
+		"htmlrewriter": "anfibiacreativa/htmlrewriter#fix-emoji-crash",
 		"reframed": "workspace:*"
 	},
 	"devDependencies": {
-		"path-to-regexp": "^6.2.2",
+		"@types/connect": "^3.4.38",
+		"@types/node": "^20.12.7",
 		"@vitejs/plugin-react": "^4.3.1",
+		"client": "link:@types/vite/client",
+		"connect": "^3.7.0",
+		"express": "^4.21.2",
+		"path-to-regexp": "^6.2.2",
+		"ts-node-dev": "^2.0.0",
+		"typescript": "catalog:",
 		"vite": "catalog:",
-		"typescript": "catalog:"
+		"vite-plugin-node-polyfills": "^0.23.0",
+		"vitest": "^3.0.5",
+		"vitest-fetch-mock": "^0.4.3"
 	},
 	"peerDependencies": {
 		"@cloudflare/workers-types": "^4.20250109.0"

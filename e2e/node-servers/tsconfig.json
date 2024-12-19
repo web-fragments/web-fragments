@@ -1,0 +1,25 @@
+{
+	"compilerOptions": {
+	  "types": ["express", "node"],
+	  "target": "ESNext",
+	  "module": "ES2022",
+	  "moduleResolution": "bundler",
+	  "outDir": "dist",
+	  "rootDir": "app/server/src",
+	  "strict": true,
+	  "esModuleInterop": true,
+		"skipLibCheck": true
+	},
+	"files": [
+		"app/server/src/express.ts",
+		"app/server/src/connect.ts"
+	],
+	"ts-node": {
+		"experimentalSpecifierResolution": "node",
+		"experimentalResolver": true,
+		"transpileOnly": false,
+		"esm": true,
+		"logError": true
+	}
+  }
+  

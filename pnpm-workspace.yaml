@@ -3,6 +3,7 @@ packages:
   - packages/**
   - e2e/*
   - e2e/*/fragments/*
+  - e2e/node-servers/**/*
 
 catalog:
   typescript: 5.5.4
