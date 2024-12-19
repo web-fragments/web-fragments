@@ -44,13 +44,14 @@
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\""
 	},
 	"dependencies": {
+		"htmlrewriter": "^0.0.12",
 		"reframed": "workspace:*"
 	},
 	"devDependencies": {
-		"path-to-regexp": "^6.2.2",
 		"@vitejs/plugin-react": "^4.3.1",
-		"vite": "^5.3.3",
-		"typescript": "^5.5.4"
+		"path-to-regexp": "^6.2.2",
+		"typescript": "^5.5.4",
+		"vite": "^5.3.3"
 	},
 	"peerDependencies": {
 		"@cloudflare/workers-types": "^4.20240620.0"

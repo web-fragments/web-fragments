@@ -1,5 +1,4 @@
-import { FragmentGateway } from 'web-fragments/gateway';
-import { getMiddleware } from 'web-fragments/gateway/middlewares/cloudflare-pages';
+import { FragmentGateway, getMiddleware } from "web-fragments/gateway";
 
 const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
 	_gatewayMiddleware?: PagesFunction;
@@ -55,7 +54,12 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
 		},
 	});
 
-	getGatewayMiddleware._gatewayMiddleware = getMiddleware(gateway, devMode ? 'development' : 'production');
+	getGatewayMiddleware._gatewayMiddleware = getMiddleware(
+		gateway,
+		{
+			mode: devMode ? "development" : "production"
+		}
+	) as PagesFunction;
 	return getGatewayMiddleware._gatewayMiddleware;
 };
 
