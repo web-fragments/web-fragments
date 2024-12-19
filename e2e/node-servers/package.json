@@ -1,0 +1,33 @@
+{
+	"name": "node-servers",
+	"private": true,
+	"version": "1.0.0",
+	"type": "module",
+	"scripts": {
+		"dev:express": "node --loader ts-node/esm app/server/src/express.ts",
+		"dev:connect": "node --loader ts-node/esm app/server/src/connect.ts",
+		"start:express": "node dist/express.js",
+		"start:connect": "node dist/connect.js",
+		"build": "tsc -p tsconfig.json && cd app/client && npm run build && cd ../..",
+		"clean": "rm -rf dist && rm -rf node_modules",
+		"all:connect": "pnpm clean && pnpm i && pnpm build && pnpm dev:connect",
+		"all:express": "pnpm clean && pnpm i && pnpm build && pnpm dev:express"
+	},
+	"license": "MIT",
+	"dependencies": {
+		"connect": "^3.7.0",
+		"express": "^5.0.1",
+		"serve-static": "^1.16.2",
+		"web-fragments": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/connect": "^3.4.38",
+		"@types/express": "^5.0.0",
+		"@types/node": "22.13.0",
+		"@types/serve-static": "^1.15.7",
+		"ts-node": "^10.9.2",
+		"tsconfig-paths": "^4.2.0",
+		"tslib": "^2.8.1",
+		"typescript": "catalog:"
+	}
+}

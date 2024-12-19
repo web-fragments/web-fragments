@@ -17,7 +17,10 @@ export default component$(() => {
 		<QwikCityProvider>
 			<RouterHead />
 			<RouterOutlet />
-			<PrefetchServiceWorker path="/_fragment/qwik/assets/build/qwik-prefetch-service-worker.js" scope="/" />
+			<PrefetchServiceWorker
+				path="/_fragment/qwik/assets/build/qwik-prefetch-service-worker.js"
+				scope="/_fragment/qwik/assets/build/"
+			/>
 			<PrefetchGraph base="/_fragment/qwik/assets/build/" />
 		</QwikCityProvider>
 	);

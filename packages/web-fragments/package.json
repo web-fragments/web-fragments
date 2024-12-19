@@ -6,8 +6,8 @@
 		"./gateway": {
 			"import": "./src/gateway/index.ts"
 		},
-		"./gateway/middlewares/cloudflare-pages": {
-			"import": "./src/gateway/middlewares/cloudflare-pages/index.ts"
+		"./gateway/node": {
+			"import": "./src/gateway/middleware/node.ts"
 		},
 		"./elements": {
 			"import": "./src/elements/index.ts"
@@ -19,13 +19,17 @@
 				"import": "./dist/gateway.js",
 				"types": "./dist/gateway/index.d.ts"
 			},
-			"./gateway/middlewares/cloudflare-pages": {
-				"import": "./dist/gateway/middlewares/cloudflare-pages.js",
-				"types": "./dist/gateway/middlewares/cloudflare-pages/index.d.ts"
-			},
 			"./elements": {
 				"import": "./dist/elements.js",
 				"types": "./dist/elements/index.d.ts"
+			},
+			"./gateway/web": {
+				"import": "./dist/gateway/web.js",
+				"types": "./dist/gateway/web.d.ts"
+			},
+			"./gateway/node": {
+				"import": "./dist/gateway/node.js",
+				"types": "./dist/gateway/node.d.ts"
 			}
 		}
 	},
@@ -38,27 +42,27 @@
 		"build": "pnpm types && vite build",
 		"types:elements": "tsc -p src/elements",
 		"types:gateway": "tsc -p src/gateway",
-		"types:middlewares:cloudflare-pages": "tsc -p src/gateway/middlewares/cloudflare-pages",
 		"types:root": "tsc -p .",
 		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
-		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\""
+		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\"",
+		"test:gateway": "vitest test/gateway",
+		"test-debug:gateway": "vitest test/gateway --test-timeout=0 --no-file-parallelism"
 	},
 	"dependencies": {
+		"htmlrewriter": "anfibiacreativa/htmlrewriter#fix-emoji-crash",
 		"reframed": "workspace:*"
 	},
 	"devDependencies": {
+		"@types/connect": "^3.4.38",
+		"@types/node": "^20.12.7",
+		"connect": "^3.7.0",
+		"express": "^4.21.2",
 		"path-to-regexp": "^6.2.2",
-		"@vitejs/plugin-react": "^4.3.1",
+		"ts-node-dev": "^2.0.0",
+		"typescript": "catalog:",
 		"vite": "catalog:",
-		"typescript": "catalog:"
-	},
-	"peerDependencies": {
-		"@cloudflare/workers-types": "^4.20250109.0"
-	},
-	"peerDependenciesMeta": {
-		"@cloudflare/workers-types": {
-			"optional": true
-		}
+		"vitest": "^3.0.5",
+		"vitest-fetch-mock": "^0.4.3"
 	},
 	"author": "Igor Minar<i@igor.dev>",
 	"contributors": [
@@ -85,6 +89,10 @@
 			"name": "Dario Piotrowicz",
 			"email": "dario.piotrowicz@gmail.com",
 			"url": "https://github.com/dario-piotrowicz"
+		},
+		{
+			"name": "Natalia Venditto",
+			"url": "https://github.com/anfibiacreativa"
 		}
 	]
 }
