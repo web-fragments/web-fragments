@@ -1,2 +1,2 @@
-export { FragmentGateway } from './fragment-gateway';
-export type { FragmentConfig } from './fragment-gateway';
+export { FragmentGateway, type FragmentConfig, type FragmentMiddlewareOptions } from './fragment-gateway';
+export { getWebMiddleware } from './middleware/web';

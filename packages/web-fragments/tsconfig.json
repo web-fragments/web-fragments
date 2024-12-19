@@ -5,7 +5,8 @@
 		"emitDeclarationOnly": false,
 		"noEmit": true,
 		"rootDir": ".",
-		"lib": ["ESNext"]
+		"lib": ["ES2023"],
+		"types": ["node"]
 	},
 	"files": ["vite.config.ts"]
 }

@@ -1,0 +1,24 @@
+name: Gateway Tests
+on:
+  push:
+    branches: [main, master]
+    paths: ['packages/web-fragments/src/gateway/**', 'packages/web-fragments/test/gateway/**']
+  pull_request:
+    branches: [main, master]
+    paths: ['packages/web-fragments/src/gateway/**', 'packages/web-fragments/test/gateway/**']
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 'packages/web-fragments'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install
+      - name: Run Gateway tests
+        run: pnpm run test:gateway
