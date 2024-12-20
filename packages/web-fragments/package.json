@@ -26,6 +26,10 @@
 			"./elements": {
 				"import": "./dist/elements.js",
 				"types": "./dist/elements/index.d.ts"
+			},
+			"./state": {
+				"import": "./dist/state.js",
+				"types": "./dist/state/index.d.ts"
 			}
 		}
 	},
@@ -38,6 +42,7 @@
 		"build": "pnpm types && vite build",
 		"types:elements": "tsc -p src/elements",
 		"types:gateway": "tsc -p src/gateway",
+		"types:state": "tsc -p src/state",
 		"types:middlewares:cloudflare-pages": "tsc -p src/gateway/middlewares/cloudflare-pages",
 		"types:root": "tsc -p .",
 		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
