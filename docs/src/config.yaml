@@ -18,7 +18,7 @@ metadata:
   openGraph:
     site_name: Web Fragments
     images:
-      - url: '~/assets/images/wf-hero.png'
+      - url: '~/assets/images/wf_cubes_clean_1024_72.webp'
         width: 1200
         height: 628
     type: website
