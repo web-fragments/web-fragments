@@ -43,4 +43,4 @@ A detailed guide can be found in the [fragment gateway](./gateway) section.
 <ul class="authors">
     <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
     <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>
-<ul>
+</ul>

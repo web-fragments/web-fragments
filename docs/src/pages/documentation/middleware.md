@@ -132,4 +132,4 @@ function mergeStreams(...streams: NodeReadable[]) {
 <ul class="authors">
     <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
     <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>
-<ul>
+</ul>
