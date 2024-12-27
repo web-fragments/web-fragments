@@ -14,14 +14,23 @@ const fetchContributors = async () => {
     throw new Error(`GitHub API Error: ${response.status}`);
   }
 
-  return await response.json();
+  const contributors = await response.json();
+  // Filter out contributors with '[bot]' or 'GitHub' in their login names
+  return contributors.filter(contributor => 
+    !contributor.login.includes('[bot]') && !contributor.login.includes('GitHub')
+  );
 };
 
 const contributors = await fetchContributors();
 ---
 
 <section>
-  <p>Web Fragments is the 3rd iteration on an idea initially brought to life and developed by <a href="https://igor.dev">Igor Minar</a>, Web enthusiast, and <a href="https://angular.io">Angular</a> co-creator. As a fully open-source project, it is now developed by open-source contributors, with the support of Cloudflare and other vendors, like Microsoft, Netlify and Block.</p>
+  <p>
+    Web Fragments is the 3rd iteration on an idea initially brought to life and developed by 
+    <a href="https://igor.dev">Igor Minar</a>, Web enthusiast, and 
+    <a href="https://angular.io">Angular</a> co-creator. As a fully open-source project, it is now developed 
+    by open-source contributors, with the support of Cloudflare and other vendors, like Microsoft, Netlify and Block.
+  </p>
   <ul class="contributorList">
     {contributors.map(contributor => (
       <li>
@@ -34,3 +43,30 @@ const contributors = await fetchContributors();
   </ul>
   Want to join us? Read our <a href="/contributing/guidelines">Contribution Guidelines</a> and <a href="/contributing/coc">CoC</a>.
 </section>
+
+<style>
+  .contributorList {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  @media (min-width: 512px) {
+    .contributorList {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .contributorList li {
+    display: flex;
+    align-items: center;
+  }
+
+  .contributorList img {
+    margin-right: 0.5rem;
+    border-radius: 50%;
+    border: 3px solid;
+  }
+</style>
