@@ -37,3 +37,10 @@ The `<fragment-outlet>` should have a `fragment-id` and `src` attribute that wil
 Apart from registering the custom elements, `fragments` must be registered in the [fragment gateway](./gateway). In order to do so, the gateway must be imported to the server application.
 
 A detailed guide can be found in the [fragment gateway](./gateway) section.
+
+--------------
+#### Authors
+<ul class="authors">
+    <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
+    <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>
+<ul>

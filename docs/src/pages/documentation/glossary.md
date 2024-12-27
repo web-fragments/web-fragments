@@ -37,3 +37,9 @@ The mechanism that takes place while reframing the application and fetching and 
 
 The mechanism that creates and destroys an iframe context as well as a container with its corresponding `shadowRoot` to embed the remote fragment, and manages all fragments events.
 
+--------------
+#### Authors
+<ul class="authors">
+    <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
+    <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>
+<ul>

@@ -52,3 +52,10 @@ At the same time, an `iframe` will be created in the DOM, to encapsulate all scr
 Middleware in place will be responsible for intercepting all requests coming from the legacy application, identifying those that match with a fragment request, handling scripts and embedding the resulting fragment.
 
 Learn more about [middleware](./middleware) and the Web Fragment mechanisms that port fully working independent applications to be embedded in a functional, legacy shell user interface, in the [middleware](./middleware) section.
+
+--------------
+#### Authors
+<ul class="authors">
+    <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
+    <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>
+<ul>

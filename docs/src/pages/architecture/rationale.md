@@ -41,3 +41,9 @@ By following this strategy, cross-functional teams can modernize applications ef
 
 We can! Learn more about [Web Fragment architecture](./architecture) to find out how.
 
+--------------
+#### Authors
+<ul class="authors">
+    <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
+    <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>
+<ul>

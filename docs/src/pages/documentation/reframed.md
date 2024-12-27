@@ -60,3 +60,10 @@ import { monkeyPatchIFrameEnvironment } from 'reframed';
 monkeyPatchIFrameEnvironment(iframeWindow, mainWindow);
 console.log(iframeWindow.innerWidth);
 ```
+
+--------------
+#### Authors
+<ul class="authors">
+    <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
+    <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>
+<ul>

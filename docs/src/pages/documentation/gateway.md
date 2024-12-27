@@ -101,3 +101,10 @@ Please note that at this time, the following apply, for the fragment to be corre
 - for fragments that are pulling a specific route in the [upstream application](../architecture/architecture#remote-upstream), the `<fragment-outlet>` `src` attribute must be that `route` value
 
 Head to the [middleware](./middleware) documentation, to learn more about intercepting a request and manipulating the response streams.
+
+--------------
+#### Authors
+<ul class="authors">
+    <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
+    <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>
+<ul>
