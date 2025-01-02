@@ -1,17 +1,9 @@
-import {
-	Links,
-	Meta,
-	Outlet,
-	Scripts,
-	ScrollRestoration,
-	json,
-	useRouteLoaderData,
-} from "@remix-run/react";
-import "./tailwind.css";
-import { LoaderFunctionArgs } from "@remix-run/node";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, json, useRouteLoaderData } from '@remix-run/react';
+import './tailwind.css';
+import { LoaderFunctionArgs } from '@remix-run/node';
 
 function isEmbeddedMode(request: Request) {
-	return request.headers.get("x-fragment-mode") === "embedded";
+	return request.headers.get('x-fragment-mode') === 'embedded';
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -21,7 +13,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-	const data = useRouteLoaderData<typeof loader>("root");
+	const data = useRouteLoaderData<typeof loader>('root');
 
 	return data?.standaloneMode ? (
 		<html lang="en">

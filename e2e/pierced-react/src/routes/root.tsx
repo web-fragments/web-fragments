@@ -1,20 +1,20 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
 function App() {
 	const goTo = (url: string) => {
-		window.history.pushState({}, "", url);
+		window.history.pushState({}, '', url);
 	};
 
 	return (
 		<div className="index-page">
 			<button
 				onClick={() => {
-					goTo("/remix-page");
+					goTo('/remix-page');
 				}}
 			>
 				Remix Page (window.history.pushState)
 			</button>
-			<p style={{ fontSize: "1rem", fontStyle: "italic", marginTop: "-1rem" }}>
+			<p style={{ fontSize: '1rem', fontStyle: 'italic', marginTop: '-1rem' }}>
 				Note: Clicking this button should update the URL but not the UI.
 			</p>
 			<Link to="/remix-page">Remix Page</Link>

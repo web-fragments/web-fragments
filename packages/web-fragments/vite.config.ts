@@ -1,5 +1,5 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
 	plugins: [react()],
@@ -7,21 +7,21 @@ export default defineConfig({
 		emptyOutDir: false,
 		lib: {
 			entry: {
-				gateway: new URL("src/gateway/index.ts", import.meta.url).pathname,
-				"gateway/middlewares/cloudflare-pages": new URL(
-					"src/gateway/middlewares/cloudflare-pages/index.ts",
-					import.meta.url
+				gateway: new URL('src/gateway/index.ts', import.meta.url).pathname,
+				'gateway/middlewares/cloudflare-pages': new URL(
+					'src/gateway/middlewares/cloudflare-pages/index.ts',
+					import.meta.url,
 				).pathname,
-				elements: new URL("src/elements/index.ts", import.meta.url).pathname,
+				elements: new URL('src/elements/index.ts', import.meta.url).pathname,
 			},
-			formats: ["es"],
+			formats: ['es'],
 		},
 		rollupOptions: {
-			external: ["react", "react-dom", "reframed"],
+			external: ['react', 'react-dom', 'reframed'],
 			output: {
 				globals: {
-					react: "React",
-					"react-dom": "ReactDOM",
+					react: 'React',
+					'react-dom': 'ReactDOM',
 				},
 			},
 		},
@@ -31,10 +31,7 @@ export default defineConfig({
 			// cross-repo development only!
 			// requires writable-dom checked out as a sibling to `reframed`
 			// TODO: this is incorrect here and should be addressed as fragment-elements should be able to be standalone
-			"writable-dom": new URL(
-				"../../../writable-dom/src/index.ts",
-				import.meta.url
-			).pathname,
+			'writable-dom': new URL('../../../writable-dom/src/index.ts', import.meta.url).pathname,
 		},
 	},
 });

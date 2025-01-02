@@ -1,20 +1,17 @@
-import type { MetaFunction } from "@remix-run/node";
-import { Suspense } from "react";
-import { Link, useLoaderData, Await } from "@remix-run/react";
-import { defer } from "@remix-run/node";
+import type { MetaFunction } from '@remix-run/node';
+import { Suspense } from 'react';
+import { Link, useLoaderData, Await } from '@remix-run/react';
+import { defer } from '@remix-run/node';
 
 export const meta: MetaFunction = () => {
-	return [
-		{ title: "New Remix Counter" },
-		{ name: "description", content: "Welcome to a Remix Counter!" },
-	];
+	return [{ title: 'New Remix Counter' }, { name: 'description', content: 'Welcome to a Remix Counter!' }];
 };
 
 export const loader = async () => {
 	const pendingStatus = () =>
 		new Promise<string>((resolve) => {
 			setTimeout(() => {
-				resolve("ok");
+				resolve('ok');
 			}, 500);
 		});
 
@@ -52,18 +49,18 @@ export default function Index() {
           }
         }
   `}</style>
-				<div style={{ maxHeight: "10rem", overflow: "auto" }}>
-					<div style={{ display: "flex" }}>
+				<div style={{ maxHeight: '10rem', overflow: 'auto' }}>
+					<div style={{ display: 'flex' }}>
 						<Link
 							to="/remix-page"
 							style={{
-								display: "block",
-								padding: "0.5rem",
-								margin: "1rem 0",
-								backgroundColor: "#333",
-								borderRadius: "5px",
-								fontSize: "1rem",
-								color: "#fff",
+								display: 'block',
+								padding: '0.5rem',
+								margin: '1rem 0',
+								backgroundColor: '#333',
+								borderRadius: '5px',
+								fontSize: '1rem',
+								color: '#fff',
 							}}
 						>
 							👈 Go to /remix-page
@@ -71,9 +68,7 @@ export default function Index() {
 					</div>
 					<p>Current Route: /remix-page/details</p>
 					<Suspense fallback={<p>Pending status...</p>}>
-						<Await resolve={data.status}>
-							{(status) => <p>Success status: {status}</p>}
-						</Await>
+						<Await resolve={data.status}>{(status) => <p>Success status: {status}</p>}</Await>
 					</Suspense>
 				</div>
 			</div>

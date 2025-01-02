@@ -1,19 +1,11 @@
-import {
-	Links,
-	Meta,
-	Outlet,
-	Scripts,
-	ScrollRestoration,
-	json,
-	useRouteLoaderData,
-} from "@remix-run/react";
-import { useRef, useState, useEffect } from "react";
-import "./tailwind.css";
-import "./global.css";
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, json, useRouteLoaderData } from '@remix-run/react';
+import { useRef, useState, useEffect } from 'react';
+import './tailwind.css';
+import './global.css';
+import type { LoaderFunctionArgs } from '@remix-run/node';
 
 function isDocumentRequest(request: Request) {
-	return request.headers.get("sec-fetch-dest") === "document";
+	return request.headers.get('sec-fetch-dest') === 'document';
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -27,7 +19,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	const [shouldReframe, setShouldReframe] = useState(false);
-	const loaderData = useRouteLoaderData<typeof loader>("root");
+	const loaderData = useRouteLoaderData<typeof loader>('root');
 
 	const standaloneMode = !!loaderData?.standaloneMode;
 
@@ -36,20 +28,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		(async () => {
-			if (
-				!(document as unknown as { unreframedBody: unknown }).unreframedBody
-			) {
+			if (!(document as unknown as { unreframedBody: unknown }).unreframedBody) {
 				setShouldReframe(true);
 			}
 
 			if (reframingWasTriggered.current) return;
 			reframingWasTriggered.current = true;
 
-			const { reframed } = await import("reframed");
+			const { reframed } = await import('reframed');
 			const reframedContainer = ref.current;
 			if (!reframedContainer) return;
 
-			await reframed("/counter", { container: reframedContainer });
+			await reframed('/counter', { container: reframedContainer });
 		})();
 	}, []);
 
@@ -65,10 +55,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				{shouldReframe && (
 					<article
 						style={{
-							border: "6px dashed red",
-							scale: "60%",
-							display: "grid",
-							placeContent: "center",
+							border: '6px dashed red',
+							scale: '60%',
+							display: 'grid',
+							placeContent: 'center',
 						}}
 						ref={shouldReframe ? ref : undefined}
 					></article>

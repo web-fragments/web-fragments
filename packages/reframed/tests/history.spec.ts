@@ -1,7 +1,7 @@
-import { test, expect } from ".";
+import { test, expect } from '.';
 
-test.describe("History API behavior", () => {
-	test("a reframed context ignores the broadcasted `popstate` event from the main window if it originated from a client-side navigation from that same context", async ({
+test.describe('History API behavior', () => {
+	test('a reframed context ignores the broadcasted `popstate` event from the main window if it originated from a client-side navigation from that same context', async ({
 		page,
 	}) => {
 		await page.setContent(`
@@ -39,23 +39,19 @@ test.describe("History API behavior", () => {
           </body>
         </html>`);
 
-		await page.waitForFunction("window.popstateCount > 0");
+		await page.waitForFunction('window.popstateCount > 0');
 
 		const reframedContext1 = page.frames()[1];
 		const reframedContext2 = page.frames()[2];
 
 		// ensure a popstate event was dispatched in the contexts that didn't initiate the client-side navigation
-		expect(await page.evaluate("window.popstateCount")).toBe(1);
-		expect(await reframedContext1.evaluate("window.popstateCount")).toBe(0);
-		expect(await reframedContext2.evaluate("window.popstateCount")).toBe(1);
+		expect(await page.evaluate('window.popstateCount')).toBe(1);
+		expect(await reframedContext1.evaluate('window.popstateCount')).toBe(0);
+		expect(await reframedContext2.evaluate('window.popstateCount')).toBe(1);
 
 		// ensure the navigation was correctly reflected across all execution contexts
-		expect(await page.evaluate("window.location.pathname")).toBe("/foo");
-		expect(await reframedContext1.evaluate("window.location.pathname")).toBe(
-			"/foo"
-		);
-		expect(await reframedContext2.evaluate("window.location.pathname")).toBe(
-			"/foo"
-		);
+		expect(await page.evaluate('window.location.pathname')).toBe('/foo');
+		expect(await reframedContext1.evaluate('window.location.pathname')).toBe('/foo');
+		expect(await reframedContext2.evaluate('window.location.pathname')).toBe('/foo');
 	});
 });

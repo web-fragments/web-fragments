@@ -7,10 +7,8 @@
 		<h1>Simple SPA</h1>
 		<section id="spa-root">initializing...</section>
 		<script type="module">
-			console.log(
-				`simple-spa starting (document.title == '${document.title})'`
-			);
-			const root = document.getElementById("spa-root");
+			console.log(`simple-spa starting (document.title == '${document.title})'`);
+			const root = document.getElementById('spa-root');
 			let counter = 0;
 
 			const updateCounter = () => {
@@ -23,19 +21,19 @@
 			setInterval(updateCounter, 1000);
 
 			globalThis.hello = () => {
-				console.log("hello from iframe, counter=", counter);
+				console.log('hello from iframe, counter=', counter);
 			};
 
-			console.debug("simple-spa script end");
+			console.debug('simple-spa script end');
 			console.assert(
-				document.title === "Simple SPA",
-				`script[type=module] didn't eval in an iframe, document title: ${document.title}`
+				document.title === 'Simple SPA',
+				`script[type=module] didn't eval in an iframe, document title: ${document.title}`,
 			);
 		</script>
 		<script>
 			console.assert(
-				document.title === "Simple SPA",
-				`script[type=] didn't eval in an iframe, document title: ${document.title}`
+				document.title === 'Simple SPA',
+				`script[type=] didn't eval in an iframe, document title: ${document.title}`,
 			);
 		</script>
 	</body>

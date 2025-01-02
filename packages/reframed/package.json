@@ -21,7 +21,8 @@
 		"dev": "vite",
 		"build": "tsc && vite build",
 		"preview": "vite preview",
-		"types:check": "tsc --noEmit"
+		"types:check": "tsc --noEmit",
+		"test": "playwright test"
 	},
 	"author": "Igor Minar <i@igor.dev> (https://igor.dev)",
 	"contributors": [

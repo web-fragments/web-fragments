@@ -1,7 +1,7 @@
-import { useState } from "react";
-import reactLogo from "../assets/react.svg";
-import qwikLogo from "../assets/qwik.svg";
-import "../App.css";
+import { useState } from 'react';
+import reactLogo from '../assets/react.svg';
+import qwikLogo from '../assets/qwik.svg';
+import '../App.css';
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -23,25 +23,23 @@ function App() {
 			</div>
 			<h1>React + Qwik</h1>
 			<div className="card">
-				<button onClick={() => setCount((count) => count + 1)}>
-					count is {count}
-				</button>
+				<button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
 			</div>
 
-			<section style={{ display: "flex", justifyContent: "center" }}>
+			<section style={{ display: 'flex', justifyContent: 'center' }}>
 				<div className="fragment-container pierced">
 					<h2>Reframed - from target</h2>
 					<fragment-outlet fragment-id="qwik" />
 				</div>
 				<div className="fragment-container">
-					<div style={{ width: "100%" }}>
+					<div style={{ width: '100%' }}>
 						<h2>Reframed - with fetch</h2>
 						<button
 							onClick={toggleShowHost}
 							style={{
-								background: "AliceBlue",
-								padding: "0.5rem",
-								color: "black",
+								background: 'AliceBlue',
+								padding: '0.5rem',
+								color: 'black',
 							}}
 						>
 							Toggle host

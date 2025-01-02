@@ -1,5 +1,5 @@
-import { Link } from "@remix-run/react";
-import { useState } from "react";
+import { Link } from '@remix-run/react';
+import { useState } from 'react';
 
 export default function Counter() {
 	const [counter, setCounter] = useState(0);
@@ -18,7 +18,7 @@ export default function Counter() {
         padding: 0.5rem;
     }
   `}</style>
-				<Link to={"/fancy-counter"}>go to fancy counter</Link>
+				<Link to={'/fancy-counter'}>go to fancy counter</Link>
 				<div className="counter">
 					<button
 						onClick={() => {

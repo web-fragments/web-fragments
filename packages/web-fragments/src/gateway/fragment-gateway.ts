@@ -1,4 +1,4 @@
-import { MatchFunction, match } from "path-to-regexp";
+import { MatchFunction, match } from 'path-to-regexp';
 
 interface SSRFetchErrorResponse {
 	response: Response;
@@ -47,7 +47,7 @@ export interface FragmentConfig {
 	 */
 	onSsrFetchError?: (
 		req: RequestInfo,
-		failedResOrError: Response | unknown
+		failedResOrError: Response | unknown,
 	) => SSRFetchErrorResponse | Promise<SSRFetchErrorResponse>;
 }
 
@@ -61,7 +61,7 @@ export class FragmentGateway {
 	#prePiercingStyles: string;
 
 	constructor(config?: FragmentGatewayConfig) {
-		this.#prePiercingStyles = config?.prePiercingStyles ?? "";
+		this.#prePiercingStyles = config?.prePiercingStyles ?? '';
 	}
 
 	get prePiercingStyles() {
@@ -80,7 +80,7 @@ export class FragmentGateway {
 				"\x1b[31m Warning: you're trying to register a fragment with id" +
 					` "${fragmentConfig.fragmentId}", but a fragment with the same fragmentId` +
 					` has already been registered, thus this` +
-					" duplicate registration will be ignored. \x1b[0m"
+					' duplicate registration will be ignored. \x1b[0m',
 			);
 			return;
 		}
@@ -98,9 +98,7 @@ export class FragmentGateway {
 	}
 
 	matchRequestToFragment(urlOrRequest: string | URL | Request) {
-		const path = new URL(
-			urlOrRequest instanceof Request ? urlOrRequest.url : `${urlOrRequest}`
-		).pathname;
+		const path = new URL(urlOrRequest instanceof Request ? urlOrRequest.url : `${urlOrRequest}`).pathname;
 		// TODO: path matching needs to take pattern specificity into account
 		// such that more specific patterns are matched before less specific ones
 		//   e.g. given route patterns `['/:accountId', '/:accountId/workers']` and a request path of `/abc123/workers/foo`,

@@ -1,5 +1,5 @@
-import { component$, useSignal, useStyles$ } from "@builder.io/qwik";
-import { Link } from "@builder.io/qwik-city";
+import { component$, useSignal, useStyles$ } from '@builder.io/qwik';
+import { Link } from '@builder.io/qwik-city';
 
 export default component$(() => {
 	const counter = useSignal(0);
@@ -24,10 +24,10 @@ export default component$(() => {
 			<Link href="/qwik-page">← Go back to home</Link>
 			<div
 				style={{
-					marginTop: "2rem",
-					maxHeight: "20rem",
-					maxWidth: "20rem",
-					overflow: "auto",
+					marginTop: '2rem',
+					maxHeight: '20rem',
+					maxWidth: '20rem',
+					overflow: 'auto',
 				}}
 			>
 				<div class="counter">

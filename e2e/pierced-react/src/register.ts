@@ -1,2 +1,2 @@
-import { register } from "web-fragments/elements";
+import { register } from 'web-fragments/elements';
 register();
