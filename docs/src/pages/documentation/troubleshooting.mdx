@@ -1,0 +1,53 @@
+---
+title: "Web Fragments Troubleshooting"
+layout: "~/layouts/MarkdownLayout.astro"
+---
+
+_Last updated_: December 8, 2024
+
+---
+
+import FAQs from "~/components/widgets/FAQs.astro";
+
+<FAQs
+  title="Troubleshooting Web Fragments"
+  items={[
+    {
+      title: "I have custom elements errors",
+      description:
+        "Make sure you are correctly registering the fragment custom elements.",
+      icon: "tabler:chevrons-right",
+    },
+    {
+      title: "The fragment is not found or rendered",
+      description: `Make sure to be following the requirements and conventions`,
+      icon: "tabler:chevrons-right",
+    },
+  ]}
+>
+  <Fragment slot="bg">
+    <div class="absolute inset-0 bg-blue-50 dark:bg-transparent"></div>
+  </Fragment>
+</FAQs>
+
+---
+
+- **Custom elements errors**
+  <a href="../documentation/elements">Elements registration</a>
+- **The fragment is not found**
+  <a href="../documentation/gateway.md#pre-requirements-and-conventions">
+    Requirements and conventions
+  </a>
+
+---
+
+#### Authors
+
+<ul class="authors">
+  <li class="author">
+    <a href="https://github.com/anfibiacreativa">anfibiacreativa</a>
+  </li>
+  <li class="author">
+    <a href="https://github.com/igorminar">IgorMinar</a>
+  </li>
+</ul>
