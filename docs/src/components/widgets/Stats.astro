@@ -1,23 +1,28 @@
 ---
-import type { Stats as Props } from '~/types';
-import WidgetWrapper from '../ui/WidgetWrapper.astro';
-import Headline from '../ui/Headline.astro';
-import { Icon } from 'astro-icon/components';
+import type { Stats as Props } from "~/types";
+import WidgetWrapper from "../ui/WidgetWrapper.astro";
+import Headline from "../ui/Headline.astro";
+import { Icon } from "astro-icon/components";
 
 const {
-  title = await Astro.slots.render('title'),
-  subtitle = await Astro.slots.render('subtitle'),
+  title = await Astro.slots.render("title"),
+  subtitle = await Astro.slots.render("subtitle"),
   tagline,
   stats = [],
 
   id,
   isDark = false,
   classes = {},
-  bg = await Astro.slots.render('bg'),
+  bg = await Astro.slots.render("bg"),
 } = Astro.props;
 ---
 
-<WidgetWrapper id={id} isDark={isDark} containerClass={`max-w-6xl mx-auto ${classes?.container ?? ''}`} bg={bg}>
+<WidgetWrapper
+  id={id}
+  isDark={isDark}
+  containerClass={`max-w-6xl mx-auto ${classes?.container ?? ""}`}
+  bg={bg}
+>
   <Headline title={title} subtitle={subtitle} tagline={tagline} />
   <div class="flex flex-wrap justify-center -m-4 text-center">
     {

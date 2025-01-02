@@ -1,6 +1,6 @@
 ---
-title: 'Elements'
-layout: '~/layouts/MarkdownLayout.astro'
+title: "Elements"
+layout: "~/layouts/MarkdownLayout.astro"
 ---
 
 _Last updated_: December 8, 2024
@@ -14,12 +14,12 @@ Before using the `web fragments` custom elements in an application, they must be
 Please notice that different frameworks may require additional utilities to work with `custom elements`. For example `Angular` needs `CUSTOM_ELEMENTS_SCHEMA` to be provided.
 
 ```javascript
-import { FragmentOutlet } from './fragment-outlet';
-import { FragmentHost } from './fragment-host';
+import { FragmentOutlet } from "./fragment-outlet";
+import { FragmentHost } from "./fragment-host";
 
 export function register() {
-	window.customElements.define('fragment-outlet', FragmentOutlet);
-	window.customElements.define('fragment-host', FragmentHost);
+  window.customElements.define("fragment-outlet", FragmentOutlet);
+  window.customElements.define("fragment-host", FragmentHost);
 }
 ```
 
@@ -53,8 +53,10 @@ Middleware in place will be responsible for intercepting all requests coming fro
 
 Learn more about [middleware](./middleware) and the Web Fragment mechanisms that port fully working independent applications to be embedded in a functional, legacy shell user interface, in the [middleware](./middleware) section.
 
---------------
+---
+
 #### Authors
+
 <ul class="authors">
     <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
     <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>

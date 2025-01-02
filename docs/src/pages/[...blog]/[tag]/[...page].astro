@@ -1,11 +1,11 @@
 ---
-import type { InferGetStaticPropsType, GetStaticPaths } from 'astro';
-import { blogTagRobots, getStaticPathsBlogTag } from '~/utils/blog';
+import type { InferGetStaticPropsType, GetStaticPaths } from "astro";
+import { blogTagRobots, getStaticPathsBlogTag } from "~/utils/blog";
 
-import Layout from '~/layouts/PageLayout.astro';
-import BlogList from '~/components/blog/List.astro';
-import Headline from '~/components/blog/Headline.astro';
-import Pagination from '~/components/blog/Pagination.astro';
+import Layout from "~/layouts/PageLayout.astro";
+import BlogList from "~/components/blog/List.astro";
+import Headline from "~/components/blog/Headline.astro";
+import Pagination from "~/components/blog/Pagination.astro";
 
 export const prerender = true;
 
@@ -20,7 +20,7 @@ const { page, tag } = Astro.props as Props;
 const currentPage = page.currentPage ?? 1;
 
 const metadata = {
-  title: `Posts by tag '${tag.title}'${currentPage > 1 ? ` — Page ${currentPage} ` : ''}`,
+  title: `Posts by tag '${tag.title}'${currentPage > 1 ? ` — Page ${currentPage} ` : ""}`,
   robots: {
     index: blogTagRobots?.index,
     follow: blogTagRobots?.follow,

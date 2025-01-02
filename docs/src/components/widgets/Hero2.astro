@@ -1,20 +1,20 @@
 ---
-import Image from '~/components/common/Image.astro';
-import Button from '~/components/ui/Button.astro';
+import Image from "~/components/common/Image.astro";
+import Button from "~/components/ui/Button.astro";
 
-import type { Hero as Props } from '~/types';
+import type { Hero as Props } from "~/types";
 
 const {
-  title = await Astro.slots.render('title'),
-  subtitle = await Astro.slots.render('subtitle'),
+  title = await Astro.slots.render("title"),
+  subtitle = await Astro.slots.render("subtitle"),
   tagline,
 
-  content = await Astro.slots.render('content'),
-  actions = await Astro.slots.render('actions'),
-  image = await Astro.slots.render('image'),
+  content = await Astro.slots.render("content"),
+  actions = await Astro.slots.render("actions"),
+  image = await Astro.slots.render("image"),
 
   id,
-  bg = await Astro.slots.render('bg'),
+  bg = await Astro.slots.render("bg"),
 } = Astro.props;
 ---
 
@@ -26,7 +26,9 @@ const {
   </div>
   <div class="relative max-w-7xl mx-auto px-4 sm:px-6">
     <div class="pt-0 md:pt-[76px] pointer-events-none"></div>
-    <div class="py-12 md:py-20 lg:py-0 lg:flex lg:items-center lg:h-screen lg:gap-8">
+    <div
+      class="py-12 md:py-20 lg:py-0 lg:flex lg:items-center lg:h-screen lg:gap-8"
+    >
       <div class="basis-1/2 text-center lg:text-left pb-10 md:pb-16 mx-auto">
         {
           tagline && (
@@ -76,7 +78,7 @@ const {
         {
           image && (
             <div class="relative m-auto max-w-5xl intersect-once intercept-no-queue motion-safe:md:intersect:animate-fade motion-safe:md:opacity-0 intersect-quarter">
-              {typeof image === 'string' ? (
+              {typeof image === "string" ? (
                 <Fragment set:html={image} />
               ) : (
                 <Image

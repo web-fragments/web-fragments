@@ -1,6 +1,6 @@
 ---
-title: 'Web Fragments Rationale'
-layout: '~/layouts/MarkdownLayout.astro'
+title: "Web Fragments Rationale"
+layout: "~/layouts/MarkdownLayout.astro"
 ---
 
 _Last updated_: December 8, 2024
@@ -9,16 +9,15 @@ _Last updated_: December 8, 2024
 
 We know that progress is not linear and the modernization of application stacks and architectures, to integrate innovation leads to churn.
 
-Multiple rendering strategies and approaches are now available, from the early MPA to SPA, client-side rendering, server-side rendering and hybrid approaches. This constant evolution and progress and optimization cycles, have *motivated frontend developers* and framework authors, to move from developing client-side to adopt full-stack frameworks. 
+Multiple rendering strategies and approaches are now available, from the early MPA to SPA, client-side rendering, server-side rendering and hybrid approaches. This constant evolution and progress and optimization cycles, have _motivated frontend developers_ and framework authors, to move from developing client-side to adopt full-stack frameworks.
 
 **This shift demands a new mental model.** Rendering pages server-side means having to introduce mechanisms to keep experiences dynamic and highly reactive like [hydration]() and, recently, [resumability](https://www.builder.io/blog/resumability-vs-hydration).
 
 ## Innovation adoption can be challenging
 
-Small application developers building greenfield can adopt the latest and greatest from the get-go, but for the enterprise development teams, where brownfield is the norm, the ability to modernize their stacks and patterns is limited by monolithic coupling and SLAs. 
+Small application developers building greenfield can adopt the latest and greatest from the get-go, but for the enterprise development teams, where brownfield is the norm, the ability to modernize their stacks and patterns is limited by monolithic coupling and SLAs.
 
 **Big bang migrations are undersirable**; the way forward and out of a legacy monolith, must be incremental.
-
 
 ## Enabling mobility to move forward
 
@@ -34,15 +33,16 @@ We recognize the need for mobility end-to-end, from infrastructure to technical 
 
 By following this strategy, cross-functional teams can modernize applications efficiently, maintaining stability and fostering innovation at their own pace.
 
-
 ## Are you ready for a new micro-frontends paradigm?
 
 > What if we could take an enterprise monolithic frontend, carve out out pieces of the UI, develop and deploy them separately, and compose everything back into a single user interface and consolidated experience?
 
 We can! Learn more about [Web Fragment architecture](./architecture) to find out how.
 
---------------
+---
+
 #### Authors
+
 <ul class="authors">
     <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
     <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>

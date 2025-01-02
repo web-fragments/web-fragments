@@ -1,6 +1,6 @@
 ---
-title: 'Glossary'
-layout: '~/layouts/MarkdownLayout.astro'
+title: "Glossary"
+layout: "~/layouts/MarkdownLayout.astro"
 ---
 
 Learning a new framework comes with a lot of new terminology to learn. To make it easier, we have compiled a glossary of terms that are present in our documentation and other content.
@@ -37,8 +37,10 @@ The mechanism that takes place while reframing the application and fetching and 
 
 The mechanism that creates and destroys an iframe context as well as a container with its corresponding `shadowRoot` to embed the remote fragment, and manages all fragments events.
 
---------------
+---
+
 #### Authors
+
 <ul class="authors">
     <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
     <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>

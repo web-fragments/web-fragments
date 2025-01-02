@@ -1,6 +1,6 @@
 ---
-import type { CallToAction } from '~/types';
-import Button from '~/components/ui/Button.astro';
+import type { CallToAction } from "~/types";
+import Button from "~/components/ui/Button.astro";
 
 export interface Props {
   title?: string;
@@ -12,12 +12,12 @@ export interface Props {
 }
 
 const {
-  title = await Astro.slots.render('title'),
-  subtitle = await Astro.slots.render('subtitle'),
+  title = await Astro.slots.render("title"),
+  subtitle = await Astro.slots.render("subtitle"),
   tagline,
-  content = await Astro.slots.render('content'),
-  callToAction = await Astro.slots.render('callToAction'),
-  callToAction2 = await Astro.slots.render('callToAction2'),
+  content = await Astro.slots.render("content"),
+  callToAction = await Astro.slots.render("callToAction"),
+  callToAction2 = await Astro.slots.render("callToAction2"),
 } = Astro.props;
 ---
 
@@ -58,7 +58,7 @@ const {
             {
               callToAction && (
                 <div class="flex w-full sm:w-auto">
-                  {typeof callToAction === 'string' ? (
+                  {typeof callToAction === "string" ? (
                     <Fragment set:html={callToAction} />
                   ) : (
                     <Button variant="primary" {...callToAction} />
@@ -69,7 +69,7 @@ const {
             {
               callToAction2 && (
                 <div class="flex w-full sm:w-auto">
-                  {typeof callToAction2 === 'string' ? (
+                  {typeof callToAction2 === "string" ? (
                     <Fragment set:html={callToAction2} />
                   ) : (
                     <Button {...callToAction2} />

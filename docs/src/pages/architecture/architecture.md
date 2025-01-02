@@ -1,6 +1,6 @@
 ---
-title: 'Web Fragments Architecture'
-layout: '~/layouts/MarkdownLayout.astro'
+title: "Web Fragments Architecture"
+layout: "~/layouts/MarkdownLayout.astro"
 ---
 
 _Last updated_: December 8, 2024
@@ -74,8 +74,10 @@ Ensures that fragments or data are securely fetched and processed while adhering
 - Decoupling teams by allowing independent development and deployment of fragments.
 - Maintaining strict encapsulation and sandboxing of fragment styles and scripts.
 
---------------
+---
+
 #### Authors
+
 <ul class="authors">
     <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
     <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>

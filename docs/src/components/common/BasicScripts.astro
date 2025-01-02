@@ -1,5 +1,5 @@
 ---
-import { UI } from 'astrowind:config';
+import { UI } from "astrowind:config";
 ---
 
 <script is:inline define:vars={{ defaultTheme: UI.theme }}>
@@ -10,29 +10,36 @@ import { UI } from 'astrowind:config';
   window.basic_script = true;
 
   function applyTheme(theme) {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
   }
 
   const initTheme = function () {
-    if ((defaultTheme && defaultTheme.endsWith(':only')) || (!localStorage.theme && defaultTheme !== 'system')) {
-      applyTheme(defaultTheme.replace(':only', ''));
-    } else if (
-      localStorage.theme === 'dark' ||
-      (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    if (
+      (defaultTheme && defaultTheme.endsWith(":only")) ||
+      (!localStorage.theme && defaultTheme !== "system")
     ) {
-      applyTheme('dark');
+      applyTheme(defaultTheme.replace(":only", ""));
+    } else if (
+      localStorage.theme === "dark" ||
+      (!("theme" in localStorage) &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    ) {
+      applyTheme("dark");
     } else {
-      applyTheme('light');
+      applyTheme("light");
     }
   };
   initTheme();
 
   function attachEvent(selector, event, fn) {
-    const matches = typeof selector === 'string' ? document.querySelectorAll(selector) : selector;
+    const matches =
+      typeof selector === "string"
+        ? document.querySelectorAll(selector)
+        : selector;
     if (matches && matches.length) {
       matches.forEach((elem) => {
         elem.addEventListener(event, (e) => fn(e, elem), false);
@@ -44,54 +51,62 @@ import { UI } from 'astrowind:config';
     let lastKnownScrollPosition = window.scrollY;
     let ticking = true;
 
-    attachEvent('#header nav', 'click', function () {
-      document.querySelector('[data-aw-toggle-menu]')?.classList.remove('expanded');
-      document.body.classList.remove('overflow-hidden');
-      document.getElementById('header')?.classList.remove('h-screen');
-      document.getElementById('header')?.classList.remove('expanded');
-      document.getElementById('header')?.classList.remove('bg-page');
-      document.querySelector('#header nav')?.classList.add('hidden');
-      document.querySelector('#header > div > div:last-child')?.classList.add('hidden');
+    attachEvent("#header nav", "click", function () {
+      document
+        .querySelector("[data-aw-toggle-menu]")
+        ?.classList.remove("expanded");
+      document.body.classList.remove("overflow-hidden");
+      document.getElementById("header")?.classList.remove("h-screen");
+      document.getElementById("header")?.classList.remove("expanded");
+      document.getElementById("header")?.classList.remove("bg-page");
+      document.querySelector("#header nav")?.classList.add("hidden");
+      document
+        .querySelector("#header > div > div:last-child")
+        ?.classList.add("hidden");
     });
 
-    attachEvent('[data-aw-toggle-menu]', 'click', function (_, elem) {
-      elem.classList.toggle('expanded');
-      document.body.classList.toggle('overflow-hidden');
-      document.getElementById('header')?.classList.toggle('h-screen');
-      document.getElementById('header')?.classList.toggle('expanded');
-      document.getElementById('header')?.classList.toggle('bg-page');
-      document.querySelector('#header nav')?.classList.toggle('hidden');
-      document.querySelector('#header > div > div:last-child')?.classList.toggle('hidden');
+    attachEvent("[data-aw-toggle-menu]", "click", function (_, elem) {
+      elem.classList.toggle("expanded");
+      document.body.classList.toggle("overflow-hidden");
+      document.getElementById("header")?.classList.toggle("h-screen");
+      document.getElementById("header")?.classList.toggle("expanded");
+      document.getElementById("header")?.classList.toggle("bg-page");
+      document.querySelector("#header nav")?.classList.toggle("hidden");
+      document
+        .querySelector("#header > div > div:last-child")
+        ?.classList.toggle("hidden");
     });
 
-    attachEvent('[data-aw-toggle-color-scheme]', 'click', function () {
-      if (defaultTheme.endsWith(':only')) {
+    attachEvent("[data-aw-toggle-color-scheme]", "click", function () {
+      if (defaultTheme.endsWith(":only")) {
         return;
       }
-      document.documentElement.classList.toggle('dark');
-      localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      document.documentElement.classList.toggle("dark");
+      localStorage.theme = document.documentElement.classList.contains("dark")
+        ? "dark"
+        : "light";
     });
 
-    attachEvent('[data-aw-social-share]', 'click', function (_, elem) {
-      const network = elem.getAttribute('data-aw-social-share');
-      const url = encodeURIComponent(elem.getAttribute('data-aw-url'));
-      const text = encodeURIComponent(elem.getAttribute('data-aw-text'));
+    attachEvent("[data-aw-social-share]", "click", function (_, elem) {
+      const network = elem.getAttribute("data-aw-social-share");
+      const url = encodeURIComponent(elem.getAttribute("data-aw-url"));
+      const text = encodeURIComponent(elem.getAttribute("data-aw-text"));
 
       let href;
       switch (network) {
-        case 'facebook':
+        case "facebook":
           href = `https://www.facebook.com/sharer.php?u=${url}`;
           break;
-        case 'twitter':
+        case "twitter":
           href = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
           break;
-        case 'linkedin':
+        case "linkedin":
           href = `https://www.linkedin.com/shareArticle?mini=true&url=${url}&title=${text}`;
           break;
-        case 'whatsapp':
+        case "whatsapp":
           href = `https://wa.me/?text=${text}%20${url}`;
           break;
-        case 'mail':
+        case "mail":
           href = `mailto:?subject=%22${text}%22&body=${text}%20${url}`;
           break;
 
@@ -99,36 +114,46 @@ import { UI } from 'astrowind:config';
           return;
       }
 
-      const newlink = document.createElement('a');
-      newlink.target = '_blank';
+      const newlink = document.createElement("a");
+      newlink.target = "_blank";
       newlink.href = href;
       newlink.click();
     });
 
-    const screenSize = window.matchMedia('(max-width: 767px)');
-    screenSize.addEventListener('change', function () {
-      document.querySelector('[data-aw-toggle-menu]')?.classList.remove('expanded');
-      document.body.classList.remove('overflow-hidden');
-      document.getElementById('header')?.classList.remove('h-screen');
-      document.getElementById('header')?.classList.remove('expanded');
-      document.getElementById('header')?.classList.remove('bg-page');
-      document.querySelector('#header nav')?.classList.add('hidden');
-      document.querySelector('#header > div > div:last-child')?.classList.add('hidden');
+    const screenSize = window.matchMedia("(max-width: 767px)");
+    screenSize.addEventListener("change", function () {
+      document
+        .querySelector("[data-aw-toggle-menu]")
+        ?.classList.remove("expanded");
+      document.body.classList.remove("overflow-hidden");
+      document.getElementById("header")?.classList.remove("h-screen");
+      document.getElementById("header")?.classList.remove("expanded");
+      document.getElementById("header")?.classList.remove("bg-page");
+      document.querySelector("#header nav")?.classList.add("hidden");
+      document
+        .querySelector("#header > div > div:last-child")
+        ?.classList.add("hidden");
     });
 
     function applyHeaderStylesOnScroll() {
-      const header = document.querySelector('#header[data-aw-sticky-header]');
+      const header = document.querySelector("#header[data-aw-sticky-header]");
       if (!header) return;
-      if (lastKnownScrollPosition > 60 && !header.classList.contains('scroll')) {
-        header.classList.add('scroll');
-      } else if (lastKnownScrollPosition <= 60 && header.classList.contains('scroll')) {
-        header.classList.remove('scroll');
+      if (
+        lastKnownScrollPosition > 60 &&
+        !header.classList.contains("scroll")
+      ) {
+        header.classList.add("scroll");
+      } else if (
+        lastKnownScrollPosition <= 60 &&
+        header.classList.contains("scroll")
+      ) {
+        header.classList.remove("scroll");
       }
       ticking = false;
     }
     applyHeaderStylesOnScroll();
 
-    attachEvent([document], 'scroll', function () {
+    attachEvent([document], "scroll", function () {
       lastKnownScrollPosition = window.scrollY;
 
       if (!ticking) {
@@ -140,21 +165,21 @@ import { UI } from 'astrowind:config';
     });
   };
   const onPageShow = function () {
-    document.documentElement.classList.add('motion-safe:scroll-smooth');
-    const elem = document.querySelector('[data-aw-toggle-menu]');
+    document.documentElement.classList.add("motion-safe:scroll-smooth");
+    const elem = document.querySelector("[data-aw-toggle-menu]");
     if (elem) {
-      elem.classList.remove('expanded');
+      elem.classList.remove("expanded");
     }
-    document.body.classList.remove('overflow-hidden');
-    document.getElementById('header')?.classList.remove('h-screen');
-    document.getElementById('header')?.classList.remove('expanded');
-    document.querySelector('#header nav')?.classList.add('hidden');
+    document.body.classList.remove("overflow-hidden");
+    document.getElementById("header")?.classList.remove("h-screen");
+    document.getElementById("header")?.classList.remove("expanded");
+    document.querySelector("#header nav")?.classList.add("hidden");
   };
 
   window.onload = onLoad;
   window.onpageshow = onPageShow;
 
-  document.addEventListener('astro:after-swap', () => {
+  document.addEventListener("astro:after-swap", () => {
     initTheme();
     onLoad();
     onPageShow();
@@ -179,17 +204,19 @@ import { UI } from 'astrowind:config';
         '[class$=" intersect"]',
       ];
 
-      const elements = Array.from(document.querySelectorAll(selectors.join(',')));
+      const elements = Array.from(
+        document.querySelectorAll(selectors.join(",")),
+      );
 
       const getThreshold = (element) => {
-        if (element.classList.contains('intersect-full')) return 0.99;
-        if (element.classList.contains('intersect-half')) return 0.5;
-        if (element.classList.contains('intersect-quarter')) return 0.25;
+        if (element.classList.contains("intersect-full")) return 0.99;
+        if (element.classList.contains("intersect-half")) return 0.5;
+        if (element.classList.contains("intersect-quarter")) return 0.25;
         return 0;
       };
 
       elements.forEach((el) => {
-        el.setAttribute('no-intersect', '');
+        el.setAttribute("no-intersect", "");
         el._intersectionThreshold = getThreshold(el);
       });
 
@@ -200,38 +227,39 @@ import { UI } from 'astrowind:config';
             const intersectionRatio = entry.intersectionRatio;
             const threshold = target._intersectionThreshold;
 
-            if (target.classList.contains('intersect-no-queue')) {
+            if (target.classList.contains("intersect-no-queue")) {
               if (entry.isIntersecting) {
-                target.removeAttribute('no-intersect');
-                if (target.classList.contains('intersect-once')) {
+                target.removeAttribute("no-intersect");
+                if (target.classList.contains("intersect-once")) {
                   this.observer.unobserve(target);
                 }
               } else {
-                target.setAttribute('no-intersect', '');
+                target.setAttribute("no-intersect", "");
               }
               return;
             }
 
             if (intersectionRatio >= threshold) {
-              if (!target.hasAttribute('data-animated')) {
-                target.removeAttribute('no-intersect');
-                target.setAttribute('data-animated', 'true');
+              if (!target.hasAttribute("data-animated")) {
+                target.removeAttribute("no-intersect");
+                target.setAttribute("data-animated", "true");
 
-                const delay = this.animationCounter * this.delayBetweenAnimations;
+                const delay =
+                  this.animationCounter * this.delayBetweenAnimations;
                 this.animationCounter++;
 
                 target.style.transitionDelay = `${delay}ms`;
                 target.style.animationDelay = `${delay}ms`;
 
-                if (target.classList.contains('intersect-once')) {
+                if (target.classList.contains("intersect-once")) {
                   this.observer.unobserve(target);
                 }
               }
             } else {
-              target.setAttribute('no-intersect', '');
-              target.removeAttribute('data-animated');
-              target.style.transitionDelay = '';
-              target.style.animationDelay = '';
+              target.setAttribute("no-intersect", "");
+              target.removeAttribute("data-animated");
+              target.style.transitionDelay = "";
+              target.style.animationDelay = "";
 
               this.animationCounter = 0;
             }
@@ -239,7 +267,9 @@ import { UI } from 'astrowind:config';
         });
       };
 
-      this.observer = new IntersectionObserver(callback.bind(this), { threshold: [0, 0.25, 0.5, 0.99] });
+      this.observer = new IntersectionObserver(callback.bind(this), {
+        threshold: [0, 0.25, 0.5, 0.99],
+      });
 
       elements.forEach((el) => {
         this.observer.observe(el);
@@ -249,7 +279,7 @@ import { UI } from 'astrowind:config';
 
   Observer.start();
 
-  document.addEventListener('astro:after-swap', () => {
+  document.addEventListener("astro:after-swap", () => {
     Observer.start();
   });
 </script>

@@ -1,5 +1,5 @@
-import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
-import type { HTMLAttributes, ImageMetadata } from 'astro/types';
+import type { AstroComponentFactory } from "astro/runtime/server/index.js";
+import type { HTMLAttributes, ImageMetadata } from "astro/types";
 
 export interface Post {
   /** A unique ID number that identifies a post. */
@@ -181,12 +181,12 @@ export interface Disclaimer {
 }
 
 // COMPONENTS
-export interface CallToAction extends Omit<HTMLAttributes<'a'>, 'slot'> {
-  variant?: 'primary' | 'secondary' | 'tertiary' | 'link';
+export interface CallToAction extends Omit<HTMLAttributes<"a">, "slot"> {
+  variant?: "primary" | "secondary" | "tertiary" | "link";
   text?: string;
   icon?: string;
   classes?: Record<string, string>;
-  type?: 'button' | 'submit' | 'reset';
+  type?: "button" | "submit" | "reset";
 }
 
 export interface ItemGrid {
@@ -213,35 +213,37 @@ export interface Form {
 }
 
 // WIDGETS
-export interface Hero extends Omit<Headline, 'classes'>, Omit<Widget, 'isDark' | 'classes'> {
+export interface Hero
+  extends Omit<Headline, "classes">,
+    Omit<Widget, "isDark" | "classes"> {
   content?: string;
   actions?: string | CallToAction[];
   image?: string | unknown;
 }
 
-export interface Team extends Omit<Headline, 'classes'>, Widget {
+export interface Team extends Omit<Headline, "classes">, Widget {
   team?: Array<TeamMember>;
 }
 
-export interface Stats extends Omit<Headline, 'classes'>, Widget {
+export interface Stats extends Omit<Headline, "classes">, Widget {
   stats?: Array<Stat>;
 }
 
-export interface Pricing extends Omit<Headline, 'classes'>, Widget {
+export interface Pricing extends Omit<Headline, "classes">, Widget {
   prices?: Array<Price>;
 }
 
-export interface Testimonials extends Omit<Headline, 'classes'>, Widget {
+export interface Testimonials extends Omit<Headline, "classes">, Widget {
   testimonials?: Array<Testimonial>;
   callToAction?: CallToAction;
 }
 
-export interface Brands extends Omit<Headline, 'classes'>, Widget {
+export interface Brands extends Omit<Headline, "classes">, Widget {
   icons?: Array<string>;
   images?: Array<Image>;
 }
 
-export interface Features extends Omit<Headline, 'classes'>, Widget {
+export interface Features extends Omit<Headline, "classes">, Widget {
   image?: string | unknown;
   video?: Video;
   items?: Array<Item>;
@@ -254,14 +256,14 @@ export interface Features extends Omit<Headline, 'classes'>, Widget {
   isAfterContent?: boolean;
 }
 
-export interface Faqs extends Omit<Headline, 'classes'>, Widget {
+export interface Faqs extends Omit<Headline, "classes">, Widget {
   iconUp?: string;
   iconDown?: string;
   items?: Array<Item>;
   columns?: number;
 }
 
-export interface Steps extends Omit<Headline, 'classes'>, Widget {
+export interface Steps extends Omit<Headline, "classes">, Widget {
   items: Array<{
     title: string;
     description?: string;
@@ -273,7 +275,7 @@ export interface Steps extends Omit<Headline, 'classes'>, Widget {
   isReversed?: boolean;
 }
 
-export interface Content extends Omit<Headline, 'classes'>, Widget {
+export interface Content extends Omit<Headline, "classes">, Widget {
   content?: string;
   image?: string | unknown;
   items?: Array<Item>;
@@ -283,4 +285,4 @@ export interface Content extends Omit<Headline, 'classes'>, Widget {
   callToAction?: CallToAction;
 }
 
-export interface Contact extends Omit<Headline, 'classes'>, Form, Widget {}
+export interface Contact extends Omit<Headline, "classes">, Form, Widget {}

@@ -1,6 +1,6 @@
 ---
-title: 'Web Fragments Middleware'
-layout: '~/layouts/MarkdownLayout.astro'
+title: "Web Fragments Middleware"
+layout: "~/layouts/MarkdownLayout.astro"
 ---
 
 _Last updated_: December 8, 2024
@@ -18,9 +18,9 @@ Middleware examples available
 
 Coming up: Fastify, Azure Functions and Netlify
 
-------- 
+---
 
-Middleware typically introduces types and methods and other functionality, that connects the technology and infrastructure agnostic libraries, to required vendor code. 
+Middleware typically introduces types and methods and other functionality, that connects the technology and infrastructure agnostic libraries, to required vendor code.
 
 In the case of `Web Fragments`, middleware will be responsible for identifying and classifying client-side requests by using the `sec-fetch-dest` headers.
 
@@ -29,10 +29,10 @@ In the case of `Web Fragments`, middleware will be responsible for identifying a
 When a request's `sec-fetch-dest` equals iframe, the server must respond with an empty HTML template, and set the `Content-Type` header to `text-html`
 
 ```javascript
-  if (request.headers['sec-fetch-dest'] === 'iframe') {
-    response.setHeader('content-type', 'text/html');
-    return response.end('<!doctype html><title>');
-  }
+if (request.headers["sec-fetch-dest"] === "iframe") {
+  response.setHeader("content-type", "text/html");
+  return response.end("<!doctype html><title>");
+}
 ```
 
 ### Case 2: sec-fetch-header identifies a document request
@@ -40,7 +40,7 @@ When a request's `sec-fetch-dest` equals iframe, the server must respond with an
 For documents, the middleware should defer the request to the server in place to serve the request as expected and, when applicable, embed the fragment in the `fragment` placeholder.
 
 ```javascript
-if (request.headers['sec-fetch-dest'] === 'document') {
+if (request.headers["sec-fetch-dest"] === "document") {
   next();
 }
 ```
@@ -50,8 +50,8 @@ if (request.headers['sec-fetch-dest'] === 'document') {
 For scripts, the corresponding header should be set.
 
 ```javascript
-if (request.headers['sec-fetch-dest'] === 'script') {
-  response.setHeader('content-type', 'text/javascript');
+if (request.headers["sec-fetch-dest"] === "script") {
+  response.setHeader("content-type", "text/javascript");
 }
 ```
 
@@ -65,14 +65,13 @@ Once the requests are identified, and when there is a fragment match, the middlw
 
 ### Scripts
 
-In the case of scripts, they will be loaded, reframed and encapsulated in the corresponding `iframe context`. This isolates the execution, preventing pollution and reducing security concerns. 
+In the case of scripts, they will be loaded, reframed and encapsulated in the corresponding `iframe context`. This isolates the execution, preventing pollution and reducing security concerns.
 
 #### Offloading scripts
 
 A key diffefrentiator of this approach, is that scripts are not only loaded but also offloaded when browsing away from a reframed view, with the consequent release of memory and mitigation of memory leaks.
 
 To understand how `reframed` works and what it does, go to the [reframed](./reframed) document.
-
 
 ## Eager-rendering or piercing
 
@@ -87,7 +86,7 @@ Our team uses [Worker Tools HTML rewriter](https://github.com/worker-tools/html-
 This is an example of rewriting the HTML before reframing
 
 ```javascript
-{ 
+{
 // other code
 ...
 // process the fragment response for embedding into the host document
@@ -127,8 +126,11 @@ function mergeStreams(...streams: NodeReadable[]) {
 }
 
 ```
---------------
+
+---
+
 #### Authors
+
 <ul class="authors">
     <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
     <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>

@@ -1,4 +1,4 @@
-import { z, defineCollection } from 'astro:content';
+import { z, defineCollection } from "astro:content";
 
 const metadataDefinition = () =>
   z
@@ -27,7 +27,7 @@ const metadataDefinition = () =>
                 url: z.string(),
                 width: z.number().optional(),
                 height: z.number().optional(),
-              })
+              }),
             )
             .optional(),
           locale: z.string().optional(),

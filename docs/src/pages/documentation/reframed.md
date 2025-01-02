@@ -1,6 +1,6 @@
 ---
-title: 'Reframed'
-layout: '~/layouts/MarkdownLayout.astro'
+title: "Reframed"
+layout: "~/layouts/MarkdownLayout.astro"
 ---
 
 _Last updated_: December 8, 2024
@@ -34,19 +34,19 @@ Consider an application folder structure that includes a publicly accessible `co
 ```javascript
 // Reframing the component
 
-import { reframed } from './packages/reframed/dist/reframed.js';
+import { reframed } from "./packages/reframed/dist/reframed.js";
 
-const endpoints = ['component.html'];
+const endpoints = ["component.html"];
 const ref = `./${endpoints[0]}`;
-const refId = ref.replace(/\.html$/, '');
-const tagName = 'section';
+const refId = ref.replace(/\.html$/, "");
+const tagName = "section";
 const { container } = reframed(ref, { containerTagName: tagName });
 
-container.setAttribute('style', 'border:3px dotted red');
-container.setAttribute('id', `${tagName}-${refId}`);
+container.setAttribute("style", "border:3px dotted red");
+container.setAttribute("id", `${tagName}-${refId}`);
 
 // append the reframed component to the DOM
-const main = document.body.querySelector('main');
+const main = document.body.querySelector("main");
 main.appendChild(container);
 ```
 
@@ -55,14 +55,16 @@ main.appendChild(container);
 Reframed can also be used to monkeyPatch iframe contexts in this way:
 
 ```ts
-import { monkeyPatchIFrameEnvironment } from 'reframed';
+import { monkeyPatchIFrameEnvironment } from "reframed";
 
 monkeyPatchIFrameEnvironment(iframeWindow, mainWindow);
 console.log(iframeWindow.innerWidth);
 ```
 
---------------
+---
+
 #### Authors
+
 <ul class="authors">
     <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
     <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>

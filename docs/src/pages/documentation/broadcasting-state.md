@@ -1,6 +1,6 @@
 ---
-title: 'Broadcasting events and communicating state'
-layout: '~/layouts/MarkdownLayout.astro'
+title: "Broadcasting events and communicating state"
+layout: "~/layouts/MarkdownLayout.astro"
 ---
 
 _Last updated_: December 8, 2024
@@ -11,7 +11,7 @@ Because Web Fragments are encapsulated in a `custom element` `shadowRoot`, they 
 
 ## Using `Broadcast Channel` to communicate between fragments
 
-Fragments can share data using the [Broadcast Channel API](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API) to post messages and share state. 
+Fragments can share data using the [Broadcast Channel API](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API) to post messages and share state.
 
 ### Broadcasting scenario example
 
@@ -19,8 +19,8 @@ Assume a catalog or product list as a first fragment and a shopping cart as a se
 
 ```javascript
 // fragment A - post (broadcast) message
-const bc = new BroadcastChannel('/cart');
-bc.postMessage({ type: 'cart_cleared' });
+const bc = new BroadcastChannel("/cart");
+bc.postMessage({ type: "cart_cleared" });
 bc.close();
 ```
 
@@ -45,8 +45,10 @@ return () => {
 
 Please note that all [fragments](./glossary#fragment) should share the same origin.
 
---------------
+---
+
 #### Authors
+
 <ul class="authors">
     <li class="author"><a href="https://github.com/anfibiacreativa">anfibiacreativa</a></li>
     <li class="author"><a href="https://github.com/igorminar">IgorMinar</a></li>

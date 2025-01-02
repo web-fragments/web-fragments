@@ -1,10 +1,9 @@
 ---
-title: 'Web Fragments Contribution Guidelines'
-layout: '~/layouts/MarkdownLayout.astro'
+title: "Web Fragments Contribution Guidelines"
+layout: "~/layouts/MarkdownLayout.astro"
 ---
 
 _Last updated_: December 8, 2024
-
 
 ## Found a Bug?
 
@@ -46,7 +45,7 @@ You can file new issues by selecting from our [new issue templates](https://gith
 
 If you are contributing bug fixes or new features to this project, you will need to clone the repository in your local machine and build the project from source, then run both unit tests and e2e tests before submitting your PR.
 
-Follow our [instructions](https://github.com/web-fragments/web-fragments/blob/main/packages/web-fragments/package.json)  to build the project from source.
+Follow our [instructions](https://github.com/web-fragments/web-fragments/blob/main/packages/web-fragments/package.json) to build the project from source.
 
 ### Submitting a Pull Request (PR)
 
