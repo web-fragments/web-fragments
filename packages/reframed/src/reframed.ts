@@ -1,9 +1,6 @@
-import WritableDOMStream from "writable-dom";
+import WritableDOMStream from 'writable-dom';
 
-type ReframedOptions = (
-	| { container: HTMLElement }
-	| { containerTagName: string }
-) & {
+type ReframedOptions = ({ container: HTMLElement } | { containerTagName: string }) & {
 	headers?: HeadersInit;
 };
 
@@ -17,8 +14,8 @@ type ReframedOptions = (
 export function reframed(
 	reframedSrcOrSourceShadowRoot: string | ShadowRoot,
 	options: ReframedOptions = {
-		containerTagName: "article",
-	}
+		containerTagName: 'article',
+	},
 ): {
 	iframe: HTMLIFrameElement;
 	container: HTMLElement;
@@ -31,27 +28,24 @@ export function reframed(
 	 * It's important that we set the src of the iframe before we insert the element into the body
 	 * in order to prevent loading the iframe twice when the src is changed later on.
 	 */
-	const iframe = document.createElement("iframe");
+	const iframe = document.createElement('iframe');
 	iframe.hidden = true;
 
 	const reframeMetadata: ReframedMetadata = {
-		iframeDocumentReadyState: "loading",
+		iframeDocumentReadyState: 'loading',
 		iframe,
 	};
 
 	// create the reframed container
 	const reframedContainer = (
-		"container" in options
-			? options.container
-			: document.createElement(options.containerTagName)
+		'container' in options ? options.container : document.createElement(options.containerTagName)
 	) as ReframedContainer;
 
 	const reframedContainerShadowRoot = Object.assign(
-		reframedContainer.shadowRoot ??
-			reframedContainer.attachShadow({ mode: "open" }),
+		reframedContainer.shadowRoot ?? reframedContainer.attachShadow({ mode: 'open' }),
 		{
 			[reframedMetadataSymbol]: reframeMetadata,
-		}
+		},
 	);
 
 	/**
@@ -59,24 +53,23 @@ export function reframed(
 	 * We need to know when monkeyPatchIFrameDocument resolves so we can return from reframe()
 	 * since this happens after the iframe loads.
 	 */
-	let { promise: monkeyPatchReady, resolve: resolveMonkeyPatchReady } =
-		Promise.withResolvers<void>();
+	let { promise: monkeyPatchReady, resolve: resolveMonkeyPatchReady } = Promise.withResolvers<void>();
 
-	iframe.addEventListener("load", () => {
+	iframe.addEventListener('load', () => {
 		monkeyPatchIFrameEnvironment(iframe, reframedContainerShadowRoot);
 		resolveMonkeyPatchReady();
 	});
 
 	let reframeReady: Promise<void>;
 
-	if (typeof reframedSrcOrSourceShadowRoot === "string") {
+	if (typeof reframedSrcOrSourceShadowRoot === 'string') {
 		const reframedSrc = reframedSrcOrSourceShadowRoot;
-		reframedContainer.setAttribute("reframed-src", reframedSrc);
+		reframedContainer.setAttribute('reframed-src', reframedSrc);
 		reframeReady = reframeWithFetch(
 			reframedSrcOrSourceShadowRoot,
 			reframedContainer.shadowRoot as ParentNode,
 			iframe,
-			options
+			options,
 		);
 	} else {
 		reframeReady = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe);
@@ -84,21 +77,17 @@ export function reframed(
 
 	// Note: this line needs to be here as it needs to be added before all the reframing logic
 	//       has added the various load event listeners
-	document.body.insertAdjacentElement("beforeend", iframe);
+	document.body.insertAdjacentElement('beforeend', iframe);
 
 	const ready = Promise.all([monkeyPatchReady, reframeReady]).then(() => {
-		reframedContainer.shadowRoot[
-			reframedMetadataSymbol
-		].iframeDocumentReadyState = "interactive";
-		reframedContainer.shadowRoot!.dispatchEvent(new Event("readystatechange"));
+		reframedContainer.shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'interactive';
+		reframedContainer.shadowRoot!.dispatchEvent(new Event('readystatechange'));
 		// TODO: this should be called when reframed async loading activities finish
 		//        (note: the 2s delay is completely arbitrary, this is a very temporary solution anyways)
 		//       (see: https://github.com/web-fragments/web-fragments/issues/36)
 		setTimeout(() => {
-			reframedContainer.shadowRoot[
-				reframedMetadataSymbol
-			].iframeDocumentReadyState = "complete";
-			reframedContainer.shadowRoot.dispatchEvent(new Event("readystatechange"));
+			reframedContainer.shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'complete';
+			reframedContainer.shadowRoot.dispatchEvent(new Event('readystatechange'));
 		}, 2_000);
 	});
 
@@ -113,9 +102,9 @@ async function reframeWithFetch(
 	reframedSrc: string,
 	target: ParentNode,
 	iframe: HTMLIFrameElement,
-	options: ReframedOptions
+	options: ReframedOptions,
 ): Promise<void> {
-	console.debug("reframing (with fetch)!", {
+	console.debug('reframing (with fetch)!', {
 		source: reframedSrc,
 		targetContainer: target,
 	});
@@ -130,7 +119,7 @@ async function reframeWithFetch(
 			: stringToStream(
 					`error fetching ${reframedSrc} (HTTP Status = ${
 						reframedHtmlResponse.status
-					})<hr>${await reframedHtmlResponse.text()}`
+					})<hr>${await reframedHtmlResponse.text()}`,
 				);
 
 	const { promise, resolve } = Promise.withResolvers<void>();
@@ -140,13 +129,13 @@ async function reframeWithFetch(
 	iframe.src = reframedSrc;
 	iframe.name = reframedSrc;
 
-	iframe.addEventListener("load", () => {
+	iframe.addEventListener('load', () => {
 		reframedHtmlStream
 			.pipeThrough(new TextDecoderStream())
 			.pipeTo(new WritableDOMStream(target))
 			.finally(() => {
 				import.meta.env.DEV &&
-					console.log("reframing done (reframeWithFetch)!", {
+					console.log('reframing done (reframeWithFetch)!', {
 						source: reframedSrc,
 						target,
 						title: iframe.contentDocument?.title,
@@ -158,39 +147,31 @@ async function reframeWithFetch(
 	return promise;
 }
 
-async function reframeFromTarget(
-	source: ParentNode,
-	iframe: HTMLIFrameElement
-): Promise<void> {
-	console.debug("reframing! (reframeFromTarget)", { source });
+async function reframeFromTarget(source: ParentNode, iframe: HTMLIFrameElement): Promise<void> {
+	console.debug('reframing! (reframeFromTarget)', { source });
 
 	iframe.src = document.location.href;
 
-	const scripts = [...source.querySelectorAll("script")];
+	const scripts = [...source.querySelectorAll('script')];
 
 	const { promise, resolve } = Promise.withResolvers<void>();
 
-	iframe.addEventListener("load", () => {
+	iframe.addEventListener('load', () => {
 		scripts.forEach((script) => {
-			const scriptType = script.getAttribute("data-script-type");
-			script.removeAttribute("data-script-type");
-			script.removeAttribute("type");
+			const scriptType = script.getAttribute('data-script-type');
+			script.removeAttribute('data-script-type');
+			script.removeAttribute('type');
 			if (scriptType) {
-				script.setAttribute("type", scriptType);
+				script.setAttribute('type', scriptType);
 			}
 
-			assert(
-				iframe.contentDocument !== null,
-				"iframe.contentDocument is not defined"
-			);
+			assert(iframe.contentDocument !== null, 'iframe.contentDocument is not defined');
 
-			getInternalReference(iframe.contentDocument, "body").appendChild(
-				iframe.contentDocument.importNode(script, true)
-			);
+			getInternalReference(iframe.contentDocument, 'body').appendChild(iframe.contentDocument.importNode(script, true));
 		});
 
 		import.meta.env.DEV &&
-			console.log("reframing done (reframeFromTarget)!", {
+			console.log('reframing done (reframeFromTarget)!', {
 				source,
 				title: document.defaultView!.document.title,
 			});
@@ -204,13 +185,10 @@ async function reframeFromTarget(
  * Apply monkey-patches to the source iframe so that we trick code running in it to behave as if it
  * was running in the main frame.
  */
-function monkeyPatchIFrameEnvironment(
-	iframe: HTMLIFrameElement,
-	shadowRoot: ReframedShadowRoot
-) {
+function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: ReframedShadowRoot) {
 	assert(
 		iframe.contentWindow !== null && iframe.contentDocument !== null,
-		"attempted to patch iframe before it was ready"
+		'attempted to patch iframe before it was ready',
 	);
 
 	const iframeWindow = iframe.contentWindow as Window & typeof globalThis;
@@ -219,32 +197,24 @@ function monkeyPatchIFrameEnvironment(
 	// When an iframe element is added to the page, it always triggers a load event
 	// even if the src is empty. In this case, don't monkey patch the iframe document
 	// because we will end up doing it twice.
-	if (
-		iframeWindow?.location.origin === "null" &&
-		iframeWindow?.location.protocol === "about:"
-	) {
+	if (iframeWindow?.location.origin === 'null' && iframeWindow?.location.protocol === 'about:') {
 		return;
 	}
 
 	const mainDocument = shadowRoot.ownerDocument;
 	const mainWindow = mainDocument.defaultView!;
 
-	const globalConstructors: Function[] = Object.entries(
-		Object.getOwnPropertyDescriptors(iframeWindow)
-	).flatMap(([property, descriptor]) =>
-		/^[A-Z]/.test(property) && typeof descriptor.value === "function"
-			? descriptor.value
-			: []
+	const globalConstructors: Function[] = Object.entries(Object.getOwnPropertyDescriptors(iframeWindow)).flatMap(
+		([property, descriptor]) =>
+			/^[A-Z]/.test(property) && typeof descriptor.value === 'function' ? descriptor.value : [],
 	);
 
 	function hasInstance(this: Function, instance: any) {
-		const parentContextConstructor: Function =
-			mainWindow[this.name as keyof typeof mainWindow];
+		const parentContextConstructor: Function = mainWindow[this.name as keyof typeof mainWindow];
 
 		return (
 			Function.prototype[Symbol.hasInstance].call(this, instance) ||
-			(typeof parentContextConstructor === "function" &&
-				instance instanceof parentContextConstructor)
+			(typeof parentContextConstructor === 'function' && instance instanceof parentContextConstructor)
 		);
 	}
 
@@ -258,7 +228,7 @@ function monkeyPatchIFrameEnvironment(
 
 	let updatedIframeTitle: string | undefined = undefined;
 
-	setInternalReference(iframeDocument, "body");
+	setInternalReference(iframeDocument, 'body');
 
 	Object.defineProperties(iframeDocument, {
 		title: {
@@ -266,8 +236,8 @@ function monkeyPatchIFrameEnvironment(
 				return (
 					updatedIframeTitle ??
 					// https://html.spec.whatwg.org/multipage/dom.html#document.title
-					shadowRoot.querySelector("title")?.textContent?.trim() ??
-					"[reframed document]"
+					shadowRoot.querySelector('title')?.textContent?.trim() ??
+					'[reframed document]'
 				);
 			},
 			set: function (newTitle: string) {
@@ -277,12 +247,9 @@ function monkeyPatchIFrameEnvironment(
 
 		readyState: {
 			get() {
-				if (
-					shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState ===
-					"complete"
-				) {
+				if (shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState === 'complete') {
 					console.warn(
-						"reframed warning: `document.readyState` possibly returned `'complete'` prematurely. If your app is not working correctly, please see https://github.com/web-fragments/web-fragments/issues/36  and comment on this issue so that we can prioritize fixing it."
+						"reframed warning: `document.readyState` possibly returned `'complete'` prematurely. If your app is not working correctly, please see https://github.com/web-fragments/web-fragments/issues/36  and comment on this issue so that we can prioritize fixing it.",
 					);
 				}
 				return shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState;
@@ -316,10 +283,7 @@ function monkeyPatchIFrameEnvironment(
 
 		getElementsByTagNameNS: {
 			value(namespaceURI: string | null, name: string) {
-				return shadowRoot.firstElementChild?.getElementsByTagNameNS(
-					namespaceURI,
-					name
-				);
+				return shadowRoot.firstElementChild?.getElementsByTagNameNS(namespaceURI, name);
 			},
 		},
 
@@ -420,7 +384,7 @@ function monkeyPatchIFrameEnvironment(
 	} satisfies Partial<Record<keyof Document, any>>);
 
 	// iframe window patches
-	setInternalReference(iframeWindow, "history");
+	setInternalReference(iframeWindow, 'history');
 
 	// WARNING: Be sure this class stays declared inside of this function!
 	// We rely on each reframed context having its own instance of this constructor
@@ -430,19 +394,16 @@ function monkeyPatchIFrameEnvironment(
 
 	const historyProxy = new Proxy(mainWindow.history, {
 		get(target, property, receiver) {
-			if (
-				typeof Object.getOwnPropertyDescriptor(History.prototype, property)
-					?.value === "function"
-			) {
+			if (typeof Object.getOwnPropertyDescriptor(History.prototype, property)?.value === 'function') {
 				return function (this: unknown, ...args: unknown[]) {
 					const result = Reflect.apply(
 						History.prototype[property as keyof History],
 						this === receiver ? target : this,
-						args
+						args,
 					);
 
 					// dispatch a popstate event on the main window to inform listeners of a location change
-					mainWindow.dispatchEvent(new SyntheticPopStateEvent("popstate"));
+					mainWindow.dispatchEvent(new SyntheticPopStateEvent('popstate'));
 					return result;
 				};
 			}
@@ -464,10 +425,12 @@ function monkeyPatchIFrameEnvironment(
 
 	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
 
-	const windowSizeProperties: (keyof Pick<
-		Window,
-		"innerHeight" | "innerWidth" | "outerHeight" | "outerWidth"
-	>)[] = ["innerHeight", "innerWidth", "outerHeight", "outerWidth"];
+	const windowSizeProperties: (keyof Pick<Window, 'innerHeight' | 'innerWidth' | 'outerHeight' | 'outerWidth'>)[] = [
+		'innerHeight',
+		'innerWidth',
+		'outerHeight',
+		'outerWidth',
+	];
 	for (const windowSizeProperty of windowSizeProperties) {
 		Object.defineProperty(iframeWindow, windowSizeProperty, {
 			get: function reframedWindowSizeGetter() {
@@ -478,31 +441,31 @@ function monkeyPatchIFrameEnvironment(
 
 	const domCreateProperties: (keyof Pick<
 		Document,
-		| "createAttributeNS"
-		| "createCDATASection"
-		| "createComment"
-		| "createDocumentFragment"
-		| "createEvent"
-		| "createExpression"
-		| "createNSResolver"
-		| "createNodeIterator"
-		| "createProcessingInstruction"
-		| "createRange"
-		| "createTextNode"
-		| "createTreeWalker"
+		| 'createAttributeNS'
+		| 'createCDATASection'
+		| 'createComment'
+		| 'createDocumentFragment'
+		| 'createEvent'
+		| 'createExpression'
+		| 'createNSResolver'
+		| 'createNodeIterator'
+		| 'createProcessingInstruction'
+		| 'createRange'
+		| 'createTextNode'
+		| 'createTreeWalker'
 	>)[] = [
-		"createAttributeNS",
-		"createCDATASection",
-		"createComment",
-		"createDocumentFragment",
-		"createEvent",
-		"createExpression",
-		"createNSResolver",
-		"createNodeIterator",
-		"createProcessingInstruction",
-		"createRange",
-		"createTextNode",
-		"createTreeWalker",
+		'createAttributeNS',
+		'createCDATASection',
+		'createComment',
+		'createDocumentFragment',
+		'createEvent',
+		'createExpression',
+		'createNSResolver',
+		'createNodeIterator',
+		'createProcessingInstruction',
+		'createRange',
+		'createTextNode',
+		'createTreeWalker',
 	];
 	for (const createProperty of domCreateProperties) {
 		Object.defineProperty(iframeDocument, createProperty, {
@@ -515,25 +478,18 @@ function monkeyPatchIFrameEnvironment(
 
 	Object.defineProperties(iframeDocument, {
 		createElement: {
-			value: function createElement(
-				...[tagName]: Parameters<Document["createElement"]>
-			) {
+			value: function createElement(...[tagName]: Parameters<Document['createElement']>) {
 				return Document.prototype.createElement.apply(
-					tagName.includes("-") ? iframeDocument : mainDocument,
-					arguments as any
+					tagName.includes('-') ? iframeDocument : mainDocument,
+					arguments as any,
 				);
 			},
 		},
 		createElementNS: {
-			value: function createElementNS(
-				...[namespaceURI, tagName]: Parameters<Document["createElementNS"]>
-			) {
+			value: function createElementNS(...[namespaceURI, tagName]: Parameters<Document['createElementNS']>) {
 				return Document.prototype.createElementNS.apply(
-					namespaceURI === "http://www.w3.org/1999/xhtml" &&
-						tagName.includes("-")
-						? iframeDocument
-						: mainDocument,
-					arguments as any
+					namespaceURI === 'http://www.w3.org/1999/xhtml' && tagName.includes('-') ? iframeDocument : mainDocument,
+					arguments as any,
 				);
 			},
 		},
@@ -546,50 +502,40 @@ function monkeyPatchIFrameEnvironment(
 	// Event listeners for these events should be added normally
 	// instead of being redirected to other event targets.
 	// TODO: there are probably a lot more events we don't want to redirect, e.g. "pagehide" / "pageshow"
-	const nonRedirectedEvents = ["DOMContentLoaded", "popstate", "unload"];
+	const nonRedirectedEvents = ['DOMContentLoaded', 'popstate', 'unload'];
 
 	// Redirect event listeners (except for the events listed above)
 	// from the iframe window or document to the main window or shadow root respectively.
 	// We also inject an abort signal into the provided options
 	// to handle cleanup of these listeners when the iframe is destroyed.
-	iframeWindow.EventTarget.prototype.addEventListener = new Proxy(
-		iframeWindow.EventTarget.prototype.addEventListener,
-		{
-			apply(target, thisArg, argumentsList) {
-				const [eventName, listener, optionsOrCapture] =
-					argumentsList as Parameters<typeof target>;
+	iframeWindow.EventTarget.prototype.addEventListener = new Proxy(iframeWindow.EventTarget.prototype.addEventListener, {
+		apply(target, thisArg, argumentsList) {
+			const [eventName, listener, optionsOrCapture] = argumentsList as Parameters<typeof target>;
 
-				const options =
-					typeof optionsOrCapture === "boolean"
-						? { capture: optionsOrCapture }
-						: typeof optionsOrCapture === "object"
-							? optionsOrCapture
-							: {};
+			const options =
+				typeof optionsOrCapture === 'boolean'
+					? { capture: optionsOrCapture }
+					: typeof optionsOrCapture === 'object'
+						? optionsOrCapture
+						: {};
 
-				// coalesce any provided signal with the one from our abort controller
-				const signal = AbortSignal.any(
-					[controller.signal, options.signal].filter((signal) => signal != null)
-				);
+			// coalesce any provided signal with the one from our abort controller
+			const signal = AbortSignal.any([controller.signal, options.signal].filter((signal) => signal != null));
 
-				const modifiedArgumentsList = [
-					eventName,
-					listener,
-					{ ...options, signal },
-				];
+			const modifiedArgumentsList = [eventName, listener, { ...options, signal }];
 
-				// redirect event listeners added to window and document unless the event is allowlisted
-				if (!nonRedirectedEvents.includes(eventName)) {
-					if (thisArg === iframeWindow) {
-						thisArg = mainWindow;
-					} else if (thisArg === iframeDocument) {
-						thisArg = shadowRoot;
-					}
+			// redirect event listeners added to window and document unless the event is allowlisted
+			if (!nonRedirectedEvents.includes(eventName)) {
+				if (thisArg === iframeWindow) {
+					thisArg = mainWindow;
+				} else if (thisArg === iframeDocument) {
+					thisArg = shadowRoot;
 				}
+			}
 
-				return Reflect.apply(target, thisArg, modifiedArgumentsList);
-			},
-		}
-	);
+			return Reflect.apply(target, thisArg, modifiedArgumentsList);
+		},
+	});
 
 	iframeWindow.EventTarget.prototype.removeEventListener = new Proxy(
 		iframeWindow.EventTarget.prototype.removeEventListener,
@@ -608,7 +554,7 @@ function monkeyPatchIFrameEnvironment(
 
 				return Reflect.apply(target, thisArg, argumentsList);
 			},
-		}
+		},
 	);
 
 	// When a navigation event occurs on the main window, either programmatically through the History API or by the back/forward button,
@@ -616,35 +562,29 @@ function monkeyPatchIFrameEnvironment(
 	// Finally, dispatch a PopStateEvent so that fragments that are listening to popstate event are
 	// made aware of a location change and retrigger their render updates.
 	const handleNavigate = (e: Event) => {
-		getInternalReference(iframeWindow, "history").replaceState(
-			window.history.state,
-			"",
-			window.location.href
-		);
+		getInternalReference(iframeWindow, 'history').replaceState(window.history.state, '', window.location.href);
 
 		if (e instanceof SyntheticPopStateEvent) {
 			return;
 		}
 
-		iframeWindow.dispatchEvent(
-			new PopStateEvent("popstate", e instanceof PopStateEvent ? e : undefined)
-		);
+		iframeWindow.dispatchEvent(new PopStateEvent('popstate', e instanceof PopStateEvent ? e : undefined));
 	};
 
 	// reframed:navigate event is triggered by the patched main window.history methods
-	window.addEventListener("reframed:navigate", handleNavigate, {
+	window.addEventListener('reframed:navigate', handleNavigate, {
 		signal: controller.signal,
 	});
 
 	// Forward the popstate event triggered on the main window to every registered iframe window
-	window.addEventListener("popstate", handleNavigate, {
+	window.addEventListener('popstate', handleNavigate, {
 		signal: controller.signal,
 	});
 
 	// cleanup event listeners attached to the window when the iframe gets destroyed.
 	// TODO: using the "pagehide" event would be preferred over the discouraged "unload" event,
 	// but we'd need to figure out how to restore the previously attached event if the page is resumed from the bfcache
-	iframeWindow.addEventListener("unload", () => controller.abort());
+	iframeWindow.addEventListener('unload', () => controller.abort());
 }
 
 function monkeyPatchHistoryAPI() {
@@ -667,13 +607,7 @@ function monkeyPatchHistoryAPI() {
 	 * Make sure we only patch main window history once
 	 */
 
-	const historyMethods: (keyof Omit<History, "length">)[] = [
-		"pushState",
-		"replaceState",
-		"back",
-		"forward",
-		"go",
-	];
+	const historyMethods: (keyof Omit<History, 'length'>)[] = ['pushState', 'replaceState', 'back', 'forward', 'go'];
 
 	historyMethods.forEach((historyMethod) => {
 		const originalFn = window.history[historyMethod];
@@ -687,7 +621,7 @@ function monkeyPatchHistoryAPI() {
 			get: () => {
 				return function reframedHistoryGetter() {
 					Reflect.apply(originalFn, window.history, arguments);
-					window.dispatchEvent(new CustomEvent("reframed:navigate"));
+					window.dispatchEvent(new CustomEvent('reframed:navigate'));
 				};
 			},
 			configurable: true,
@@ -704,34 +638,24 @@ function monkeyPatchDOMInsertionMethods() {
 
 	function executeScriptInReframedContext<T extends Node>(
 		script: T & HTMLScriptElement,
-		reframedContext: ReframedMetadata
+		reframedContext: ReframedMetadata,
 	) {
 		// If the script does not have a valid type attribute, treat the script node as a data block.
 		// We can add the data block directly to the main document instead of the iframe context.
-		const validScriptTypes = [
-			"module",
-			"text/javascript",
-			"importmap",
-			"speculationrules",
-			"",
-			null,
-		];
-		if (!validScriptTypes.includes(script.getAttribute("type"))) {
+		const validScriptTypes = ['module', 'text/javascript', 'importmap', 'speculationrules', '', null];
+		if (!validScriptTypes.includes(script.getAttribute('type'))) {
 			return script;
 		}
 
 		const iframe = reframedContext.iframe;
-		assert(
-			iframe.contentDocument !== null,
-			"iframe.contentDocument is not defined"
-		);
+		assert(iframe.contentDocument !== null, 'iframe.contentDocument is not defined');
 
 		// Script nodes that do not have text content are not evaluated.
 		// Add a reference of the script to the iframe. If text content is added later, the script is then evaluated.
 		// Clone the empty script to the main document.
 		if (!script.textContent) {
 			const clone = document.importNode(script, true);
-			getInternalReference(iframe.contentDocument, "body").appendChild(script);
+			getInternalReference(iframe.contentDocument, 'body').appendChild(script);
 			return clone;
 		}
 
@@ -743,22 +667,15 @@ function monkeyPatchDOMInsertionMethods() {
 		// It also returns the already-executed clone so that the caller can update any
 		// direct references they might be holding that point to the original script.
 		const scriptToExecute = iframe.contentDocument.importNode(script, true);
-		getInternalReference(iframe.contentDocument, "body").appendChild(
-			scriptToExecute
-		);
+		getInternalReference(iframe.contentDocument, 'body').appendChild(scriptToExecute);
 		const alreadyStartedScript = document.importNode(scriptToExecute, true);
 		_Element__replaceWith.call(script, alreadyStartedScript);
 		return alreadyStartedScript;
 	}
 
-	function executeAnyChildScripts(
-		element: Node,
-		reframedContext: ReframedMetadata
-	) {
-		const scripts = (element as Element).querySelectorAll?.("script") ?? [];
-		scripts.forEach((script) =>
-			executeScriptInReframedContext(script, reframedContext)
-		);
+	function executeAnyChildScripts(element: Node, reframedContext: ReframedMetadata) {
+		const scripts = (element as Element).querySelectorAll?.('script') ?? [];
+		scripts.forEach((script) => executeScriptInReframedContext(script, reframedContext));
 	}
 
 	function isWithinReframedDOM(node: Node) {
@@ -770,7 +687,7 @@ function monkeyPatchDOMInsertionMethods() {
 		const root = node.getRootNode();
 
 		if (!isReframedShadowRoot(root)) {
-			throw new Error("Missing reframed metadata!");
+			throw new Error('Missing reframed metadata!');
 		}
 
 		return root[reframedMetadataSymbol];
@@ -782,10 +699,7 @@ function monkeyPatchDOMInsertionMethods() {
 			const reframedContext = getReframedMetadata(this);
 			executeAnyChildScripts(node, reframedContext);
 			if (node instanceof HTMLScriptElement) {
-				node = arguments[0] = executeScriptInReframedContext(
-					node,
-					reframedContext
-				);
+				node = arguments[0] = executeScriptInReframedContext(node, reframedContext);
 			}
 		}
 		return _Node__appendChild.apply(this, arguments as any) as any;
@@ -797,10 +711,7 @@ function monkeyPatchDOMInsertionMethods() {
 			const reframedContext = getReframedMetadata(this);
 			executeAnyChildScripts(node, reframedContext);
 			if (node instanceof HTMLScriptElement) {
-				node = arguments[0] = executeScriptInReframedContext(
-					node,
-					reframedContext
-				);
+				node = arguments[0] = executeScriptInReframedContext(node, reframedContext);
 			}
 		}
 		return _Node__insertBefore.apply(this, arguments as any) as any;
@@ -813,10 +724,7 @@ function monkeyPatchDOMInsertionMethods() {
 
 			executeAnyChildScripts(node, reframedContext);
 			if (node instanceof HTMLScriptElement && isWithinReframedDOM(node)) {
-				node = arguments[0] = executeScriptInReframedContext(
-					node,
-					reframedContext
-				);
+				node = arguments[0] = executeScriptInReframedContext(node, reframedContext);
 			}
 		}
 		return _Node__replaceChild.apply(this, arguments as any) as any;
@@ -827,13 +735,10 @@ function monkeyPatchDOMInsertionMethods() {
 		if (isWithinReframedDOM(this)) {
 			const reframedContext = getReframedMetadata(this);
 			nodes.forEach((node, index) => {
-				if (typeof node !== "string") {
+				if (typeof node !== 'string') {
 					executeAnyChildScripts(node, reframedContext);
 					if (node instanceof HTMLScriptElement) {
-						node = arguments[index] = executeScriptInReframedContext(
-							node,
-							reframedContext
-						);
+						node = arguments[index] = executeScriptInReframedContext(node, reframedContext);
 					}
 				}
 			});
@@ -846,13 +751,10 @@ function monkeyPatchDOMInsertionMethods() {
 		if (isWithinReframedDOM(this)) {
 			const reframedContext = getReframedMetadata(this);
 			nodes.forEach((node, index) => {
-				if (typeof node !== "string") {
+				if (typeof node !== 'string') {
 					executeAnyChildScripts(node, reframedContext);
 					if (node instanceof HTMLScriptElement) {
-						node = arguments[index] = executeScriptInReframedContext(
-							node,
-							reframedContext
-						);
+						node = arguments[index] = executeScriptInReframedContext(node, reframedContext);
 					}
 				}
 			});
@@ -860,21 +762,14 @@ function monkeyPatchDOMInsertionMethods() {
 		return _Element__append.apply(this, arguments as any) as any;
 	};
 
-	const _Element__insertAdjacentElement =
-		Element.prototype.insertAdjacentElement;
-	Element.prototype.insertAdjacentElement = function insertAdjacentElement(
-		where,
-		element
-	) {
+	const _Element__insertAdjacentElement = Element.prototype.insertAdjacentElement;
+	Element.prototype.insertAdjacentElement = function insertAdjacentElement(where, element) {
 		if (isWithinReframedDOM(this)) {
 			const reframedContext = getReframedMetadata(this);
 
 			executeAnyChildScripts(element, reframedContext);
 			if (element instanceof HTMLScriptElement) {
-				element = arguments[1] = executeScriptInReframedContext(
-					element,
-					reframedContext
-				);
+				element = arguments[1] = executeScriptInReframedContext(element, reframedContext);
 			}
 		}
 		return _Element__insertAdjacentElement.apply(this, arguments as any) as any;
@@ -885,13 +780,10 @@ function monkeyPatchDOMInsertionMethods() {
 		if (isWithinReframedDOM(this)) {
 			const reframedContext = getReframedMetadata(this);
 			nodes.forEach((node, index) => {
-				if (typeof node !== "string") {
+				if (typeof node !== 'string') {
 					executeAnyChildScripts(node, reframedContext);
 					if (node instanceof HTMLScriptElement) {
-						node = arguments[index] = executeScriptInReframedContext(
-							node,
-							reframedContext
-						);
+						node = arguments[index] = executeScriptInReframedContext(node, reframedContext);
 					}
 				}
 			});
@@ -904,13 +796,10 @@ function monkeyPatchDOMInsertionMethods() {
 		if (isWithinReframedDOM(this)) {
 			const reframedContext = getReframedMetadata(this);
 			nodes.forEach((node, index) => {
-				if (typeof node !== "string") {
+				if (typeof node !== 'string') {
 					executeAnyChildScripts(node, reframedContext);
 					if (node instanceof HTMLScriptElement) {
-						node = arguments[index] = executeScriptInReframedContext(
-							node,
-							reframedContext
-						);
+						node = arguments[index] = executeScriptInReframedContext(node, reframedContext);
 					}
 				}
 			});
@@ -922,13 +811,10 @@ function monkeyPatchDOMInsertionMethods() {
 		if (isWithinReframedDOM(this)) {
 			const reframedContext = getReframedMetadata(this);
 			nodes.forEach((node, index) => {
-				if (typeof node !== "string") {
+				if (typeof node !== 'string') {
 					executeAnyChildScripts(node, reframedContext);
 					if (node instanceof HTMLScriptElement) {
-						node = arguments[index] = executeScriptInReframedContext(
-							node,
-							reframedContext
-						);
+						node = arguments[index] = executeScriptInReframedContext(node, reframedContext);
 					}
 				}
 			});
@@ -978,19 +864,16 @@ type ReframedMetadata = {
 	iframe: HTMLIFrameElement;
 };
 
-const reframedInitializedSymbol = Symbol("reframed:initialized");
-const reframedMetadataSymbol = Symbol("reframed:metadata");
-const reframedReferencesSymbol = Symbol("reframed:references");
+const reframedInitializedSymbol = Symbol('reframed:initialized');
+const reframedMetadataSymbol = Symbol('reframed:metadata');
+const reframedReferencesSymbol = Symbol('reframed:references');
 
 type ReframedShadowRoot = ShadowRoot & {
 	[reframedMetadataSymbol]: ReframedMetadata;
 };
 
 function isReframedShadowRoot(node: Node): node is ReframedShadowRoot {
-	return (
-		node instanceof ShadowRoot &&
-		(node as ReframedShadowRoot)[reframedMetadataSymbol] !== undefined
-	);
+	return node instanceof ShadowRoot && (node as ReframedShadowRoot)[reframedMetadataSymbol] !== undefined;
 }
 
 function setInternalReference<T extends object>(target: T, key: keyof T) {
@@ -998,15 +881,10 @@ function setInternalReference<T extends object>(target: T, key: keyof T) {
 	(target as any)[reframedReferencesSymbol][key] = Reflect.get(target, key);
 }
 
-function getInternalReference<T extends object, K extends keyof T>(
-	target: T,
-	key: K
-): T[K] {
+function getInternalReference<T extends object, K extends keyof T>(target: T, key: K): T[K] {
 	const references = (target as any)[reframedReferencesSymbol];
 	if (!references || references[key] === undefined) {
-		throw new Error(
-			`Attempted to access internal reference "${String(key)}" before it was set.`
-		);
+		throw new Error(`Attempted to access internal reference "${String(key)}" before it was set.`);
 	}
 
 	return references[key];

@@ -1,13 +1,6 @@
-import { component$ } from "@builder.io/qwik";
-import {
-	type DocumentHead,
-	routeLoader$,
-	routeAction$,
-	zod$,
-	z,
-	Form,
-} from "@builder.io/qwik-city";
-import styles from "./todolist.module.css";
+import { component$ } from '@builder.io/qwik';
+import { type DocumentHead, routeLoader$, routeAction$, zod$, z, Form } from '@builder.io/qwik-city';
+import styles from './todolist.module.css';
 
 interface ListItem {
 	text: string;
@@ -28,7 +21,7 @@ export const useAddToListAction = routeAction$(
 	},
 	zod$({
 		text: z.string().trim().min(1),
-	})
+	}),
 );
 
 export default component$(() => {
@@ -59,20 +52,18 @@ export default component$(() => {
 
 			<div class="container container-center">
 				<Form action={action} spaReset>
-					<input type="text" name="text" required class={styles.input} />{" "}
+					<input type="text" name="text" required class={styles.input} />{' '}
 					<button type="submit" class="button-dark">
 						Add item
 					</button>
 				</Form>
 
-				<p class={styles.hint}>
-					PS: This little app works even when JavaScript is disabled.
-				</p>
+				<p class={styles.hint}>PS: This little app works even when JavaScript is disabled.</p>
 			</div>
 		</>
 	);
 });
 
 export const head: DocumentHead = {
-	title: "Qwik Todo List",
+	title: 'Qwik Todo List',
 };

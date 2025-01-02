@@ -1,5 +1,5 @@
-import { component$, useStyles$ } from "@builder.io/qwik";
-import { Link, type DocumentHead } from "@builder.io/qwik-city";
+import { component$, useStyles$ } from '@builder.io/qwik';
+import { Link, type DocumentHead } from '@builder.io/qwik-city';
 
 export default component$(() => {
 	useStyles$(`
@@ -34,11 +34,11 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-	title: "Welcome to Qwik",
+	title: 'Welcome to Qwik',
 	meta: [
 		{
-			name: "description",
-			content: "Qwik site description",
+			name: 'description',
+			content: 'Qwik site description',
 		},
 	],
 };

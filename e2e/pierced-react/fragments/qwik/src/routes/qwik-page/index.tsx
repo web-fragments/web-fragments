@@ -1,10 +1,5 @@
-import {
-	component$,
-	useSignal,
-	useStyles$,
-	useVisibleTask$,
-} from "@builder.io/qwik";
-import { Link, type DocumentHead } from "@builder.io/qwik-city";
+import { component$, useSignal, useStyles$, useVisibleTask$ } from '@builder.io/qwik';
+import { Link, type DocumentHead } from '@builder.io/qwik-city';
 
 export default component$(() => {
 	const counter = useSignal(0);
@@ -41,7 +36,7 @@ export default component$(() => {
 		<>
 			<div class="qwik-counter-page">
 				<Link href="/qwik-page/details">Go to details</Link>
-				<div style={{ maxHeight: "10rem", overflow: "auto" }}>
+				<div style={{ maxHeight: '10rem', overflow: 'auto' }}>
 					<p>Qwik Counter</p>
 					<div class="counter">
 						<button
@@ -70,11 +65,11 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-	title: "Welcome to Qwik",
+	title: 'Welcome to Qwik',
 	meta: [
 		{
-			name: "description",
-			content: "Qwik site description",
+			name: 'description',
+			content: 'Qwik site description',
 		},
 	],
 };

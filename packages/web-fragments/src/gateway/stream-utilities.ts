@@ -13,7 +13,7 @@
 export function wrapStreamInText(
 	preStream: string,
 	postStream: string,
-	stream: ReadableStream<Uint8Array>
+	stream: ReadableStream<Uint8Array>,
 ): ReadableStream {
 	const { writable, readable } = new TransformStream();
 	const writer = writable.getWriter();
@@ -28,10 +28,7 @@ export function wrapStreamInText(
  * @param transformerFn the function to be applied to each chunk
  * @returns a transformed stream
  */
-export function transformStream(
-	stream: ReadableStream<Uint8Array>,
-	transformerFn: (str: string) => string
-) {
+export function transformStream(stream: ReadableStream<Uint8Array>, transformerFn: (str: string) => string) {
 	const { writable, readable } = new TransformStream();
 	const writer = writable.getWriter();
 
@@ -66,7 +63,7 @@ async function writeIntoEmbeddedStream(
 	preStream: string,
 	postStream: string,
 	stream: ReadableStream<Uint8Array>,
-	writer: WritableStreamDefaultWriter<any>
+	writer: WritableStreamDefaultWriter<any>,
 ): Promise<void> {
 	try {
 		const encoder = new TextEncoder();
@@ -95,9 +92,7 @@ async function writeIntoEmbeddedStream(
  * @returns a new stream
  */
 export function concatenateStreams(streams: ReadableStream[]): ReadableStream {
-	async function writeStreams(
-		writer: WritableStreamDefaultWriter
-	): Promise<void> {
+	async function writeStreams(writer: WritableStreamDefaultWriter): Promise<void> {
 		try {
 			for (const stream of streams) {
 				const reader = stream.getReader();

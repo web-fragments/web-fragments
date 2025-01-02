@@ -2,17 +2,17 @@ name: Playwright Tests
 on:
   push:
     branches: [main, master]
-    paths: ["packages/reframed/**"]
+    paths: ['packages/reframed/**']
   pull_request:
     branches: [main, master]
-    paths: ["packages/reframed/**"]
+    paths: ['packages/reframed/**']
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: "packages/reframed"
+        working-directory: 'packages/reframed'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

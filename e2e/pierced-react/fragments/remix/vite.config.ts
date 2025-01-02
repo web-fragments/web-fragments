@@ -1,12 +1,12 @@
-import { vitePlugin as remix } from "@remix-run/dev";
-import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
+import { vitePlugin as remix } from '@remix-run/dev';
+import { defineConfig } from 'vite';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-	mode: "development",
+	mode: 'development',
 	build: {
 		minify: false,
-		assetsDir: "_fragment/remix/assets",
+		assetsDir: '_fragment/remix/assets',
 	},
 	plugins: [
 		remix({

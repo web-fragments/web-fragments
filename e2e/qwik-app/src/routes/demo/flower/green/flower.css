@@ -31,9 +31,7 @@ h1 {
 	display: block;
 	width: var(--size);
 	height: var(--size);
-	transform: rotateZ(
-		calc(var(--rotation) * var(--state) * (var(--center) - var(--index)))
-	);
+	transform: rotateZ(calc(var(--rotation) * var(--state) * (var(--center) - var(--index))));
 	transition-property: transform, border-color;
 	transition-duration: 5s;
 	transition-timing-function: ease-in-out;
@@ -50,11 +48,7 @@ h1 {
 
 .square.odd {
 	--luminance: calc(1 - calc(calc(var(--index) * var(--odd-color-step)) / 256));
-	background: rgb(
-		calc(0 * var(--luminance)),
-		calc(255 * var(--luminance)),
-		calc(0 * var(--luminance))
-	);
+	background: rgb(calc(0 * var(--luminance)), calc(255 * var(--luminance)), calc(0 * var(--luminance)));
 }
 
 .pride .square:nth-child(12n + 1) {

@@ -1,4 +1,4 @@
-import { reframed } from "reframed";
+import { reframed } from 'reframed';
 
 export class FragmentHost extends HTMLElement {
 	iframe: HTMLIFrameElement | undefined;
@@ -19,13 +19,10 @@ export class FragmentHost extends HTMLElement {
 		if (!this.isInitialized) {
 			this.isInitialized = true;
 
-			const { iframe, ready } = reframed(
-				this.shadowRoot ?? document.location.href,
-				{
-					container: this,
-					headers: { "x-fragment-mode": "embedded" },
-				}
-			);
+			const { iframe, ready } = reframed(this.shadowRoot ?? document.location.href, {
+				container: this,
+				headers: { 'x-fragment-mode': 'embedded' },
+			});
 
 			this.iframe = iframe;
 			this.ready = ready;
@@ -34,7 +31,7 @@ export class FragmentHost extends HTMLElement {
 			 * <fragment-outlet> will dispatch the fragment-outlet-ready event.
 			 * When that happens, move the entire host element + shadowRoot into the fragment-outlet
 			 */
-			document.addEventListener("fragment-outlet-ready", this.handlePiercing);
+			document.addEventListener('fragment-outlet-ready', this.handlePiercing);
 		}
 	}
 
@@ -48,18 +45,14 @@ export class FragmentHost extends HTMLElement {
 			this.iframe.remove();
 			this.iframe = undefined;
 
-			document.removeEventListener(
-				"fragment-outlet-ready",
-				this.handlePiercing
-			);
+			document.removeEventListener('fragment-outlet-ready', this.handlePiercing);
 		}
 	}
 
 	async handlePiercing(event: Event) {
 		if (
 			event.defaultPrevented ||
-			(event.target as Element).getAttribute("fragment-id") !==
-				this.getAttribute("fragment-id")
+			(event.target as Element).getAttribute('fragment-id') !== this.getAttribute('fragment-id')
 		) {
 			return;
 		}
@@ -97,7 +90,7 @@ export class FragmentHost extends HTMLElement {
 
 		// Restore the initial type attributes of the script tags
 		this.restoreScriptTags();
-		this.removeAttribute("data-piercing");
+		this.removeAttribute('data-piercing');
 	}
 
 	// A best-effort attempt at avoiding a FOUC.
@@ -117,41 +110,38 @@ export class FragmentHost extends HTMLElement {
 	// this is probably the best way we can deal with the FOUC.
 	preserveStylesheets() {
 		if (this.shadowRoot) {
-			this.shadowRoot.adoptedStyleSheets = Array.from(
-				this.shadowRoot.styleSheets,
-				(sheet) => {
-					const clone = new CSSStyleSheet();
+			this.shadowRoot.adoptedStyleSheets = Array.from(this.shadowRoot.styleSheets, (sheet) => {
+				const clone = new CSSStyleSheet();
 
-					// CSSStyleSheet.insertRule() prepends CSS rules to the top of the stylesheet by default.
-					// We need to set the index to sheet.cssRules.length in order to append the rule and maintain specificity.
-					[...sheet.cssRules].forEach((rule) => {
-						// @import directives are not allowed in Constructed Stylesheets
-						if (!(rule instanceof CSSImportRule)) {
-							clone.insertRule(rule.cssText, clone.cssRules.length);
-						}
-					});
-					return clone;
-				}
-			);
+				// CSSStyleSheet.insertRule() prepends CSS rules to the top of the stylesheet by default.
+				// We need to set the index to sheet.cssRules.length in order to append the rule and maintain specificity.
+				[...sheet.cssRules].forEach((rule) => {
+					// @import directives are not allowed in Constructed Stylesheets
+					if (!(rule instanceof CSSImportRule)) {
+						clone.insertRule(rule.cssText, clone.cssRules.length);
+					}
+				});
+				return clone;
+			});
 		}
 	}
 
 	neutralizeScriptTags() {
-		const scripts = [...this.shadowRoot!.querySelectorAll("script")];
+		const scripts = [...this.shadowRoot!.querySelectorAll('script')];
 		scripts.forEach((script) => {
-			const type = script.getAttribute("type");
-			type && script.setAttribute("data-script-type", type);
-			script.setAttribute("type", "inert");
+			const type = script.getAttribute('type');
+			type && script.setAttribute('data-script-type', type);
+			script.setAttribute('type', 'inert');
 		});
 	}
 
 	restoreScriptTags() {
-		const scripts = [...this.shadowRoot!.querySelectorAll("script")];
+		const scripts = [...this.shadowRoot!.querySelectorAll('script')];
 		scripts.forEach((script) => {
-			script.removeAttribute("type");
-			const originalType = script.getAttribute("data-script-type");
-			originalType && script.setAttribute("type", originalType);
-			script.removeAttribute("data-script-type");
+			script.removeAttribute('type');
+			const originalType = script.getAttribute('data-script-type');
+			originalType && script.setAttribute('type', originalType);
+			script.removeAttribute('data-script-type');
 		});
 	}
 
@@ -163,9 +153,7 @@ export class FragmentHost extends HTMLElement {
 	// to help with this once it gets more browser support.
 	getSelectionRange() {
 		try {
-			return (this.shadowRoot as unknown as Document)
-				.getSelection()
-				?.getRangeAt(0);
+			return (this.shadowRoot as unknown as Document).getSelection()?.getRangeAt(0);
 		} catch {
 			return null;
 		}

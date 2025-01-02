@@ -1,7 +1,7 @@
-import { test, expect } from ".";
+import { test, expect } from '.';
 
-test.describe("Reframing already-rendered content", () => {
-	test("reframed scripts execute in an isolated context", async ({ page }) => {
+test.describe('Reframing already-rendered content', () => {
+	test('reframed scripts execute in an isolated context', async ({ page }) => {
 		await page.setContent(`
       <!DOCTYPE html>
       <html>
@@ -24,16 +24,16 @@ test.describe("Reframing already-rendered content", () => {
 
 		const reframedContext = page.frames()[1];
 
-		expect(await page.evaluate("window.context")).toBe("main");
-		expect(await reframedContext.evaluate("window.context")).toBe("reframed");
+		expect(await page.evaluate('window.context')).toBe('main');
+		expect(await reframedContext.evaluate('window.context')).toBe('reframed');
 	});
 });
 
-test.describe("Fetch-and-reframe content", () => {
-	test("reframed scripts execute in an isolated context", async ({ page }) => {
-		page.route("**/content", async (route) => {
+test.describe('Fetch-and-reframe content', () => {
+	test('reframed scripts execute in an isolated context', async ({ page }) => {
+		page.route('**/content', async (route) => {
 			route.fulfill({
-				contentType: "text/html",
+				contentType: 'text/html',
 				body: `
           <div id="target">
             <script>
@@ -63,16 +63,14 @@ test.describe("Fetch-and-reframe content", () => {
 		// FIXME: reframed currently first loads an iframe at about:blank, then sets the src.
 		// We should refactor things so that we just load the correct src initially.
 		// Once we do this, we can remove this waitForUrl()
-		await reframedContext.waitForURL("**/content");
+		await reframedContext.waitForURL('**/content');
 
-		expect(await page.evaluate("window.context")).toBe("main");
-		expect(await reframedContext.evaluate("window.context")).toBe("reframed");
+		expect(await page.evaluate('window.context')).toBe('main');
+		expect(await reframedContext.evaluate('window.context')).toBe('reframed');
 	});
 });
 
-test("reframed scripts render content into the specified container", async ({
-	page,
-}) => {
+test('reframed scripts render content into the specified container', async ({ page }) => {
 	await page.setContent(`
     <!DOCTYPE html>
     <html>
@@ -94,13 +92,11 @@ test("reframed scripts render content into the specified container", async ({
     </html>
 	`);
 
-	await expect(page.getByText("Hello world")).toBeVisible();
-	await expect(page.getByTestId("container")).toHaveText("Hello world");
+	await expect(page.getByText('Hello world')).toBeVisible();
+	await expect(page.getByTestId('container')).toHaveText('Hello world');
 });
 
-test("iframe window size properties delegate to the main frame", async ({
-	page,
-}) => {
+test('iframe window size properties delegate to the main frame', async ({ page }) => {
 	await page.setContent(`
     <!DOCTYPE html>
     <html>
@@ -123,12 +119,7 @@ test("iframe window size properties delegate to the main frame", async ({
 
 	const reframedContext = page.frames()[1];
 
-	const sizeProperties = [
-		"innerWidth",
-		"innerHeight",
-		"outerWidth",
-		"outerHeight",
-	];
+	const sizeProperties = ['innerWidth', 'innerHeight', 'outerWidth', 'outerHeight'];
 	for (const property of sizeProperties) {
 		const mainFrameValue = await page.evaluate(`window.${property}`);
 		const iframeValue = await reframedContext.evaluate(`window.${property}`);
@@ -137,9 +128,7 @@ test("iframe window size properties delegate to the main frame", async ({
 	}
 });
 
-test("custom elements registries are scoped to reframed contexts", async ({
-	page,
-}) => {
+test('custom elements registries are scoped to reframed contexts', async ({ page }) => {
 	await page.setContent(`
     <!DOCTYPE html>
     <html>
@@ -183,12 +172,12 @@ test("custom elements registries are scoped to reframed contexts", async ({
       </body>
     </html>`);
 
-	await expect(page.getByText("hello from main")).toBeVisible();
-	await expect(page.getByText("hello from frame1")).toBeVisible();
-	await expect(page.getByText("hello from frame2")).toBeVisible();
+	await expect(page.getByText('hello from main')).toBeVisible();
+	await expect(page.getByText('hello from frame1')).toBeVisible();
+	await expect(page.getByText('hello from frame2')).toBeVisible();
 });
 
-test("instanceof checks in a reframed context work with objects constructed in the parent execution context", async ({
+test('instanceof checks in a reframed context work with objects constructed in the parent execution context', async ({
 	page,
 }) => {
 	await page.setContent(`
@@ -209,9 +198,5 @@ test("instanceof checks in a reframed context work with objects constructed in t
 
 	const reframedContext = page.frames()[1];
 
-	expect(
-		await reframedContext.evaluate(
-			"document.getElementById('element') instanceof Node"
-		)
-	).toBe(true);
+	expect(await reframedContext.evaluate("document.getElementById('element') instanceof Node")).toBe(true);
 });

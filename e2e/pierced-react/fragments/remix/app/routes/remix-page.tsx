@@ -1,12 +1,9 @@
-import type { MetaFunction } from "@remix-run/node";
-import { useState } from "react";
-import { Link } from "@remix-run/react";
+import type { MetaFunction } from '@remix-run/node';
+import { useState } from 'react';
+import { Link } from '@remix-run/react';
 
 export const meta: MetaFunction = () => {
-	return [
-		{ title: "New Remix Counter" },
-		{ name: "description", content: "Welcome to a Remix Counter!" },
-	];
+	return [{ title: 'New Remix Counter' }, { name: 'description', content: 'Welcome to a Remix Counter!' }];
 };
 
 export default function Index() {
@@ -38,18 +35,18 @@ export default function Index() {
           }
         }
   `}</style>
-				<div style={{ maxHeight: "10rem", overflow: "auto" }}>
-					<div style={{ display: "flex" }}>
+				<div style={{ maxHeight: '10rem', overflow: 'auto' }}>
+					<div style={{ display: 'flex' }}>
 						<Link
 							to="/remix-page/details"
 							style={{
-								display: "block",
-								padding: "0.5rem",
-								margin: "1rem 0",
-								backgroundColor: "#333",
-								borderRadius: "5px",
-								fontSize: "1rem",
-								color: "#fff",
+								display: 'block',
+								padding: '0.5rem',
+								margin: '1rem 0',
+								backgroundColor: '#333',
+								borderRadius: '5px',
+								fontSize: '1rem',
+								color: '#fff',
 							}}
 						>
 							Go to /remix-page/details 👉

@@ -3,11 +3,7 @@
 		"scope": "javascriptreact,typescriptreact",
 		"prefix": "qonRequest",
 		"description": "onRequest function for a route index",
-		"body": [
-			"export const onRequest: RequestHandler = (request) => {",
-			"  $0",
-			"};",
-		],
+		"body": ["export const onRequest: RequestHandler = (request) => {", "  $0", "};"],
 	},
 	"loader$": {
 		"scope": "javascriptreact,typescriptreact",
@@ -25,12 +21,6 @@
 		"scope": "javascriptreact,typescriptreact",
 		"prefix": "qpage",
 		"description": "Simple page component",
-		"body": [
-			"import { component$ } from '@builder.io/qwik';",
-			"",
-			"export default component$(() => {",
-			"  $0",
-			"});",
-		],
+		"body": ["import { component$ } from '@builder.io/qwik';", "", "export default component$(() => {", "  $0", "});"],
 	},
 }

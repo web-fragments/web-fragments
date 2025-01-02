@@ -7,16 +7,16 @@ html {
 		system-ui,
 		-apple-system,
 		BlinkMacSystemFont,
-		"Segoe UI",
+		'Segoe UI',
 		Roboto,
-		"Helvetica Neue",
+		'Helvetica Neue',
 		Arial,
-		"Noto Sans",
+		'Noto Sans',
 		sans-serif,
-		"Apple Color Emoji",
-		"Segoe UI Emoji",
-		"Segoe UI Symbol",
-		"Noto Color Emoji";
+		'Apple Color Emoji',
+		'Segoe UI Emoji',
+		'Segoe UI Symbol',
+		'Noto Color Emoji';
 }
 
 body {
@@ -157,11 +157,7 @@ button.button-small {
 	left: -100px;
 	width: 400px;
 	height: 400px;
-	background: radial-gradient(
-		57.58% 57.58% at 48.79% 42.42%,
-		rgba(24, 180, 244, 0.5) 0%,
-		rgba(46, 55, 114, 0) 63.22%
-	);
+	background: radial-gradient(57.58% 57.58% at 48.79% 42.42%, rgba(24, 180, 244, 0.5) 0%, rgba(46, 55, 114, 0) 63.22%);
 	transform: rotate(5deg);
 	opacity: 0.5;
 	z-index: -1;
@@ -169,11 +165,7 @@ button.button-small {
 .ellipsis.ellipsis-purple {
 	top: 1350px;
 	left: -100px;
-	background: radial-gradient(
-		50% 50% at 50% 50%,
-		rgba(172, 127, 244, 0.5) 0%,
-		rgba(21, 25, 52, 0) 100%
-	);
+	background: radial-gradient(50% 50% at 50% 50%, rgba(172, 127, 244, 0.5) 0%, rgba(21, 25, 52, 0) 100%);
 	transform: rotate(-5deg);
 }
 
@@ -198,7 +190,7 @@ button.button-small {
 .icon:before {
 	width: 18px;
 	height: 18px;
-	content: "";
+	content: '';
 	display: inline-block;
 	margin-right: 20px;
 	position: relative;
