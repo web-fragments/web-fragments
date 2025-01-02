@@ -28,8 +28,12 @@ export interface FragmentConfig {
 	 */
 	routePatterns: string[];
 	/**
-	 * The upstream URI of the fragment application.
+	 * The endpoint URI of the fragment application.
 	 * This will be fetched on any request paths matching the specified `routePatterns`
+	 */
+	endpoint: string;
+	/**
+	 * @deprecated use `endpoint` instead
 	 */
 	upstream: string;
 	/**
@@ -84,6 +88,15 @@ export class FragmentGateway {
 			);
 			return;
 		}
+
+		if (fragmentConfig.upstream && !fragmentConfig.endpoint) {
+			throw new Error(
+				"\x1b[31m You're using the deprecated `upstream` property" +
+					` in the fragment config for fragment with id "${fragmentConfig.fragmentId}".` +
+					' Please use `endpoint` config property instead. \x1b[0m',
+			);
+		}
+
 		this.fragmentConfigs.set(fragmentConfig.fragmentId, fragmentConfig);
 
 		// create a reverse mapping of route patterns to fragment configs
