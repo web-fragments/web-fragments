@@ -1,1 +1,1 @@
-export { createFragmentsChannel } from "./broadcasting-channel";
+export { createFragmentsChannel } from './broadcasting-channel';

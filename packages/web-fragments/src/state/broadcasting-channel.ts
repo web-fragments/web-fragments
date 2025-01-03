@@ -3,7 +3,7 @@
  * @template T - The type of the state object.
  */
 type Message<T> = {
-	type: "state-update";
+	type: 'state-update';
 	state: T;
 	newFragment: boolean;
 };
@@ -30,7 +30,7 @@ export const createFragmentsChannel = <T>(channelName: string) => {
 	const handleMessage = (event: MessageEvent<Message<T>>) => {
 		const { type, state, newFragment } = event.data;
 
-		if (type === "state-update" && !newFragment) {
+		if (type === 'state-update' && !newFragment) {
 			currentState = state;
 			onUpdateCallback?.(state);
 		}
@@ -45,7 +45,7 @@ export const createFragmentsChannel = <T>(channelName: string) => {
 	const emitState = (state: T): void => {
 		currentState = state;
 		channel.postMessage({
-			type: "state-update",
+			type: 'state-update',
 			state,
 			newFragment: false,
 		});
@@ -64,7 +64,7 @@ export const createFragmentsChannel = <T>(channelName: string) => {
 	const notifyNewFragment = (): void => {
 		if (currentState !== undefined) {
 			channel.postMessage({
-				type: "state-update",
+				type: 'state-update',
 				state: currentState,
 				newFragment: true,
 			});
