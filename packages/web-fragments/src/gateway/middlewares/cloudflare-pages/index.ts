@@ -1,4 +1,5 @@
 import type { FragmentConfig, FragmentGateway } from '../../fragment-gateway';
+import { asReadableStream } from '../../stream-utilities';
 
 const fragmentHostInitialization = ({
 	fragmentId,
@@ -6,9 +7,9 @@ const fragmentHostInitialization = ({
 	classNames,
 }: {
 	fragmentId: string;
-	content: string;
+	content: string | ReadableStream;
 	classNames: string;
-}) => `
+}) => asReadableStream`
 <fragment-host class="${classNames}" fragment-id="${fragmentId}" data-piercing="true">
   <template shadowrootmode="open">${content}</template>
 </fragment-host>`;
@@ -159,7 +160,7 @@ export function getMiddleware(
 						element.append(
 							fragmentHostInitialization({
 								fragmentId,
-								content: await fragmentResponse.text(),
+								content: fragmentResponse.body,
 								classNames: prePiercingClassNames.join(' '),
 							}),
 							{ html: true },

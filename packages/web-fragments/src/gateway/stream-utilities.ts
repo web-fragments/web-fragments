@@ -1,27 +1,4 @@
 /**
- * Generates a stream which wraps a provided stream into two strings.
- *
- * For example given the two strings 'start' and 'end' and the stream
- * _s_ it generates a stream which emits 'start', all the chunks of
- * _s_ and then 'end'
- *
- * @param preStream the string to emit before the stream content
- * @param postStream the string to emit after the stream content
- * @param stream the stream to wrap
- * @returns a new stream
- */
-export function wrapStreamInText(
-	preStream: string,
-	postStream: string,
-	stream: ReadableStream<Uint8Array>,
-): ReadableStream {
-	const { writable, readable } = new TransformStream();
-	const writer = writable.getWriter();
-	writeIntoEmbeddedStream(preStream, postStream, stream, writer);
-	return readable;
-}
-
-/**
  * Transforms a stream by applying the provided transformerFn on each chunk.
  *
  * @param stream the input stream to be transformed
@@ -59,57 +36,47 @@ export function transformStream(stream: ReadableStream<Uint8Array>, transformerF
 	return readable;
 }
 
-async function writeIntoEmbeddedStream(
-	preStream: string,
-	postStream: string,
-	stream: ReadableStream<Uint8Array>,
-	writer: WritableStreamDefaultWriter<any>,
-): Promise<void> {
-	try {
-		const encoder = new TextEncoder();
-		writer.write(encoder.encode(preStream));
-
-		const reader = stream.getReader();
-		let chunk = await reader.read();
-		while (!chunk.done) {
-			writer.write(chunk.value);
-			chunk = await reader.read();
-		}
-
-		writer.write(encoder.encode(postStream));
-		writer.close();
-	} catch (error: any) {
-		writer.abort(error);
-	}
-}
-
 /**
- * Generates a stream which is the result of the concatenation of different
- * streams, meaning that it generates a stream which emits in order all
- * the chunks emitted by the provided streams.
+ * A tagged template that produces a ReadableStream of its content.
+ * It supports interpolating other ReadableStreams, which allows you
+ * to easily wrap streams with text or combine multiple streams, etc.
  *
- * @param streams the streams to concatenate
- * @returns a new stream
+ * @example
+ * const wrappedBody = asReadableStream`<template>${response.body}</template>`;
+ * const combinedStream = asReadableStream`${stream1}${stream2}`;
  */
-export function concatenateStreams(streams: ReadableStream[]): ReadableStream {
-	async function writeStreams(writer: WritableStreamDefaultWriter): Promise<void> {
-		try {
-			for (const stream of streams) {
-				const reader = stream.getReader();
-				let chunk = await reader.read();
-				while (!chunk.done) {
-					writer.write(chunk.value);
-					chunk = await reader.read();
-				}
-			}
-			writer.close();
-		} catch (error: any) {
-			writer.abort(error);
-		}
-	}
+export function asReadableStream(strings: TemplateStringsArray, ...values: Array<string | number | ReadableStream>) {
+	return new ReadableStream({
+		async start(controller) {
+			try {
+				for (let i = 0; i < strings.length; i++) {
+					if (strings[i]) {
+						controller.enqueue(new TextEncoder().encode(strings[i]));
+					}
 
-	const { writable, readable } = new TransformStream();
-	const writer = writable.getWriter();
-	writeStreams(writer);
-	return readable;
+					if (i < values.length) {
+						const value = values[i];
+
+						if (value instanceof ReadableStream) {
+							const reader = value.getReader();
+
+							while (true) {
+								const { done, value: chunk } = await reader.read();
+								if (done) break;
+								controller.enqueue(chunk);
+							}
+						} else {
+							const stringValue = String(value);
+							if (stringValue) {
+								controller.enqueue(new TextEncoder().encode(stringValue));
+							}
+						}
+					}
+				}
+			} catch (error) {
+				controller.error(error);
+			}
+			controller.close();
+		},
+	});
 }
