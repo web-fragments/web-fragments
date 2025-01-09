@@ -13,7 +13,6 @@ dist-ssr
 *.local
 
 .github
-.changeset
 
 # Editor directories and files
 .vscode/*
