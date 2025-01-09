@@ -7,11 +7,11 @@ const fragmentHostInitialization = ({
 	classNames,
 }: {
 	fragmentId: string;
-	content: string | ReadableStream;
+	content: string | ReadableStream | null;
 	classNames: string;
 }) => asReadableStream`
 <fragment-host class="${classNames}" fragment-id="${fragmentId}" data-piercing="true">
-  <template shadowrootmode="open">${content}</template>
+  <template shadowrootmode="open">${content ?? ''}</template>
 </fragment-host>`;
 
 export type FragmentMiddlewareOptions = {
