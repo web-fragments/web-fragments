@@ -1,11 +1,5 @@
 # web-fragments
 
-## 0.1.2
-
-# Minor Changes
-
-- b449ed4: [gateway] BREAKING CHANGE: Fragment registration `FrgamentConfig` property `upstream` renamed to `endpoint`.
-
 ## 0.1.1
 
 ### Patch Changes
