@@ -35,7 +35,7 @@ export interface FragmentConfig {
 	/**
 	 * @deprecated use `endpoint` instead
 	 */
-	upstream: string;
+	upstream?: string;
 	/**
 	 * An optional list of fragment response headers to forward to the gateway response.
 	 */
