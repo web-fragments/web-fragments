@@ -1,5 +1,15 @@
 # web-fragments
 
+## 0.2.0
+
+### Minor Changes
+
+- [#94](https://github.com/web-fragments/web-fragments/pull/94) [`139a6d0`](https://github.com/web-fragments/web-fragments/commit/139a6d0be7785553385864e2ef67cd62a62eba17) Thanks [@anfibiacreativa](https://github.com/anfibiacreativa) and [@IgorMinar](https://github.com/IgorMinar)! - [gateway] BREAKING CHANGE: Fragment registration `FragmentConfig` property `upstream` renamed to `endpoint`.
+
+### Patch Changes
+
+- [#104](https://github.com/web-fragments/web-fragments/pull/104) [`99e7fc2`](https://github.com/web-fragments/web-fragments/commit/99e7fc2d91f7f9b954390f28824667fccbdaf5ce) Thanks [@1000hz](https://github.com/1000hz)! - Cloudflare Pages fragment gateway middleware now streams fragment content from upstream
+
 ## 0.1.1
 
 ### Patch Changes
