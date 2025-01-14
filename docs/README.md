@@ -4,9 +4,9 @@ To contribute, follow our [guidelines](./src/pages/contributing/guidelines.md)
 
 ## Building this site
 
-´´´bash
+```bash
 pnpm i && pnpm dev
-´´´
+```
 
 ## Deploying this site
 
