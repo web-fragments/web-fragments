@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- [#107](https://github.com/web-fragments/web-fragments/pull/107) [`6d684ab`](https://github.com/web-fragments/web-fragments/commit/6d684ab64a3c2df1fb266860dc076c8903387e1d) Thanks [@1000hz](https://github.com/1000hz)! - [gateway] BREAKING CHANGE: Fragment registration `FragmentConfig` property `upstream` renamed to `endpoint`.
+- [#94](https://github.com/web-fragments/web-fragments/pull/94) [`139a6d0`](https://github.com/web-fragments/web-fragments/commit/139a6d0be7785553385864e2ef67cd62a62eba17) Thanks [@anfibiacreativa](https://github.com/anfibiacreativa) and [@IgorMinar](https://github.com/IgorMinar)! - [gateway] BREAKING CHANGE: Fragment registration `FragmentConfig` property `upstream` renamed to `endpoint`.
 
 ### Patch Changes
 
