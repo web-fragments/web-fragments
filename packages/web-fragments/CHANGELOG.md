@@ -1,5 +1,11 @@
 # web-fragments
 
+## 0.2.1
+
+### Patch Changes
+
+- [#109](https://github.com/web-fragments/web-fragments/pull/109) [`aa48cb3`](https://github.com/web-fragments/web-fragments/commit/aa48cb30ca934197995d843d937ca66b12e80f95) Thanks [@1000hz](https://github.com/1000hz)! - [gateway] TypeScript no longer throws an error if the deprecated `upstream` property is missing.
+
 ## 0.2.0
 
 ### Minor Changes
