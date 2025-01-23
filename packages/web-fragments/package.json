@@ -6,9 +6,6 @@
 		"./gateway": {
 			"import": "./src/gateway/index.ts"
 		},
-		"./gateway/middlewares/cloudflare-pages": {
-			"import": "./src/gateway/middlewares/cloudflare-pages/index.ts"
-		},
 		"./elements": {
 			"import": "./src/elements/index.ts"
 		}
@@ -18,10 +15,6 @@
 			"./gateway": {
 				"import": "./dist/gateway.js",
 				"types": "./dist/gateway/index.d.ts"
-			},
-			"./gateway/middlewares/cloudflare-pages": {
-				"import": "./dist/gateway/middlewares/cloudflare-pages.js",
-				"types": "./dist/gateway/middlewares/cloudflare-pages/index.d.ts"
 			},
 			"./elements": {
 				"import": "./dist/elements.js",
@@ -38,7 +31,6 @@
 		"build": "pnpm types && vite build",
 		"types:elements": "tsc -p src/elements",
 		"types:gateway": "tsc -p src/gateway",
-		"types:middlewares:cloudflare-pages": "tsc -p src/gateway/middlewares/cloudflare-pages",
 		"types:root": "tsc -p .",
 		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\""
