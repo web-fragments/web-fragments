@@ -52,6 +52,22 @@ export default function Index() {
 							Go to /remix-page/details 👉
 						</Link>
 					</div>
+					<button
+						style={{
+							display: 'block',
+							padding: '0.5rem',
+							margin: '1rem 0',
+							backgroundColor: '#333',
+							borderRadius: '5px',
+							fontSize: '1rem',
+							color: '#fff',
+						}}
+						onClick={() => {
+							window.location.href = '/';
+						}}
+					>
+						Go to /
+					</button>
 					<p>Current Route: /remix-page</p>
 					<div className="counter">
 						<button
