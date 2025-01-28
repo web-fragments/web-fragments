@@ -45,7 +45,7 @@ Once the gateway is instantiated, for example like this
 // is placed in the right position and there is no content-layout-shift, once the legacy
 // application is bootstrapped
 const gateway = new FragmentGateway({
-  prePiercingStyles: `<style id="fragment-piercing-styles" type="text/css">
+	prePiercingStyles: `<style id="fragment-piercing-styles" type="text/css">
       fragment-host[data-piercing="true"] {
         position: absolute;
         z-index: 1;
@@ -74,23 +74,19 @@ A Qwik application fragment hosted remotely and being fetched, can be registered
 
 ```javascript
 gateway.registerFragment({
-  fragmentId: "qwik",
-  prePiercingClassNames: ["qwik"],
-  routePatterns: [
-    "/qwik-page/:_*",
-    "/_fragment/qwik/:_*",
-    "/ecommerce-page/:_*",
-  ],
-  upstream: "http://localhost:4173",
-  onSsrFetchError: () => ({
-    response: new Response(
-      `<p id="qwik-fragment-not-found">
+	fragmentId: "qwik",
+	prePiercingClassNames: ["qwik"],
+	routePatterns: ["/qwik-page/:_*", "/_fragment/qwik/:_*", "/ecommerce-page/:_*"],
+	upstream: "http://localhost:4173",
+	onSsrFetchError: () => ({
+		response: new Response(
+			`<p id="qwik-fragment-not-found">
          <style>#qwik-fragment-not-found { color: red; font-size: 2rem; }</style>
          Qwik fragment not found
        </p>`,
-      { headers: [["content-type", "text/html"]] },
-    ),
-  }),
+			{ headers: [["content-type", "text/html"]] },
+		),
+	}),
 });
 ```
 

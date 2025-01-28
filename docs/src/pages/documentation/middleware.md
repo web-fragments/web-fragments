@@ -30,8 +30,8 @@ When a request's `sec-fetch-dest` equals iframe, the server must respond with an
 
 ```javascript
 if (request.headers["sec-fetch-dest"] === "iframe") {
-  response.setHeader("content-type", "text/html");
-  return response.end("<!doctype html><title>");
+	response.setHeader("content-type", "text/html");
+	return response.end("<!doctype html><title>");
 }
 ```
 
@@ -41,7 +41,7 @@ For documents, the middleware should defer the request to the server in place to
 
 ```javascript
 if (request.headers["sec-fetch-dest"] === "document") {
-  next();
+	next();
 }
 ```
 
@@ -51,7 +51,7 @@ For scripts, the corresponding header should be set.
 
 ```javascript
 if (request.headers["sec-fetch-dest"] === "script") {
-  response.setHeader("content-type", "text/javascript");
+	response.setHeader("content-type", "text/javascript");
 }
 ```
 
