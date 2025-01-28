@@ -1,5 +1,10 @@
 packages:
   - docs
-  - packages/*
+  - packages/**
   - e2e/*
   - e2e/*/fragments/*
+
+catalog:
+  typescript: 5.5.4
+  vite: 6.0.7
+  '@playwright/test': 1.49.1
