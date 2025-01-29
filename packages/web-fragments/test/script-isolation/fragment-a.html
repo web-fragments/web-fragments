@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>script-isolation fragment A</title>
+	</head>
+	<body>
+		<h2>script-isolation fragment A</h2>
+		<p>Document Title:</p>
+		<script type="module">
+			document.querySelector('p').textContent += ' ' + document.title;
+			window.SCRIPT_ISOLATION_MARKER = '🅰 ' + Math.random();
+		</script>
+	</body>
+</html>

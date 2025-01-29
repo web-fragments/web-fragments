@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>hello fragment</title>
+	</head>
+	<body>
+		<h2>hello</h2>
+		<script>
+			const name = new URL(location.href).searchParams.get('name') ?? 'world';
+			document.querySelector('h2').textContent += ` ${name}!`;
+		</script>
+	</body>
+</html>

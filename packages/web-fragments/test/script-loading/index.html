@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF TestBed: script-loading</title>
+		<style>
+			fragment-host {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF TestBed: script-loading</h1>
+
+		<fragment-host src="/script-loading/fragment"></fragment-host>
+
+		<script type="module">
+			import { register } from 'web-fragments/elements';
+			register();
+		</script>
+	</body>
+</html>
