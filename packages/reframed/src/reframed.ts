@@ -502,7 +502,7 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 	// Event listeners for these events should be added normally
 	// instead of being redirected to other event targets.
 	// TODO: there are probably a lot more events we don't want to redirect, e.g. "pagehide" / "pageshow"
-	const nonRedirectedEvents = ['DOMContentLoaded', 'popstate', 'unload'];
+	const nonRedirectedEvents = ['DOMContentLoaded', 'popstate', 'unload', 'load'];
 
 	// Redirect event listeners (except for the events listed above)
 	// from the iframe window or document to the main window or shadow root respectively.
@@ -570,6 +570,19 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 
 		iframeWindow.dispatchEvent(new PopStateEvent('popstate', e instanceof PopStateEvent ? e : undefined));
 	};
+
+	/** Since window.location is non-configurable and non-writable, we need a way to intercept navigation events.
+	 * This isn't really possible yet, but will be once Navigation API has better browser support.
+	 * https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API
+	 *
+	 * As a temporary hack, we can listen to the iframe load event.
+	 * After the iframe environment is monkeypatched, assume that all subsequent iframe load events
+	 * are triggered by an intent to reload the fragment or hard navigate to a different route.
+	 * In either case, propagate the intent to navigate to the main window.
+	 */
+	iframe.addEventListener('load', (_event) => {
+		mainWindow.location.href = iframe?.contentWindow?.location.href!;
+	});
 
 	// reframed:navigate event is triggered by the patched main window.history methods
 	window.addEventListener('reframed:navigate', handleNavigate, {
