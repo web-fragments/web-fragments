@@ -1,4 +1,5 @@
 import { FragmentGateway, getStandardMiddleware } from 'web-fragments/gateway';
+import { PagesFunction } from '@cloudflare/workers-types';
 
 // Initialize the FragmentGateway
 const gateway = new FragmentGateway({
@@ -46,5 +47,6 @@ export const onRequest: PagesFunction = async (context) => {
   console.log('Incoming request', request.url);
   
   // run the standard middleware function
-  return middleware(request, next);
+  const response = await middleware(request as unknown as Request, next as unknown as () => Promise<Response>) as Response;
+  return response as unknown as import('@cloudflare/workers-types').Response;
 };

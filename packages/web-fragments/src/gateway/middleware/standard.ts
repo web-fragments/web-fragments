@@ -15,16 +15,20 @@ export function getStandardMiddleware(
   console.log('### Using standard middleware!!!!!');
 
   return async (req: Request, next: () => Promise<Response>) => {
+    // match the fragment request to the fragment config
     const matchedFragment = gateway.matchRequestToFragment(req);
     console.log('### Using standard middleware!!!!! matchedFragment:', matchedFragment);
 
     if (matchedFragment) {
+      // evaluate if there is a fragment match, and it's from an iframe request
+      // then return an empty response
       if (req.headers.get('sec-fetch-dest') === 'iframe') {
         return new Response('<!doctype html><title>', { headers: { 'Content-Type': 'text/html' } });
       }
 
       const fragmentResponse = fetchFragment(req, matchedFragment);
-
+      // if the fragment request comes from a document
+      // then we will embed the fragment response into the host
       if (req.headers.get('sec-fetch-dest') === 'document') {
         const hostResponse = await next();
         const isHTMLResponse = hostResponse.headers.get('content-type')?.startsWith('text/html');
@@ -42,30 +46,59 @@ export function getStandardMiddleware(
 
       return fragmentResponse;
     } else {
-      return next();
+      console.log('### No fragment match, calling next()');
+      try {
+        return await next();
+      } catch (error) {
+        console.error("Error calling next():", error);
+        return new Response("Internal Server Error", { status: 500 });
+      }
+      
     }
   };
 
+  // fetch the fragment from the upstream endpoint
+  // as per the registration configuration
   async function fetchFragment(req: Request, fragmentConfig: FragmentConfig): Promise<Response> {
     const { endpoint } = fragmentConfig;
     const requestUrl = new URL(req.url);
     const fragmentEndpoint = new URL(`${requestUrl.pathname}${requestUrl.search}`, endpoint);
-
+  
+    const controller = new AbortController();
+    const signal = controller.signal;
+  
+    // Set a timeout to abort the fetch request after a specified time (e.g., 5 seconds)
+    const timeout = setTimeout(() => controller.abort(), 5000); // Timeout after 5 seconds
+  
     const fragmentReq = new Request(fragmentEndpoint.toString(), req);
-
-    new Headers(additionalHeaders).forEach((value, name) => {
+  
+    Object.entries(additionalHeaders).forEach(([name, value]) => {
       fragmentReq.headers.set(name, value);
     });
-
+    
     fragmentReq.headers.set('sec-fetch-dest', 'empty');
+    fragmentReq.headers.set('vary', 'sec-fetch-dest');
     fragmentReq.headers.set('x-fragment-mode', 'embedded');
-
+  
+    // TODO: confirm this is necessary
     if (mode === 'development') {
       fragmentReq.headers.set('Accept-Encoding', 'gzip');
     }
-
-    return fetch(fragmentReq);
+  
+    try {
+      const response = await fetch(fragmentReq, { signal });
+      clearTimeout(timeout);
+      return response;
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('### Fragment fetch timed out!');
+      } else {
+        console.error('### Error fetching fragment:', error);
+      }
+      throw error; 
+    }
   }
+  
 
   function rejectErrorResponses(response: Response): Response {
     if (response.ok) return response;
@@ -98,6 +131,7 @@ export function getStandardMiddleware(
     throw err;
   }
 
+  // reframing operations
   function prepareFragmentForReframing(fragmentResponse: Response): Response {
     return new HTMLRewriter()
       .on('script', {
@@ -109,13 +143,17 @@ export function getStandardMiddleware(
           element.setAttribute('type', 'inert');
         },
       })
-      .transform(fragmentResponse);
+      .transform(new Response(fragmentResponse.body, fragmentResponse));
   }
 
+  // support piercing the fragment into the host
   function embedFragmentIntoHost(hostResponse: Response, fragmentConfig: FragmentConfig) {
     return (fragmentResponse: Response) => {
       const { fragmentId, prePiercingClassNames } = fragmentConfig;
+      console.log("Host Response Status:", hostResponse.status);
+      console.log("Host Response Content-Type:", hostResponse.headers.get('content-type'));
 
+      if (!hostResponse.ok) return hostResponse;
       return new HTMLRewriter()
         .on('head', {
           element(element) {

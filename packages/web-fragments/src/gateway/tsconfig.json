@@ -1,7 +1,8 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
-		"lib": ["DOM", "ESNext"]
+		"lib": ["DOM", "ESNext"],
 	},
-	"exclude": ["middlewares"]
+	"types": ["node"],
+	"include": ["middleware/**/*.ts"],
 }

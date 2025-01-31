@@ -58,6 +58,7 @@ export type FragmentGatewayConfig = {
 };
 
 export type FragmentMiddlewareOptions = {
+    hostResponseUrl?: string;
 	additionalHeaders?: HeadersInit;
 	mode?: 'production' | 'development';
 };
