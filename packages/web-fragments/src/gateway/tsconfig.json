@@ -1,8 +1,8 @@
 {
 	"extends": "../../tsconfig.base.json",
+	"typeRoots": ["../../node_modules/@types"],
 	"compilerOptions": {
 		"lib": ["DOM", "ESNext"],
 	},
-	"types": ["node"],
-	"include": ["middleware/**/*.ts"],
+	"allowSyntheticDefaultImports": true
 }
