@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+	  "types": ["express", "node"],
+	  "target": "ESNext",
+	  "module": "ES2022",
+	  "moduleResolution": "bundler",
+	  "outDir": "dist",
+	  "rootDir": "app/server/src",
+	  "strict": true,
+	  "esModuleInterop": true
+	},
+	"include": ["app/server/src"]
+  }
+  

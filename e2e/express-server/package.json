@@ -1,0 +1,27 @@
+{
+	"name": "express-server",
+	"version": "1.0.0",
+	"description": "",
+	"main": "server.js",
+		"type": "module",
+	"scripts": {
+		"dev": "node --loader ts-node/esm --inspect app/server/src/server.ts",
+		"start": "node dist/server.js",
+		"build": "tsc -p tsconfig.json && cd app/client && npm run build && cd ../..",
+		"clean": "rm -rf dist && rm -rf node_modules"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"express": "^5.0.1",
+		"web-fragments": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "^5.7.3",
+		"@types/express": "^5.0.0",
+		"@types/node": "22.13.0",
+		"ts-node": "^10.9.2",
+		"tsconfig-paths": "^4.2.0",
+		"tslib": "^2.8.1"
+	}
+}

@@ -1,0 +1,21 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "outDir": "../../../dist",
+        "rootDir": "./src",
+        "baseUrl": "./",
+        "paths": {
+            "@web-fragments/*": ["../../node_modules/web-fragments/dist/*"]
+        }
+    },
+    "files": [
+        "src/main.ts",
+        "src/index.html",
+        "src/remix-page.html",
+        "src/qwik-page.html",
+    ],
+    "exclude": [
+        "../../app/server/src",
+        "tsconfig.client.json"
+    ]
+}
