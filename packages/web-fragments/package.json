@@ -4,7 +4,13 @@
 	"type": "module",
 	"exports": {
 		"./gateway": {
-			"import": "./src/gateway/index.ts"
+			"import": "./src/gateway/fragment-gateway.ts"
+		},
+		"./gateway/web": {
+			"import": "./src/gateway/middleware/web.ts"
+		},
+		"./gateway/node": {
+			"import": "./src/gateway/middleware/node.ts"
 		},
 		"./elements": {
 			"import": "./src/elements/index.ts"
@@ -19,6 +25,14 @@
 			"./elements": {
 				"import": "./dist/elements.js",
 				"types": "./dist/elements/index.d.ts"
+			},
+			"./gateway/web": {
+				"import": "./dist/gateway/web.js",
+				"types": "./dist/gateway/web.d.ts"
+			},
+			"./gateway/node": {
+				"import": "./dist/gateway/node.js",
+				"types": "./dist/gateway/node.d.ts"
 			}
 		}
 	},
@@ -40,8 +54,9 @@
 		"reframed": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.9",
+		"@types/node": "^20.12.7",
 		"@vitejs/plugin-react": "^4.3.1",
+		"client": "link:@types/vite/client",
 		"path-to-regexp": "^6.2.2",
 		"ts-node-dev": "^2.0.0",
 		"typescript": "^5.5.4",
