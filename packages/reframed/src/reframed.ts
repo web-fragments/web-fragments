@@ -2,6 +2,7 @@ import WritableDOMStream from 'writable-dom';
 
 type ReframedOptions = ({ container: HTMLElement } | { containerTagName: string }) & {
 	headers?: HeadersInit;
+	errorHandler?: (err: Error) => void;
 };
 
 /**
@@ -61,6 +62,7 @@ export function reframed(
 	});
 
 	let reframeReady: Promise<void>;
+	const errorHandler = options.errorHandler;
 
 	if (typeof reframedSrcOrSourceShadowRoot === 'string') {
 		const reframedSrc = reframedSrcOrSourceShadowRoot;
@@ -70,6 +72,7 @@ export function reframed(
 			reframedContainer.shadowRoot as ParentNode,
 			iframe,
 			options,
+			errorHandler,
 		);
 	} else {
 		reframeReady = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe);
@@ -103,15 +106,21 @@ async function reframeWithFetch(
 	target: ParentNode,
 	iframe: HTMLIFrameElement,
 	options: ReframedOptions,
+	errorHandler?: (err: Error) => void,
 ): Promise<void> {
 	console.debug('reframing (with fetch)!', {
 		source: reframedSrc,
 		targetContainer: target,
 	});
 
+	//TODO: should this be wrapped in a try/catch?
 	const reframedHtmlResponse = await fetch(reframedSrc, {
 		headers: options.headers,
 	});
+
+	if (errorHandler && !reframedHtmlResponse.ok) {
+		errorHandler(new Error(`error fetching ${reframedSrc} (HTTP Status = ${reframedHtmlResponse.status})`));
+	}
 
 	const reframedHtmlStream =
 		reframedHtmlResponse.status === 200

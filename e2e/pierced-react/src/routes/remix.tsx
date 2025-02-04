@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import reactLogo from '../assets/react.svg';
 import remixLogo from '../assets/remix.svg';
 import '../App.css';
@@ -10,6 +10,19 @@ function App() {
 	const toggleShowHost = () => {
 		setShowHost(!showHost);
 	};
+	const fragmentOutletRef = useRef<HTMLElement>(null);
+	useEffect(() => {
+		const handleError = (e: Event) => {
+			const { error } = e as ErrorEvent;
+			console.log('Error Detected, Handling from client host', error);
+			fragmentOutletRef.current?.setHTMLUnsafe(`<h1>Error: ${error.message}</h1>`);
+		};
+
+		fragmentOutletRef.current?.addEventListener('fragment-host-error', handleError);
+		return () => {
+			fragmentOutletRef.current?.removeEventListener('fragment-host-error', handleError);
+		};
+	}, [fragmentOutletRef]);
 
 	return (
 		<>
@@ -81,7 +94,7 @@ function App() {
 			<section style={{ display: 'flex', justifyContent: 'center' }}>
 				<div className="fragment-container pierced">
 					<h2>Reframed - from target</h2>
-					<fragment-outlet fragment-id="remix" />
+					<fragment-outlet fragment-id="remix" ref={fragmentOutletRef} />
 				</div>
 				<div className="fragment-container">
 					<div style={{ width: '100%' }}>

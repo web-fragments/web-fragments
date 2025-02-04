@@ -20,6 +20,10 @@ const router = createBrowserRouter([
 		path: '/remix-page/*',
 		element: <RemixPage />,
 	},
+	{
+		path: '/remix-error-page/*',
+		element: <RemixPage />,
+	},
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
