@@ -1,4 +1,5 @@
-import { FragmentGateway, getStandardMiddleware } from 'web-fragments/gateway';
+import { FragmentGateway } from 'web-fragments/gateway';
+import { getWebMiddleware } from 'web-fragments/gateway/web';
 import { PagesFunction } from '@cloudflare/workers-types';
 
 // Initialize the FragmentGateway
@@ -39,7 +40,7 @@ gateway.registerFragment({
   }),
 });
 
-const middleware = getStandardMiddleware(gateway, { mode: 'production' });
+const middleware = getWebMiddleware(gateway, { mode: 'production' });
 
 // CF Pages specific handler
 export const onRequest: PagesFunction = async (context) => {
