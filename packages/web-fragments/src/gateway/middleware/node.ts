@@ -2,8 +2,8 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { FragmentGateway } from '../fragment-gateway';
 import { HTMLRewriter } from 'htmlrewriter';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
-// import fs from 'fs';
-// import path from 'path';
+import fs from 'fs';
+import path from 'path';
 import stream from 'stream';
 
 const NodeReadable = stream?.Readable ?? (class {} as typeof import('stream').Readable);
@@ -24,6 +24,13 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	return async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
 		const reqUrl = new URL('http://foo.bar' + req.url);
 		console.log('[Debug Info | Local request]:', reqUrl.href);
+
+		// handle service worker requests
+		const userAgent = req.headers['user-agent'] || '';
+		if (req.headers['service-worker'] || userAgent.includes('ServiceWorker')) {
+			console.log('[Debug Info | Service Worker Request Detected]');
+			res.setHeader('Service-Worker-Allowed', '/');
+		}
 
 		if (req.headers['sec-fetch-dest'] === 'script') {
 			console.log('[Debug Info | Dynamic script request]', req.url);
@@ -56,16 +63,16 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 					if (!fragmentResponse.ok) throw new Error(`Fragment response not ok: ${fragmentResponse.status}`);
 
 					res.setHeader('content-type', 'text/html');
-					return next();
+
+					next();
 					// The block below is a remanent of the original code for express that we were
 					// meant to replace with next() but we are keeping it here for reference since we have a bug
 					// and I am not sure it has nothing to do with next() not being async
 					// TODO: investigate
-
-					/*                  fs
-                    .createReadStream(path!.resolve(new URL('../dist/index.html', import.meta.url).pathname))
-                    .pipe(embedFragmentSSR(fragmentResponse, matchedFragment, req, gateway))
-                    .pipe(res); */
+/* 					const currentPagePath = path.resolve(process.cwd(), `dist/index.html`);
+					fs.createReadStream(currentPagePath)
+					.pipe(embedFragmentIntoHost(fragmentResponse, matchedFragment))
+					.pipe(res); */
 				} catch (err) {
 					console.error('[Error] Error during fragment embedding:', err);
 					return renderErrorResponse(err, res);
@@ -155,10 +162,48 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		console.log(
 			`[Debug Info | Gateway Fetch Response]: status=${fragmentResponse.status}, content-type=${fragmentResponse.headers.get('content-type')}, url=${fragmentReq.url}`,
 		);
+		
 		return fragmentResponse;
 	}
 
 	function embedFragmentIntoHost(
+		fragmentResponse: Response,
+		fragmentConfig: FragmentConfig,
+		// fragmentSrc: string
+		) {
+		const { fragmentId, prePiercingClassNames } = fragmentConfig;
+
+		const { prefix: fragmentHostPrefix, suffix: fragmentHostSuffix } = fragmentHostInitialization({
+			fragmentId,
+			// fragmentSrc: fragmentSrc,
+			classNames: prePiercingClassNames.join(''),
+		})
+
+		const transform = new NodePassThrough();
+
+		const rewrittenResponseBody = new HTMLRewriter()
+			.on("head", {
+		element(element) {
+			element.append(gateway.prePiercingStyles, { html: true });
+		},
+		})
+		.on("body", {
+		async element(element) {
+			element.append(fragmentHostPrefix, { html: true });
+			// TODO: this should be a stream append rather than buffer to text & append
+			//       update once HTMLRewriter is updated
+			element.append(await fragmentResponse.text(), { html: true });
+			element.append(fragmentHostSuffix, { html: true });
+		},
+		})
+		.transform(new Response(NodeReadable.toWeb(transform) as any)).body;
+
+		NodeReadable.fromWeb(rewrittenResponseBody as any).pipe(transform);
+
+		return transform;
+	}
+
+	/* function embedFragmentIntoHost(
 		fragmentResponse: Response,
 		fragmentConfig: MatchedFragment,
 		req: IncomingMessage,
@@ -190,7 +235,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		NodeReadable.fromWeb(rewrittenResponseBody as any).pipe(transformStream);
 
 		return transformStream;
-	}
+	} */
 
 	// process the fragment response for embedding into the host document
 /* 	function processFragmentForReframing(fragmentResponse: Response) {
@@ -238,15 +283,15 @@ function mergeStreams(...streams: NodeJS.ReadableStream[]) {
 // but there are issues with import resolution
 function fragmentHostInitialization({
 	fragmentId,
-	fragmentSrc,
+	// fragmentSrc,
 	classNames,
 }: {
 	fragmentId: string;
-	fragmentSrc: string;
+	// fragmentSrc: string;
 	classNames: string;
 }) {
 	return {
-		prefix: `<fragment-host class="${classNames}" fragment-id="${fragmentId}" src="${fragmentSrc}" data-piercing="true"><template shadowrootmode="open">`,
+		prefix: `<fragment-host class="${classNames}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">`,
 		suffix: `</template></fragment-host>`,
 	};
 }
