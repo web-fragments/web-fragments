@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Express Fragments Server</title>
+    <title>Web Fragments - Express Server Demo</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <main>
         <section>
-            <h1>Welcome Express Fragments Server Example</h1>
-            <p>This is a simple example of an Express server that serves fragments of a page.</p>
+            <img src="/assets/favicon.svg" alt="Web Fragments Logo" width="100" />
+            <h1>Welcome Express Web Fragments Server Example</h1>
+            <p>This is a simple example of an Express server that serves fragments of a page using our default Node.js middleware.</p>
             <p>Click on the links below to load the fragments:</p>
             <ul>
-                <li><a href="/remix-page">Remix fragment</a></li>
-                <li><a href="/qwik-page">Qwik fragment</a></li>
+                <li><a class="button" href="/remix-page">Remix fragment</a></li>
+                <li><a class="button" href="/qwik-page">Qwik fragment</a></li>
             </ul>
         </section>
         <script type="module" src="main.ts"></script>

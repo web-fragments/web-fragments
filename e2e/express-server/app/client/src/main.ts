@@ -1,2 +1,1 @@
-console.log("Is SSR mode enabled?", import.meta.env.SSR);
-
+console.log('Hello, Web Fragment Demo!');

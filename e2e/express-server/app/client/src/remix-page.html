@@ -4,11 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Express Fragments Server</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <header>
+        <h1>Remix Fragment Node.js</h1>
     <main>
+        <button itle="This is an independent JavaScript component" class="button counter" id="counter">click to count: 0</button>
         <section>
-            <fragment-outlet fragment-id="remix" />
+            <div class="wrapper">
+                <div class="fragment-container">
+                    <h2>Reframed - from target</h2>
+                    <fragment-outlet fragment-id="remix" />
+                </div>
+                <div class="fragment-container">
+                    <h2>Reframed - with fetch</h2>
+                    <button class="button" id="load-remix">Toggle Host</button>
+                </div>
+            </div>
         </section>
     </main>
     <script type="module" src="../src/reframe.ts"></script>

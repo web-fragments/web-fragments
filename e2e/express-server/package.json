@@ -5,7 +5,7 @@
 	"main": "server.js",
 		"type": "module",
 	"scripts": {
-		"dev": "node --loader ts-node/esm --inspect app/server/src/server.ts",
+		"dev": "node --loader ts-node/esm app/server/src/server.ts",
 		"start": "node dist/server.js",
 		"build": "tsc -p tsconfig.json && cd app/client && npm run build && cd ../..",
 		"clean": "rm -rf dist && rm -rf node_modules"
