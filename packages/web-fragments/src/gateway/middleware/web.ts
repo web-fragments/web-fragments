@@ -21,7 +21,7 @@ export function getWebMiddleware(
 
     if (matchedFragment) {
       // evaluate if there is a fragment match, and it's from an iframe request
-      // then return an empty response
+      // then return an empty document response
       if (req.headers.get('sec-fetch-dest') === 'iframe') {
         return new Response('<!doctype html><title>', { headers: { 'Content-Type': 'text/html' } });
       }
@@ -52,8 +52,7 @@ export function getWebMiddleware(
       } catch (error) {
         console.error("Error calling next():", error);
         return new Response("Internal Server Error", { status: 500 });
-      }
-      
+      } 
     }
   };
 
@@ -150,10 +149,12 @@ export function getWebMiddleware(
   function embedFragmentIntoHost(hostResponse: Response, fragmentConfig: FragmentConfig) {
     return (fragmentResponse: Response) => {
       const { fragmentId, prePiercingClassNames } = fragmentConfig;
+      const type = 'web';
       console.log("Host Response Status:", hostResponse.status);
       console.log("Host Response Content-Type:", hostResponse.headers.get('content-type'));
-
+  
       if (!hostResponse.ok) return hostResponse;
+  
       return new HTMLRewriter()
         .on('head', {
           element(element) {
@@ -162,19 +163,27 @@ export function getWebMiddleware(
         })
         .on('body', {
           async element(element) {
-            element.append(
-              fragmentHostInitialization({
-                fragmentId,
-                content: await fragmentResponse.text(),
-                classNames: prePiercingClassNames.join(' '),
-              }),
-              { html: true }
-            );
+            const fragmentContent = await fragmentResponse.text();
+            const fragmentHost = fragmentHostInitialization({
+              fragmentId,
+              content: fragmentContent,
+              classNames: prePiercingClassNames.join(' '),
+            }, type); // Pass the correct type
+  
+            if (typeof fragmentHost === 'string') {
+              // If it's a string, append directly
+              element.append(fragmentHost, { html: true });
+            } else {
+              // If it's an object, append the prefix and suffix separately
+              element.append(fragmentHost.prefix, { html: true });
+              element.append(fragmentHost.suffix, { html: true });
+            }
           },
         })
         .transform(hostResponse);
     };
   }
+  
 
   function attachForwardedHeaders(fragmentResponse: Promise<Response>, fragmentConfig: FragmentConfig) {
     return async (response: Response) => {
