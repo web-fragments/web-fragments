@@ -1,9 +1,15 @@
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 export default defineConfig({
-	plugins: [react()],
+	plugins: [
+		react(),
+		nodePolyfills({
+			protocolImports: true,
+		})
+	],
 	build: {
 		emptyOutDir: false,
 		lib: {
@@ -11,6 +17,7 @@ export default defineConfig({
 				gateway: new URL('src/gateway/index.ts', import.meta.url).pathname,
 				'gateway/node': new URL('src/gateway/middleware/node.ts', import.meta.url).pathname,
 				'gateway/web': new URL('src/gateway/middleware/web.ts', import.meta.url).pathname,
+				utils: new URL('src/gateway/utils/host-utils.ts', import.meta.url).pathname,
 				elements: new URL('src/elements/index.ts', import.meta.url).pathname,
 			},
 			formats: ['es'],
