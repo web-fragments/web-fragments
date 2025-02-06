@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const counterButton = document.getElementById('counter');
     const counterInstance = counter();
 
+    const toggle = document.getElementById('toggle-host');
+
     if (counterButton) {
         counterButton.addEventListener('click', () => {
             const count = counterInstance.increment();
@@ -26,6 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Counter incremented to:', count);
         });
     }
+
+    if (toggle) {
+        toggle.addEventListener('click', () => {
+            const hostWrapper = document.querySelector('.host-wrapper') as HTMLElement;
+            if (hostWrapper.style.display === 'none') {
+                hostWrapper.style.display = 'block';
+                hostWrapper.style.visibility = 'visible';
+            } else {
+                hostWrapper.style.display = 'none';
+                hostWrapper.style.visibility = 'hidden';
+            }
+        });
+    }
+
+    register();
 });
 
-register();
