@@ -9,6 +9,9 @@
 	  "strict": true,
 	  "esModuleInterop": true
 	},
-	"include": ["app/server/src"]
+	"files": [
+		"app/server/src/express.ts",
+		"app/server/src/connect.ts"
+	],
   }
   

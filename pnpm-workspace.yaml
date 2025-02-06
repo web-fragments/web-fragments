@@ -3,3 +3,4 @@ packages:
   - packages/*
   - e2e/*
   - e2e/*/fragments/*
+  - e2e/node-servers/**/*

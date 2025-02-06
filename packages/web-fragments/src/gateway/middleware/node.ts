@@ -1,9 +1,9 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { FragmentGateway } from '../fragment-gateway';
+import { FragmentGateway } from 'web-fragments/gateway';
 import { HTMLRewriter } from 'htmlrewriter';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
-import fs from 'fs';
-import path from 'path';
+// import fs from 'fs';
+// import path from 'path';
 import stream from 'stream';
 
 const NodeReadable = stream?.Readable ?? (class {} as typeof import('stream').Readable);
@@ -25,7 +25,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		const reqUrl = new URL('http://foo.bar' + req.url);
 		console.log('[Debug Info | Local request]:', reqUrl.href);
 
-		// handle service worker requests
+		// handle service worker requests -this may not be needed in the future
 		const userAgent = req.headers['user-agent'] || '';
 		if (req.headers['service-worker'] || userAgent.includes('ServiceWorker')) {
 			console.log('[Debug Info | Service Worker Request Detected]');
@@ -183,12 +183,12 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 
 		const rewrittenResponseBody = new HTMLRewriter()
 			.on("head", {
-		element(element) {
+		element(element: any) {
 			element.append(gateway.prePiercingStyles, { html: true });
 		},
 		})
 		.on("body", {
-		async element(element) {
+		async element(element: any) {
 			element.append(fragmentHostPrefix, { html: true });
 			// TODO: this should be a stream append rather than buffer to text & append
 			//       update once HTMLRewriter is updated

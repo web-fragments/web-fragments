@@ -3,10 +3,6 @@
     "compilerOptions": {
         "outDir": "../../../dist",
         "rootDir": "./src",
-        "baseUrl": "./",
-        "paths": {
-            "@web-fragments/*": ["../../node_modules/web-fragments/dist/*"]
-        }
     },
     "files": [
         "src/main.ts",
