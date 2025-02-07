@@ -45,7 +45,7 @@
 	],
 	"scripts": {
 		"dev": "vite",
-		"build": "pnpm types && vite build",
+		"build": "vite build",
 		"types:elements": "tsc -p src/elements",
 		"types:gateway": "tsc -p src/gateway",
 		"types:root": "tsc -p .",

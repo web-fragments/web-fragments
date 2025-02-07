@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
 import stream from 'stream';
+import streamWeb from 'stream/web';
 
 const NodeReadable = stream?.Readable ?? (class {} as typeof import('stream').Readable);
 const NodePassThrough = stream?.PassThrough ?? (class {} as typeof import('stream').PassThrough);
@@ -37,13 +38,14 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 					if (!fs.existsSync(currentPagePath)) {
 						throw new Error(`Host page not found at ${currentPagePath}`);
 					}
-					const duplexStream = await embedFragmentIntoHost(fragmentResponse, matchedFragment);
+					
+					const hostHtmlReadable = fs.createReadStream(currentPagePath);
 
-					fs.createReadStream(currentPagePath)
-					.pipe(duplexStream)
-					.pipe(res);
+					const rewrittenHtmlReadable = await embedFragmentIntoHost(hostHtmlReadable, fragmentResponse, matchedFragment);
+
+					rewrittenHtmlReadable.pipe(res);
                     
-                    duplexStream.pipe(res);
+                    //duplexStream.pipe(res);
                 } catch (err) {
                     console.error('[Error] Error during fragment embedding:', err);
                     return renderErrorResponse(err, res);
@@ -102,7 +104,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
         return fetch(fragmentReq);
     }
 
-	async function embedFragmentIntoHost(fragmentResponse: Response, fragmentConfig: FragmentConfig) {
+	async function embedFragmentIntoHost(hostHtmlReadable: stream.Readable, fragmentResponse: Response, fragmentConfig: FragmentConfig) {
 		const { fragmentId, prePiercingClassNames } = fragmentConfig;
 		console.log('[------------Debug Info | Fragment Config]:', { fragmentId, prePiercingClassNames });
 
@@ -112,45 +114,49 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		});
 		console.log('[------------Debug Info | Fragment Host]:', { fragmentHostPrefix, fragmentHostSuffix });
 
-		const duplexStream = new NodeDuplex({
-			read() {},
-			write(chunk, encoding, callback) {
-				this.push(chunk, encoding);
-				callback();
-			}
-		});
-		const readSide = duplexStream;
-		const writeSide = duplexStream;
-		console.log('[------------Debug Info | Stream Setup]: Created duplex stream');
-
 		const html = await fragmentResponse.text();
-		console.log('[------------Debug Info | Fragment Response]: Received HTML content');
+		console.log('[------------Debug Info | Fragment Response]: Received HTML content', typeof html);
 
+		// cast due to https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/65542
+		const webReadableInput: ReadableStream = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
+
+		// const transformStream = new TransformStream({
+		//   transform(chunk, controller) {
+		//     const text = chunk.toString();
+		//     const upperText = text.toUpperCase();
+		//     controller.enqueue(upperText);
+		//   }
+		// });
+	
+		// const webReadableOutput = webReadableInput.pipeThrough(transformStream);
+	
 		const rewrittenResponse = new HTMLRewriter()
-			.on("head", {
-				element(element: any) {
-					console.log('[------------Debug Info | HTMLRewriter]: Injecting styles into head');
-					element.append(gateway.prePiercingStyles, { html: true });
-				},
-			})
-			.on("body", {
-				element(element: any) {
-					console.log('[------------Debug Info | HTMLRewriter]: Transforming body content');
-					element.append(fragmentHostPrefix, { html: true });
-					element.append(html, { html: true });
-					element.append(fragmentHostSuffix, { html: true });
-				},
-			})
-			.transform(new Response(html));
+				.on("head", {
+					element(element: any) {
+						console.log('[------------Debug Info | HTMLRewriter]: Injecting styles into head');
+						element.append(gateway.prePiercingStyles, { html: true });
+					},
+				})
+				.on("body", {
+					element(element: any) {
+						console.log('[------------Debug Info | HTMLRewriter]: Transforming body content');
 
-		const rewrittenBody = await rewrittenResponse.text();
+						element.append(fragmentHostPrefix, { html: true });
+						//element.append(html, { html: true });
+						element.append(fragmentHostSuffix, { html: true });
+					},
+				})
+				.transform(new Response(webReadableInput));
+	
+	
+		const rewrittenBody = rewrittenResponse.body;
+		const nodeReadableOuput = stream.Readable.fromWeb(rewrittenBody as streamWeb.ReadableStream);
+		
 		console.log('[------------Debug Info | Rewritten Content]: Successfully transformed HTML');
 
-		writeSide.write(rewrittenBody);
-		writeSide.end();
 		console.log('[------------Debug Info | Stream]: Writing completed', rewrittenBody);
 
-		return readSide;
+		return nodeReadableOuput;
 	}
 
     function mergeStreams(...streams: NodeJS.ReadableStream[]) {
