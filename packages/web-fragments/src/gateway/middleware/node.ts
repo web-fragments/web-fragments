@@ -111,11 +111,9 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		const { prefix: fragmentHostPrefix, suffix: fragmentHostSuffix } = fragmentHostInitialization({
 			fragmentId,
 			classNames: prePiercingClassNames.join(''),
+            content: '',
 		});
 		console.log('[------------Debug Info | Fragment Host]:', { fragmentHostPrefix, fragmentHostSuffix });
-
-		const html = await fragmentResponse.text();
-		console.log('[------------Debug Info | Fragment Response]: Received HTML content', typeof html);
 
 		// cast due to https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/65542
 		const webReadableInput: ReadableStream = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
@@ -129,7 +127,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		// });
 	
 		// const webReadableOutput = webReadableInput.pipeThrough(transformStream);
-	
+        const html = await fragmentResponse.text();       
 		const rewrittenResponse = new HTMLRewriter()
 				.on("head", {
 					element(element: any) {
@@ -139,11 +137,20 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 				})
 				.on("body", {
 					element(element: any) {
+
+                        const fragmentHost = fragmentHostInitialization({
+                            fragmentId,
+                            classNames: prePiercingClassNames.join(''),
+                            content: html,
+                        });
+		                console.log('[------------Debug Info | Fragment Response]: Received HTML content', typeof html);
 						console.log('[------------Debug Info | HTMLRewriter]: Transforming body content');
 
-						element.append(fragmentHostPrefix, { html: true });
-						//element.append(html, { html: true });
-						element.append(fragmentHostSuffix, { html: true });
+						element.append(fragmentHost.prefix, { html: true });
+                        console.log('[------------Prefix appended]:', fragmentHost.prefix);
+                        console.log('[------------HTML appended]:', typeof(html));
+						element.append(fragmentHost.suffix, { html: true });
+                        console.log('[------------Suffix appended]:', fragmentHost.suffix);
 					},
 				})
 				.transform(new Response(webReadableInput));
@@ -174,9 +181,9 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
     }
 }
 
-function fragmentHostInitialization({ fragmentId, classNames }: { fragmentId: string; classNames: string }) {
+function fragmentHostInitialization({ fragmentId, classNames, content }: { fragmentId: string; classNames: string, content: string }) {
     return {
         prefix: `<fragment-host class="${classNames}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">`,
-        suffix: `</template></fragment-host>`,
+        suffix: `${content}</template></fragment-host>`,
     };
 }

@@ -168,7 +168,7 @@ export function getWebMiddleware(
               fragmentId,
               content: fragmentContent,
               classNames: prePiercingClassNames.join(' '),
-            }, type); // Pass the correct type
+            }); // Pass the correct type
   
             if (typeof fragmentHost === 'string') {
               // If it's a string, append directly
