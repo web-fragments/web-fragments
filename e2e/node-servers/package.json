@@ -9,8 +9,7 @@
 		"start:express": "node dist/express.js",
 		"start:connect": "node dist/connect.js",
 		"build": "tsc -p tsconfig.json && cd app/client && npm run build && cd ../..",
-		"clean": "rm -rf dist && rm -rf node_modules",
-		"all": "pnpm clean && pnpm i && pnpm build && pnpm dev:express"
+		"clean": "rm -rf dist && rm -rf node_modules"
 	},
 	"author": "",
 	"license": "ISC",

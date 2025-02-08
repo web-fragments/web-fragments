@@ -2,11 +2,10 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { FragmentGateway } from 'web-fragments/gateway';
 import { HTMLRewriter } from 'htmlrewriter';
 import fs from 'fs';
-import path, { normalize } from 'path';
+import path from 'path';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
 import stream from 'stream';
 import streamWeb from 'stream/web';
-import { StringDecoder } from 'string_decoder';
 
 const NodeReadable = stream?.Readable ?? (class {} as typeof import('stream').Readable);
 const NodePassThrough = stream?.PassThrough ?? (class {} as typeof import('stream').PassThrough);
@@ -40,50 +39,13 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 						throw new Error(`Host page not found at ${currentPagePath}`);
 					}
 					
-/* 					const hostReader = fs.createReadStream(currentPagePath, { encoding: 'utf8' }); */
-// I am initializing the reader as a PassThrough stream to be able to pipe it to the embedFragmentIntoHost function
-// to make sure we have a response before we feed it to the writer, since createReadStream is async and PassThrough is sync
-                    const hostReader = new stream.PassThrough();
-                    fs.createReadStream(currentPagePath, { encoding: 'utf8' })
-                        .on('error', (err) => {
-                            console.error('[Error] Error reading host page:', err);
-                            return renderErrorResponse(err, res);
-                        })
-                        .pipe(hostReader);
+					const hostHtmlReadable = fs.createReadStream(currentPagePath);
 
-
-                        function bufferToUTF8Readable(bufferStream: stream.Readable) {
-                            const decoder = new StringDecoder('utf8');
-                            const transformedStream = new stream.PassThrough();
-                            
-                            bufferStream.on('data', (chunk) => {
-                                transformedStream.write(decoder.write(chunk));
-                            });
-                            bufferStream.on('end', () => {
-                                transformedStream.end(decoder.end());
-                            });
-                        
-                            return transformedStream;
-                        }
-                        
-    /*                 hostReader
-                    .on('error', (err) => {
-                        console.error('[Error] Error reading host page:', err);
-                        return renderErrorResponse(err, res);
-                    })
-                    .on('data', (chunk) => {
-                        console.log('[Debug Info | Host page chunk]:', chunk);
-                    })
-                    .on('end', () => {
-                        console.log('[Debug Info | Host page read]: Completed');
-                    }); */
-                    const utf8Stream = bufferToUTF8Readable(hostReader);
-                    const rewrittenHtmlReadable = await embedFragmentIntoHost(utf8Stream, fragmentResponse, matchedFragment);
-
-					//const rewrittenHtmlReadable = await embedFragmentIntoHost(hostReader, fragmentResponse, matchedFragment);
+					const rewrittenHtmlReadable = await embedFragmentIntoHost(hostHtmlReadable, fragmentResponse, matchedFragment);
 
 					rewrittenHtmlReadable.pipe(res);
-
+                    
+                    //duplexStream.pipe(res);
                 } catch (err) {
                     console.error('[Error] Error during fragment embedding:', err);
                     return renderErrorResponse(err, res);
@@ -142,7 +104,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
         return fetch(fragmentReq);
     }
 
-	async function embedFragmentIntoHost(hostReader: stream.Readable, fragmentResponse: Response, fragmentConfig: FragmentConfig) {
+	async function embedFragmentIntoHost(hostHtmlReadable: stream.Readable, fragmentResponse: Response, fragmentConfig: FragmentConfig) {
 		const { fragmentId, prePiercingClassNames } = fragmentConfig;
 		console.log('[------------Debug Info | Fragment Config]:', { fragmentId, prePiercingClassNames });
 
@@ -154,7 +116,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		console.log('[------------Debug Info | Fragment Host]:', { fragmentHostPrefix, fragmentHostSuffix });
 
 		// cast due to https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/65542
-		const webReadableInput: ReadableStream = stream.Readable.toWeb(hostReader) as ReadableStream<Uint8Array>;
+		const webReadableInput: ReadableStream = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
 
 		// const transformStream = new TransformStream({
 		//   transform(chunk, controller) {
@@ -165,18 +127,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		// });
 	
 		// const webReadableOutput = webReadableInput.pipeThrough(transformStream);
-// sanitizing doesn't work, but leave it here for ref
-/*         function sanitizeUTF8(input: string): string {
-            const decoder = new TextDecoder('utf-8', { fatal: false });
-            const encoder = new TextEncoder();
-            return decoder.decode(encoder.encode(input));
-        } */
-        function escapeHTML(str: string) {
-            return str.replace(/[^\x20-\x7E]/g, (char) => `&#${char.codePointAt(0)};`);
-        }
-        let html = await fragmentResponse.text();
-        html = escapeHTML(html);
-        console.log('[------------Debug Info | Fragment Response]: Received HTML content');
+        const html = await fragmentResponse.text();       
 		const rewrittenResponse = new HTMLRewriter()
 				.on("head", {
 					element(element: any) {
@@ -186,7 +137,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 				})
 				.on("body", {
 					element(element: any) {
-                        
+
                         const fragmentHost = fragmentHostInitialization({
                             fragmentId,
                             classNames: prePiercingClassNames.join(''),
@@ -206,11 +157,11 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	
 	
 		const rewrittenBody = rewrittenResponse.body;
-        const nodeReadableOuput = stream.Readable.fromWeb(rewrittenBody as streamWeb.ReadableStream<Uint8Array>);
+		const nodeReadableOuput = stream.Readable.fromWeb(rewrittenBody as streamWeb.ReadableStream);
 		
 		console.log('[------------Debug Info | Rewritten Content]: Successfully transformed HTML');
 
-		console.log('[-----------Debug Info | Stream]: Writing completed');
+		console.log('[------------Debug Info | Stream]: Writing completed', rewrittenBody);
 
 		return nodeReadableOuput;
 	}
