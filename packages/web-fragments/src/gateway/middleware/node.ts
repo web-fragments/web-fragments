@@ -41,7 +41,8 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 					}
 					
 /* 					const hostReader = fs.createReadStream(currentPagePath, { encoding: 'utf8' }); */
-
+// I am initializing the reader as a PassThrough stream to be able to pipe it to the embedFragmentIntoHost function
+// to make sure we have a response before we feed it to the writer, since createReadStream is async and PassThrough is sync
                     const hostReader = new stream.PassThrough();
                     fs.createReadStream(currentPagePath, { encoding: 'utf8' })
                         .on('error', (err) => {
