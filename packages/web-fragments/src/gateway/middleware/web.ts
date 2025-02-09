@@ -12,24 +12,20 @@ export function getWebMiddleware(
   options: FragmentMiddlewareOptions = {}
 ): (req: Request, next: () => Promise<Response>) => Promise<Response> {
   const { additionalHeaders = {}, mode = 'development' } = options;
-  console.log('### Using Web middleware!!!!!');
+  console.log('[Debug Info]: Using NEW Web middleware');
 
   return async (req: Request, next: () => Promise<Response>) => {
     // match the fragment request to the fragment config
     const matchedFragment = gateway.matchRequestToFragment(req);
-    console.log('### Using Web middleware!!!!! matchedFragment:', matchedFragment);
+    console.log('[Debug Info]: matched fragment:', matchedFragment);
 
     if (matchedFragment) {
-      // evaluate if there is a fragment match, and it's from an iframe request
-      // then return an empty document response
-      if (req.headers.get('sec-fetch-dest') === 'iframe') {
-        return new Response('<!doctype html><title>', { headers: { 'Content-Type': 'text/html' } });
-      }
 
       const fragmentResponse = fetchFragment(req, matchedFragment);
       // if the fragment request comes from a document
       // then we will embed the fragment response into the host
       if (req.headers.get('sec-fetch-dest') === 'document') {
+
         const hostResponse = await next();
         const isHTMLResponse = hostResponse.headers.get('content-type')?.startsWith('text/html');
 
@@ -37,16 +33,23 @@ export function getWebMiddleware(
           return fragmentResponse
             .then(rejectErrorResponses)
             .catch(handleFetchErrors(req, matchedFragment))
-            .then(prepareFragmentForReframing)
-            .then(embedFragmentIntoHost(hostResponse, matchedFragment))
+            .then((fragmentResponse) => prepareFragmentForReframing(fragmentResponse))
+            .then((fragmentResponse) => embedFragmentIntoHost(hostResponse, matchedFragment)(fragmentResponse))
             .then(attachForwardedHeaders(fragmentResponse, matchedFragment))
             .catch(renderErrorResponse);
         }
       }
 
+      // evaluate if there is a fragment match, and it's from an iframe request
+      // then return an empty document response
+      if (req.headers.get('sec-fetch-dest') === 'iframe') {
+        console.log('[Debug Info]: Handling iframe request detected');
+        return new Response('<!doctype html><title>', { headers: { 'Content-Type': 'text/html' } });
+      }
+
       return fragmentResponse;
     } else {
-      console.log('### No fragment match, calling next()');
+      console.log('[Debug Info]: | No fragment match, calling next()');
       try {
         return await next();
       } catch (error) {
@@ -66,8 +69,8 @@ export function getWebMiddleware(
     const controller = new AbortController();
     const signal = controller.signal;
   
-    // Set a timeout to abort the fetch request after a specified time (e.g., 5 seconds)
-    const timeout = setTimeout(() => controller.abort(), 5000); // Timeout after 5 seconds
+    // set a timeout to abort the fetch request after a specified time 
+    const timeout = setTimeout(() => controller.abort(), 5000);
   
     const fragmentReq = new Request(fragmentEndpoint.toString(), req);
   
@@ -90,14 +93,13 @@ export function getWebMiddleware(
       return response;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log('### Fragment fetch timed out!');
+        console.log('[Debug Info]: Fragment fetch timed out!');
       } else {
-        console.error('### Error fetching fragment:', error);
+        console.error('[Debug Info]: Error fetching fragment:', error);
       }
       throw error; 
     }
   }
-  
 
   function rejectErrorResponses(response: Response): Response {
     if (response.ok) return response;
@@ -149,15 +151,20 @@ export function getWebMiddleware(
   function embedFragmentIntoHost(hostResponse: Response, fragmentConfig: FragmentConfig) {
     return (fragmentResponse: Response) => {
       const { fragmentId, prePiercingClassNames } = fragmentConfig;
-      const type = 'web';
-      console.log("Host Response Status:", hostResponse.status);
-      console.log("Host Response Content-Type:", hostResponse.headers.get('content-type'));
-  
+      console.log('[[Debug Info]: Fragment Config]:', { fragmentId, prePiercingClassNames });
+      
+      const { prefix: fragmentHostPrefix, suffix: fragmentHostSuffix } = fragmentHostInitialization({
+        fragmentId,
+        classNames: prePiercingClassNames.join(''),
+        content: '',
+      });
+
       if (!hostResponse.ok) return hostResponse;
-  
+
       return new HTMLRewriter()
         .on('head', {
           element(element) {
+            console.log('[[Debug Info]: HTMLRewriter]: Injecting styles into head');
             element.append(gateway.prePiercingStyles, { html: true });
           },
         })
@@ -168,15 +175,22 @@ export function getWebMiddleware(
               fragmentId,
               content: fragmentContent,
               classNames: prePiercingClassNames.join(' '),
-            }); // Pass the correct type
+            });
+            console.log('[[Debug Info]: Fragment Response]: Received HTML content', typeof fragmentResponse);
+            console.log('[[Debug Info]: HTMLRewriter]: Transforming body content');
   
             if (typeof fragmentHost === 'string') {
               // If it's a string, append directly
+              console.log('[[Debug Info]: HTMLRewriter]: Appending fragment host');
               element.append(fragmentHost, { html: true });
             } else {
               // If it's an object, append the prefix and suffix separately
+              
+					    console.log('[[Debug Info]: HTML appended]:', typeof fragmentContent);
               element.append(fragmentHost.prefix, { html: true });
+              console.log('[[Debug Info]: Prefix appended]:', fragmentHost.prefix);
               element.append(fragmentHost.suffix, { html: true });
+              console.log('[[Debug Info]: Suffix appended]:', fragmentHost.suffix);
             }
           },
         })
