@@ -53,7 +53,7 @@
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\""
 	},
 	"dependencies": {
-		"htmlrewriter": "latest",
+		"@worker-tools/html-rewriter": "0.1.0-pre.19",
 		"reframed": "workspace:*"
 	},
 	"devDependencies": {

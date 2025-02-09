@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { FragmentGateway } from 'web-fragments/gateway';
-import { HTMLRewriter } from 'htmlrewriter';
+import { HTMLRewriter } from '@worker-tools/html-rewriter/base64';
 import fs from 'fs';
 import path from 'path';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
@@ -44,7 +44,11 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 					// prepare the fragment for reframing
 					const preparedFragmentResponse = await prepareFragmentForReframing(fragmentResponse);
 
-					const rewrittenHtmlReadable = await embedFragmentIntoHost(hostPageReader, preparedFragmentResponse, matchedFragment);
+					const rewrittenHtmlReadable = await embedFragmentIntoHost(
+						hostPageReader,
+						preparedFragmentResponse,
+						matchedFragment,
+					);
 
 					// attach headers before sending the response
 					attachForwardedHeaders(res, fragmentResponse, matchedFragment);
@@ -55,6 +59,11 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 					console.error('[Error] Error during fragment embedding:', err);
 					return renderErrorResponse(err, res);
 				}
+			} else if (req.headers['sec-fetch-dest'] === 'iframe') {
+				// handle the iframe
+				console.log(`[Debug Info]: Handling iframe request`);
+				res.writeHead(200, { 'content-type': 'text/html' });
+				res.end('<!doctype html><title>');
 			} else {
 				if (fragmentResponse.body) {
 					res.setHeader('content-type', fragmentResponse.headers.get('content-type') || 'text/plain');
@@ -64,12 +73,6 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 					res.statusCode = 500;
 					res.end('<p>Fragment response body is empty.</p>');
 				}
-			}
-			// handle the iframe
-			if (req.headers['sec-fetch-dest'] === 'iframe') {
-				console.log(`[Debug Info]: Handling iframe request`);
-				res.writeHead(200, { 'content-type': 'text/html' });
-				res.end('<!doctype html><title>');
 			}
 		} else {
 			return next();
@@ -96,8 +99,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		}
 
 		headers.append('sec-fetch-dest', 'empty');
-		// Is this necessary? This is not standard
-		// and I assume it was added because of some CF worker logic
+		// TODO: review the name of this header and document it as something fragments can use to render a fake shell in standalone mode vs fragment in the embedded mode.
 		headers.append('x-fragment-mode', 'embedded');
 
 		// Do we need this still?
@@ -191,7 +193,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	async function prepareFragmentForReframing(fragmentResponse: Response): Promise<Response> {
 		const rewrittenResponse = new HTMLRewriter()
 			.on('script', {
-				element(element) {
+				element(element: any) {
 					const scriptType = element.getAttribute('type');
 					if (scriptType) {
 						element.setAttribute('data-script-type', scriptType);
@@ -217,7 +219,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	}
 }
 
-// we need to remove this and import it from 
+// we need to remove this and import it from
 // packages/web-fragments/src/utils/host-utils.ts
 function fragmentHostInitialization({
 	fragmentId,

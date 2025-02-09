@@ -7,11 +7,19 @@
 	  "outDir": "dist",
 	  "rootDir": "app/server/src",
 	  "strict": true,
-	  "esModuleInterop": true
+	  "esModuleInterop": true,
+		"skipLibCheck": true
 	},
 	"files": [
 		"app/server/src/express.ts",
 		"app/server/src/connect.ts"
 	],
+	"ts-node": {
+		"experimentalSpecifierResolution": "node",
+		"experimentalResolver": true,
+		"transpileOnly": false,
+		"esm": true,
+		"logError": true
+	}
   }
   
