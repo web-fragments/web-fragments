@@ -10,8 +10,7 @@ export const fragmentHostInitialization = ({
 	classNames: string;
 }) => {
 	return {
-		suffix: `<fragment-host class="${classNames}" fragment-id="${fragmentId}" data-piercing="true">
-		<template shadowrootmode="open">${content}`,
-		prefix: `</template></fragment-host>`
+		prefix: `<fragment-host class="${classNames}" "data-attibute-test="new_version" fragment-id="${fragmentId}" data-attribute-piercing="true"><template shadowrootmode="open">${content}`,
+		suffix: `</template></fragment-host>`
 	};
 };
