@@ -98,13 +98,13 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 			}
 		}
 
-		headers.append('sec-fetch-dest', 'empty');
+		headers.set('sec-fetch-dest', 'empty');
 		// TODO: review the name of this header and document it as something fragments can use to render a fake shell in standalone mode vs fragment in the embedded mode.
-		headers.append('x-fragment-mode', 'embedded');
+		headers.set('x-fragment-mode', 'embedded');
 
 		// Do we need this still?
 		if (mode === 'development') {
-			headers.append('Accept-Encoding', 'gzip');
+			headers.set('Accept-Encoding', 'gzip');
 		}
 
 		const fragmentReqUrl = new URL(request.url!, endpoint);
@@ -115,6 +115,10 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 
 		Object.entries(additionalHeaders).forEach(([name, value]) => {
 			fragmentReq.headers.set(name, value as string);
+		});
+
+		fragmentReq.headers.forEach((value, key) => {
+			console.log('--------- fetch headers: ', key, '=', value);
 		});
 
 		return fetch(fragmentReq);

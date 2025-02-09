@@ -30,8 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="fragment-container">
                 <h2>Reframed - with fetch</h2>
                 <button class="button" id="toggle-host">Toggle Host</button>
-                <div class="host-wrapper" style="display: none;">
-                    <fragment-host></fragment-host>
+                <div class="host-wrapper">
                 </div>
             </div>
         </div>
@@ -51,14 +50,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	if (toggle) {
+		let toggled = false;
+
 		toggle.addEventListener('click', () => {
 			const hostWrapper = document.querySelector('.host-wrapper') as HTMLElement;
-			if (hostWrapper.style.display === 'none') {
-				hostWrapper.style.display = 'block';
-				hostWrapper.style.visibility = 'visible';
+			if (!toggled) {
+				toggled = true;
+				hostWrapper.appendChild(document.createElement('fragment-host'));
 			} else {
-				hostWrapper.style.display = 'none';
-				hostWrapper.style.visibility = 'hidden';
+				toggled = false;
+				hostWrapper.innerHTML = '';
 			}
 		});
 	}
