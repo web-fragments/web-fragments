@@ -1,12 +1,10 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { FragmentGateway } from 'web-fragments/gateway';
-import { HTMLRewriter } from '@worker-tools/html-rewriter/base64';
+import { HTMLRewriter } from 'htmlrewriter';
 import fs from 'fs';
 import path from 'path';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
-// commented it out because I can't import it due to resolution issues in the server at runtime
-// TODO: Fix this
-// import { fragmentHostInitialization } from '../utils/host-utils';
+import { fragmentHostInitialization } from '../utils/host-utils';
 import stream from 'stream';
 import streamWeb from 'stream/web';
 
@@ -142,14 +140,6 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		// cast due to https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/65542
 		const webReadableInput: ReadableStream = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
 
-		// const transformStream = new TransformStream({
-		//   transform(chunk, controller) {
-		//     const text = chunk.toString();
-		//     const upperText = text.toUpperCase();
-		//     controller.enqueue(upperText);
-		//   }
-		// });
-
 		// const webReadableOutput = webReadableInput.pipeThrough(transformStream);
 		const html = await fragmentResponse.text();
 		const rewrittenResponse = new HTMLRewriter()
@@ -182,8 +172,6 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		const nodeReadableOuput = stream.Readable.fromWeb(rewrittenBody as streamWeb.ReadableStream);
 
 		console.log('[[Debug Info]: Rewritten Content]: Successfully transformed HTML');
-
-		// console.log('[[Debug Info]: Stream]: Writing completed', rewrittenBody);
 
 		return nodeReadableOuput;
 	}
@@ -221,22 +209,4 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 			}
 		}
 	}
-}
-
-// we need to remove this and import it from
-// packages/web-fragments/src/utils/host-utils.ts
-function fragmentHostInitialization({
-	fragmentId,
-	classNames,
-	content,
-}: {
-	fragmentId: string;
-	classNames: string;
-	content: string;
-}) {
-	return {
-		prefix: `<fragment-host class="${classNames}" fragment-id="${fragmentId}" data-piercing="true">
-		<template shadowrootmode="open">${content}`,
-		suffix: `</template></fragment-host>`,
-	};
 }
