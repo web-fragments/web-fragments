@@ -7,16 +7,16 @@
 			"import": "./src/gateway/fragment-gateway.ts"
 		},
 		"./gateway/web": {
-			"import": "./src/gateway/middleware/web.ts"
+			"import": "./src/gateway/middleware/web-common.ts"
 		},
 		"./gateway/node": {
-			"import": "./src/gateway/middleware/node.ts"
+			"import": "./src/gateway/middleware/node-common.ts"
 		},
 		"./elements": {
 			"import": "./src/elements/index.ts"
 		},
 		"./utils": {
-			"import": "./src/gateway/utils/host-utils.ts"
+			"import": "./src/gateway/utils/common-utils.ts"
 		}
 	},
 	"publishConfig": {
@@ -30,11 +30,11 @@
 				"types": "./dist/elements/index.d.ts"
 			},
 			"./gateway/web": {
-				"import": "./dist/gateway/web.js",
+				"import": "./dist/gateway/web-common.js",
 				"types": "./dist/gateway/web.d.ts"
 			},
 			"./gateway/node": {
-				"import": "./dist/gateway/node.js",
+				"import": "./dist/gateway/node-common.js",
 				"types": "./dist/gateway/node.d.ts"
 			}
 		}
@@ -53,8 +53,8 @@
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\""
 	},
 	"dependencies": {
-		"@worker-tools/html-rewriter": "0.1.0-pre.19",
-		"reframed": "workspace:*"
+		"reframed": "workspace:*",
+		"htmlrewriter": "file:./_tmp/htmlrewriter-0.0.12.tgz"
 	},
 	"devDependencies": {
 		"@types/node": "^20.12.7",
