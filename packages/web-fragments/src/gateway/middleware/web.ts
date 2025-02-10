@@ -137,7 +137,7 @@ export function getWebMiddleware(
 	function prepareFragmentForReframing(fragmentResponse: Response): Response {
 		return new HTMLRewriter()
 			.on('script', {
-				element(element) {
+				element(element: any) {
 					const scriptType = element.getAttribute('type');
 					if (scriptType) {
 						element.setAttribute('data-script-type', scriptType);
@@ -164,13 +164,13 @@ export function getWebMiddleware(
 
 			return new HTMLRewriter()
 				.on('head', {
-					element(element) {
+					element(element: any) {
 						console.log('[[Debug Info]: HTMLRewriter]: Injecting styles into head');
 						element.append(gateway.prePiercingStyles, { html: true });
 					},
 				})
 				.on('body', {
-					async element(element) {
+					async element(element: any) {
 						const fragmentContent = await fragmentResponse.text();
 						const fragmentHost = fragmentHostInitialization({
 							fragmentId,
