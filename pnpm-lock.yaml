@@ -519,9 +519,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20240620.0
         version: 4.20240620.0
-      '@worker-tools/html-rewriter':
-        specifier: 0.1.0-pre.19
-        version: 0.1.0-pre.19
+      htmlrewriter:
+        specifier: anfibiacreativa/htmlrewriter#fix-emoji-crash
+        version: https://codeload.github.com/anfibiacreativa/htmlrewriter/tar.gz/e234d7a1c7b86e10ee1e8f271afca42058daef42
       reframed:
         specifier: workspace:*
         version: link:../reframed
@@ -2408,12 +2408,6 @@ packages:
   '@shikijs/vscode-textmate@9.3.0':
     resolution: {integrity: sha512-jn7/7ky30idSkd/O5yDBfAnVt+JJpepofP/POZ1iMOxK59cOfqIgg/Dj0eFsjOTMw+4ycJN0uhZH/Eb0bs/EUA==}
 
-  '@stardazed/streams-compression@1.0.0':
-    resolution: {integrity: sha512-SQCiwxdIVJ5xxUBYptN+fc+tJpSDbxQuJ0+3u2SmHjIzr6JIRZ28AVFtFnGy6x6j3UBlaLx73w9rC6UAFxnd1g==}
-
-  '@stardazed/zlib@1.0.1':
-    resolution: {integrity: sha512-MS6PCYiRNJ32c69+3NPyL+bu7LpiFDvMcBXnlhQnF8CKMG0R/xRVCCo422NPkQ0+Cox3xKpk5Lc1LfWFS4b3cw==}
-
   '@tailwindcss/typography@0.5.15':
     resolution: {integrity: sha512-AqhlCXl+8grUz8uqExv5OTtgpjuVIwFTSXTrh8y9/pw6q2ek7fJ+Y8ZEVw7EB2DCcuCOtEjf9w3+J3rzts01uA==}
     peerDependencies:
@@ -2914,12 +2908,6 @@ packages:
 
   '@web3-storage/multipart-parser@1.0.0':
     resolution: {integrity: sha512-BEO6al7BYqcnfX15W2cnGR+Q566ACXAT9UQykORCWW80lmkpWsnEob6zJS1ZVBKsSJC8+7vJkHwlp+lXG1UCdw==}
-
-  '@worker-tools/html-rewriter@0.1.0-pre.19':
-    resolution: {integrity: sha512-IUbEZwvSdp8vtaB1LAZ/sBRJGNycd9a8cbkqO05rMEPm5MC59Sb+wiGCWaaRXrwQLDAyWeod4QC/q0TuSUI5EA==}
-
-  '@worker-tools/resolvable-promise@0.2.0-pre.6':
-    resolution: {integrity: sha512-+5RcuruCLB/P3FYYb376RgyImXaq9BBQoOskUbgPyNK3O0AXPakrXUj1EELv+lcnUSdFws/ufdrrWODLJyoTmg==}
 
   '@zxing/text-encoding@0.9.0':
     resolution: {integrity: sha512-U/4aVJ2mxI0aDNI8Uq0wEhMgY+u4CNtEb0om3+y3+niDAsoTCOB33UF0sxpzqzdqXLqmvc+vZyAt4O8pPdfkwA==}
@@ -4812,6 +4800,10 @@ packages:
 
   htmlparser2@9.1.0:
     resolution: {integrity: sha512-5zfg6mHUoaer/97TxnGpxmbR7zJtPwIYFMZ/H5ucTlPZhKvtum05yiPK3Mgai3a0DyVxv7qYqoweaEd2nrYQzQ==}
+
+  htmlrewriter@https://codeload.github.com/anfibiacreativa/htmlrewriter/tar.gz/e234d7a1c7b86e10ee1e8f271afca42058daef42:
+    resolution: {tarball: https://codeload.github.com/anfibiacreativa/htmlrewriter/tar.gz/e234d7a1c7b86e10ee1e8f271afca42058daef42}
+    version: 0.0.13
 
   http-cache-semantics@4.1.1:
     resolution: {integrity: sha512-er295DKPVsV82j5kw1Gjt+ADA/XYHsajl82cGNQG2eyoPkvgUhX+nDIyelzhIWbbsXP39EHcI6l5tYs2FYqYXQ==}
@@ -10117,12 +10109,6 @@ snapshots:
 
   '@shikijs/vscode-textmate@9.3.0': {}
 
-  '@stardazed/streams-compression@1.0.0':
-    dependencies:
-      '@stardazed/zlib': 1.0.1
-
-  '@stardazed/zlib@1.0.1': {}
-
   '@tailwindcss/typography@0.5.15(tailwindcss@3.4.16(ts-node@10.9.2(@types/node@22.13.0)(typescript@5.7.2)))':
     dependencies:
       lodash.castarray: 4.4.0
@@ -10845,13 +10831,6 @@ snapshots:
   '@vscode/l10n@0.0.18': {}
 
   '@web3-storage/multipart-parser@1.0.0': {}
-
-  '@worker-tools/html-rewriter@0.1.0-pre.19':
-    dependencies:
-      '@stardazed/streams-compression': 1.0.0
-      '@worker-tools/resolvable-promise': 0.2.0-pre.6
-
-  '@worker-tools/resolvable-promise@0.2.0-pre.6': {}
 
   '@zxing/text-encoding@0.9.0':
     optional: true
@@ -13503,6 +13482,8 @@ snapshots:
       domhandler: 5.0.3
       domutils: 3.1.0
       entities: 4.5.0
+
+  htmlrewriter@https://codeload.github.com/anfibiacreativa/htmlrewriter/tar.gz/e234d7a1c7b86e10ee1e8f271afca42058daef42: {}
 
   http-cache-semantics@4.1.1: {}
 

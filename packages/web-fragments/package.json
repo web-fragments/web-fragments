@@ -54,7 +54,7 @@
 	},
 	"dependencies": {
 		"reframed": "workspace:*",
-		"htmlrewriter": "file:./_tmp/htmlrewriter-0.0.12.tgz"
+		"htmlrewriter": "anfibiacreativa/htmlrewriter#fix-emoji-crash"
 	},
 	"devDependencies": {
 		"@types/node": "^20.12.7",
