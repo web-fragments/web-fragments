@@ -1,12 +1,13 @@
-// import { HTMLRewriter } from '@worker-tools/html-rewriter';
 import { HTMLRewriter } from 'htmlrewriter';
 import type { FragmentConfig } from '../utils/types';
 import { ServerResponse } from 'node:http';
-import stream from 'node:stream';
 
-// @ts-ignore
-// const HTMLRewriter = globalThis.HTMLRewriter;
-
+/**
+ * Prepares a fragment response for reframing by modifying script elements.
+ *
+ * @param {Response} fragmentResponse - The response containing the fragment.
+ * @returns {Response} - The transformed response with inert scripts.
+ */
 export function prepareFragmentForReframing(fragmentResponse: Response): Response {
     return new HTMLRewriter()
         .on('script', {
@@ -21,49 +22,15 @@ export function prepareFragmentForReframing(fragmentResponse: Response): Respons
         .transform(new Response(fragmentResponse.body, fragmentResponse));
 }
 
-// export function embedFragmentIntoHost(
-//     hostResponse: Response | ReadableStream<Uint8Array>,
-//     fragmentResponse: Response,
-//     fragmentConfig: FragmentConfig,
-//     gateway?: any
-// ) {
-//     const { fragmentId, prePiercingClassNames } = fragmentConfig;
-//     console.log('[[Debug Info]: Fragment Config]:', { fragmentId, prePiercingClassNames });
-
-//     // cast due to https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/65542
-//     // const webReadableInput: ReadableStream = stream.Readable.toWeb(hostResponse) as ReadableStream<Uint8Array>;
-
-//     const { prefix: fragmentHostPrefix, suffix: fragmentHostSuffix } = fragmentHostInitialization({
-//         fragmentId,
-//         classNames: prePiercingClassNames.join(' '),
-//         content: '',
-//     });
-
-//     return new HTMLRewriter()
-//         .on('head', {
-//             element(element: any) {
-//                 console.log('[[Debug Info]: HTMLRewriter]: Injecting styles into head');
-//                 if (gateway) {
-//                     element.append(gateway.prePiercingStyles, { html: true });
-//                 }
-//             },
-//         })
-//         .on('body', {
-//             async element(element: any) {
-//                 const fragmentContent = await fragmentResponse.text();
-//                 const fragmentHost = fragmentHostInitialization({
-//                     fragmentId,
-//                     content: fragmentContent,
-//                     classNames: prePiercingClassNames.join(' '),
-//                 });
-
-//                 element.append(fragmentHost.prefix, { html: true });
-//                 element.append(fragmentHost.suffix, { html: true });
-//             },
-//         })
-//         .transform(hostResponse instanceof Response ? hostResponse : new Response(hostResponse));
-// }
-
+/**
+ * Initializes a fragment host element with given attributes.
+ *
+ * @param {Object} params - The initialization parameters.
+ * @param {string} params.fragmentId - The ID of the fragment.
+ * @param {string} params.content - The content of the fragment.
+ * @param {string} params.classNames - The class names to be applied to the host.
+ * @returns {Object} - The prefix and suffix for embedding the fragment.
+ */
 export const fragmentHostInitialization = ({
 	fragmentId,
 	content,
@@ -79,7 +46,13 @@ export const fragmentHostInitialization = ({
 	};
 };
 
-
+/**
+ * Attaches forwarded headers from a fragment response to the main response.
+ *
+ * @param {Response | ServerResponse} res - The response object to attach headers to.
+ * @param {Response} fragmentResponse - The fragment response containing headers.
+ * @param {FragmentConfig} fragmentConfig - Configuration specifying which headers to forward.
+ */
 export function attachForwardedHeaders(
     res: Response | ServerResponse,
     fragmentResponse: Response,
@@ -98,7 +71,15 @@ export function attachForwardedHeaders(
     }
 }
 
-// the mode should be configurable
+/**
+ * Fetches a fragment from a specified endpoint.
+ *
+ * @param {Request} req - The original request object.
+ * @param {FragmentConfig} fragmentConfig - Configuration containing the fragment endpoint.
+ * @param {Record<string, string>} additionalHeaders - Additional headers to include in the request.
+ * @param {string} mode - The environment mode (e.g., 'development').
+ * @returns {Promise<Response>} - The fetched fragment response.
+ */
 export async function fetchFragment(
     req: Request,
     fragmentConfig: FragmentConfig,
@@ -141,6 +122,12 @@ export async function fetchFragment(
     }
 }
 
+/**
+ * Renders an error response with a status of 500.
+ *
+ * @param {unknown} err - The error to handle.
+ * @returns {Response} - The error response.
+ */
 export function renderErrorResponse(err: unknown): Response {
     if (err instanceof Response) return err;
     return new Response('Internal Server Error', { status: 500, headers: { 'Content-Type': 'text/html' } });
