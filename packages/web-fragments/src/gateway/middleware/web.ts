@@ -1,5 +1,5 @@
 import { FragmentGateway } from '../fragment-gateway';
-import { fetchFragment, fragmentHostInitialization, prepareFragmentForReframing, renderErrorResponse } from '../utils/common-utils';
+import { fetchFragment, rewriteHtmlResponse, prepareFragmentForReframing, renderErrorResponse } from '../utils/common-utils';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
 import type { ServerResponse } from 'http';
 
@@ -53,7 +53,7 @@ export function getWebMiddleware(
                     try {
                         if (!fragmentResponse.ok) throw fragmentResponse;
                         const preparedFragment = prepareFragmentForReframing(fragmentResponse);
-                        const embeddedFragment = await embedFragmentIntoHost(hostResponse, matchedFragment)(preparedFragment);
+                        const embeddedFragment = await embedFragmentIntoHost(hostResponse, matchedFragment, gateway)(preparedFragment);
                         return attachForwardedHeaders(embeddedFragment, fragmentResponse, matchedFragment);
                     } catch (error) {
                         return renderErrorResponse(error);
@@ -85,50 +85,19 @@ export function getWebMiddleware(
      * @param {FragmentConfig} fragmentConfig - Configuration object for the fragment.
      * @returns {Function} - A function that processes and integrates the fragment response.
      */
-    function embedFragmentIntoHost(hostResponse: Response, fragmentConfig: FragmentConfig) {
+    // 
+    
+    function embedFragmentIntoHost(hostResponse: Response, fragmentConfig: FragmentConfig, gateway: FragmentGateway) {
         return (fragmentResponse: Response) => {
-            const { fragmentId, prePiercingClassNames } = fragmentConfig;
-            console.log('[[Debug Info]: Fragment Config]:', { fragmentId, prePiercingClassNames });
-
-            const { prefix: fragmentHostPrefix, suffix: fragmentHostSuffix } = fragmentHostInitialization({
-                fragmentId,
-                classNames: prePiercingClassNames.join(''),
-                content: '',
-            });
-
             if (!hostResponse.ok) return hostResponse;
-
-            return new HTMLRewriter()
-                .on('head', {
-                    element(element: any) {
-                        console.log('[[Debug Info]: HTMLRewriter]: Injecting styles into head');
-                        element.append(gateway.prePiercingStyles, { html: true });
-                    },
-                })
-                .on('body', {
-                    async element(element: any) {
-                        const fragmentContent = await fragmentResponse.text();
-                        const fragmentHost = fragmentHostInitialization({
-                            fragmentId,
-                            content: fragmentContent,
-                            classNames: prePiercingClassNames.join(' '),
-                        });
-                        console.log('[[Debug Info]: Fragment Response]: Received HTML content', typeof fragmentResponse);
-                        console.log('[[Debug Info]: HTMLRewriter]: Transforming body content');
-
-                        if (typeof fragmentHost === 'string') {
-                            console.log('[[Debug Info]: HTMLRewriter]: Appending fragment host');
-                            element.append(fragmentHost, { html: true });
-                        } else {
-                            console.log('[[Debug Info]: HTML appended]:', typeof fragmentContent);
-                            element.append(fragmentHost.prefix, { html: true });
-                            console.log('[[Debug Info]: Prefix appended]:', fragmentHost.prefix);
-                            element.append(fragmentHost.suffix, { html: true });
-                            console.log('[[Debug Info]: Suffix appended]:', fragmentHost.suffix);
-                        }
-                    },
-                })
-                .transform(hostResponse);
+            console.log('---------[Debug Info]: Embedding fragment into host web [common-utils]');
+            return rewriteHtmlResponse({
+                htmlRewriter: HTMLRewriter,
+                hostInput: hostResponse,
+                fragmentResponse,
+                fragmentConfig,
+                gateway
+            });
         };
     }
 }
