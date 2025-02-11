@@ -7,10 +7,10 @@
 			"import": "./src/gateway/fragment-gateway.ts"
 		},
 		"./gateway/web": {
-			"import": "./src/gateway/middleware/web-common.ts"
+			"import": "./src/gateway/middleware/web.ts"
 		},
 		"./gateway/node": {
-			"import": "./src/gateway/middleware/node-common.ts"
+			"import": "./src/gateway/middleware/node.ts"
 		},
 		"./elements": {
 			"import": "./src/elements/index.ts"
@@ -30,11 +30,11 @@
 				"types": "./dist/elements/index.d.ts"
 			},
 			"./gateway/web": {
-				"import": "./dist/gateway/web-common.js",
+				"import": "./dist/gateway/web.js",
 				"types": "./dist/gateway/web.d.ts"
 			},
 			"./gateway/node": {
-				"import": "./dist/gateway/node-common.js",
+				"import": "./dist/gateway/node.js",
 				"types": "./dist/gateway/node.d.ts"
 			}
 		}
