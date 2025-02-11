@@ -52,13 +52,12 @@ export class FragmentGateway {
 		});
 	}
 
-	matchRequestToFragment(urlOrRequest: string | URL | Request) {
-		const path = new URL(urlOrRequest instanceof Request ? urlOrRequest.url : `${urlOrRequest}`).pathname;
+	matchRequestToFragment(urlPath: string) {
 		// TODO: path matching needs to take pattern specificity into account
 		// such that more specific patterns are matched before less specific ones
 		//   e.g. given route patterns `['/:accountId', '/:accountId/workers']` and a request path of `/abc123/workers/foo`,
 		//   the matched pattern should be `/:accountId/workers` since it is the more specific pattern.
-		const match = [...this.routeMap.keys()].find((matcher) => matcher(path));
+		const match = [...this.routeMap.keys()].find((matcher) => matcher(urlPath));
 
 		if (match) {
 			return this.routeMap.get(match) ?? null;

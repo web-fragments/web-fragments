@@ -42,68 +42,89 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	const { additionalHeaders = {}, mode = 'development' } = options;
 
 	return async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
-		const reqUrl = new URL(req.url!, `http://${req.headers.host}`);
-		const body = req.method !== 'GET' && req.method !== 'HEAD' ? await streamToPromise(req) : undefined;
-		console.log('[Debug Info | Local request]:', reqUrl.href);
+		const originalReqUrl = new URL(req.url!, `http://${req.headers.host}`);
+		console.log('[Debug Info | Local request]:', originalReqUrl);
 
-		const matchedFragment = gateway.matchRequestToFragment(reqUrl.href);
-		if (matchedFragment) {
-			console.log('[Debug Info | Matched Fragment]:', JSON.stringify(matchedFragment));
-			const request = new Request(reqUrl.href, {
-				method: req.method,
-				headers: req.headers as any,
-				body: req.method !== 'GET' && req.method !== 'HEAD' ? body : undefined,
-			});
-			const fragmentResponse = await fetchFragment(
-				request,
-				matchedFragment,
-				additionalHeaders as Record<string, string>,
-				mode,
-			);
+		const matchedFragment = gateway.matchRequestToFragment(originalReqUrl.pathname);
 
-			if (req.headers['sec-fetch-dest'] === 'document') {
-				console.log('[Debug Info | Document request]');
-				try {
-					if (!fragmentResponse.ok) throw new Error(`Fragment response not ok: ${fragmentResponse.status}`);
+		if (!matchedFragment) {
+			console.log('[Debug Info]: No fragment match, calling next()');
+			return next();
+		}
 
-					res.setHeader('content-type', 'text/html');
+		// If this request was initiated by an iframe (via reframed),
+		// return a stub document.
+		//
+		// Reframed has to set the iframe's `src` to the fragment URL to have
+		// its `document.location` reflect the correct value
+		// (and also avoid same-origin policy restrictions).
+		// However, we don't want the iframe's document to actually contain the
+		// fragment's content; we're only using it as an isolated execution context.
+		// Returning a stub document here is our workaround to that problem.
+		if (req.headers['sec-fetch-dest'] === 'iframe') {
+			console.log(`[Debug Info]: Handling iframe request`);
+			res.writeHead(200, { 'content-type': 'text/html' });
+			res.end('<!doctype html><title>');
+			return;
+		}
 
-					const currentPagePath = path.join(process.cwd(), `dist/${reqUrl.pathname}.html`);
-					if (!fs.existsSync(currentPagePath)) {
-						throw new Error(`Host page not found at ${currentPagePath}`);
-					}
+		console.log('[Debug Info | Matched Fragment]:', JSON.stringify(matchedFragment));
+		const body =
+			req.method !== 'GET' && req.method !== 'HEAD'
+				? ((await stream.Readable.toWeb(req)) as ReadableStream<Uint8Array>)
+				: undefined;
 
-					const hostPageReader = fs.createReadStream(currentPagePath);
-					const preparedFragmentResponse = await prepareFragmentForReframing(fragmentResponse);
-					const rewrittenHtmlReadable = await embedFragmentIntoHost(
-						hostPageReader,
-						preparedFragmentResponse,
-						matchedFragment,
-                        gateway
-					);
+		const fragmentResponse = await fetchFragment(
+			nodeRequestToWebRequest(req),
+			matchedFragment,
+			additionalHeaders,
+			mode,
+		);
 
-					attachForwardedHeaders(res, fragmentResponse, matchedFragment);
-					rewrittenHtmlReadable.pipe(res);
-				} catch (err) {
-					console.error('[Error] Error during fragment embedding:', err);
-					return renderErrorResponse(err);
+		// If this is a document request, we need to fetch the host application
+		// and if we get a successful HTML response, we need to rewrite the HTML to embed the fragment inside it
+		if (req.headers['sec-fetch-dest'] === 'document') {
+			console.log('[Debug Info | Document request]');
+
+			try {
+				if (!fragmentResponse.ok) return fragmentResponse;
+
+				res.setHeader('content-type', 'text/html');
+
+				// TODO: temporarily read the file from the fs
+				// 			 this should be replaced with reading the ServerResponse
+				const currentPagePath = path.join(process.cwd(), `dist/${reqUrl.pathname}.html`);
+				if (!fs.existsSync(currentPagePath)) {
+					throw new Error(`Host page not found at ${currentPagePath}`);
 				}
-			} else if (req.headers['sec-fetch-dest'] === 'iframe') {
-				console.log(`[Debug Info]: Handling iframe request`);
-				res.writeHead(200, { 'content-type': 'text/html' });
-				res.end('<!doctype html><title>');
-			} else {
-				if (fragmentResponse.body) {
-					res.setHeader('content-type', fragmentResponse.headers.get('content-type') || 'text/plain');
-					NodeReadable.fromWeb(fragmentResponse.body as any).pipe(res);
-				} else {
-					console.error('[Error] No body in fragment response');
-					res.statusCode = 500;
-					res.end('<p>Fragment response body is empty.</p>');
-				}
+				const hostPageReadStream = fs.createReadStream(currentPagePath);
+				const hostPageReadableStream = stream.Readable.toWeb(hostPageReadStream) as ReadableStream<Uint8Array>;
+
+				
+
+				const preparedFragmentResponse = await prepareFragmentForReframing(fragmentResponse);
+				const rewrittenHtmlReadable = await embedFragmentIntoHost(
+					hostPageReadableStream,
+					preparedFragmentResponse,
+					matchedFragment,
+					gateway,
+				);
+
+				attachForwardedHeaders(res, fragmentResponse, matchedFragment);
+				rewrittenHtmlReadable.pipe(res);
+			} catch (err) {
+				console.error('[Error] Error during fragment embedding:', err);
+				return renderErrorResponse(err);
 			}
 		} else {
-			return next();
+			if (fragmentResponse.body) {
+				res.setHeader('content-type', fragmentResponse.headers.get('content-type') || 'text/plain');
+				NodeReadable.fromWeb(fragmentResponse.body as any).pipe(res);
+			} else {
+				console.error('[Error] No body in fragment response');
+				res.statusCode = 500;
+				res.end('<p>Fragment response body is empty.</p>');
+			}
 		}
 	};
 
@@ -115,19 +136,39 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	 * @returns {Promise<stream.Readable>} - A readable stream of the transformed HTML.
 	 */
 	async function embedFragmentIntoHost(
-	    hostHtmlReadable: stream.Readable,
-	    fragmentResponse: Response,
-	    fragmentConfig: FragmentConfig,
-	    gateway: FragmentGateway
+		hostHtmlReadable: stream.Readable,
+		fragmentResponse: Response,
+		fragmentConfig: FragmentConfig,
+		gateway: FragmentGateway,
 	) {
-	    const webReadableInput = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
+		const webReadableInput = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
 
-	    const rewrittenResponse = await rewriteHtmlResponse({
-	        hostInput: new Response(webReadableInput),
-	        fragmentResponse,
-	        fragmentConfig,
-	        gateway
-	    });
-	    return stream.Readable.fromWeb(rewrittenResponse.body as streamWeb.ReadableStream);
+		const rewrittenResponse = await rewriteHtmlResponse({
+			hostInput: new Response(webReadableInput),
+			fragmentResponse,
+			fragmentConfig,
+			gateway,
+		});
+		return stream.Readable.fromWeb(rewrittenResponse.body as streamWeb.ReadableStream);
 	}
+}
+
+function nodeRequestToWebRequest(nodeReq: IncomingMessage): Request {
+	const headers = new Headers();
+
+	for (const [key, value] of Object.entries(nodeReq.headers)) {
+		if (Array.isArray(value)) {
+			value.forEach((val) => headers.append(key, val));
+		} else if (value) {
+			headers.append(key, value);
+		}
+	}
+
+	const body = stream.Readable.toWeb(nodeReq) as ReadableStream<Uint8Array>;
+
+	return new Request(nodeReq.url!, {
+		method: nodeReq.method,
+		headers: headers,
+		body: body,
+	});
 }

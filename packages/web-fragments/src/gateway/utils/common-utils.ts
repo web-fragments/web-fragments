@@ -83,7 +83,7 @@ export function attachForwardedHeaders(
 export async function fetchFragment(
 	req: Request,
 	fragmentConfig: FragmentConfig,
-	additionalHeaders: Record<string, string> = {},
+	additionalHeaders: HeadersInit = {},
 	mode: string = 'development',
 ): Promise<Response> {
 	const { endpoint } = fragmentConfig;
@@ -94,17 +94,28 @@ export async function fetchFragment(
 	const signal = controller.signal;
 	const timeout = setTimeout(() => controller.abort(), 5000);
 
-	const fragmentReq = new Request(fragmentEndpoint.toString(), req);
+	const fragmentReq = new Request(fragmentEndpoint, req);
 
+	// attach additionalHeaders to fragment request
 	Object.entries(additionalHeaders).forEach(([name, value]) => {
 		fragmentReq.headers.set(name, value);
 	});
 
+	// Note: we don't want to forward the sec-fetch-dest since we usually need
+	//       custom logic so that we avoid returning full htmls if the header is
+	//       not set to 'document'
 	fragmentReq.headers.set('sec-fetch-dest', 'empty');
-	fragmentReq.headers.set('vary', 'sec-fetch-dest');
+	
+	// Add a header for signalling embedded mode
 	fragmentReq.headers.set('x-fragment-mode', 'embedded');
 
+	// Add vary header so that we don't have BFCache collision for requests with the same URL
+	fragmentReq.headers.set('vary', 'sec-fetch-dest');
+
 	if (mode === 'development') {
+		// brotli is not currently supported during local development (with `wrangler (pages) dev`)
+		// so we set the accept-encoding to gzip to avoid problems with it
+		// TODO: we should likely move this to additionalHeaders or something similar as it is wrangler/application specific.
 		fragmentReq.headers.set('Accept-Encoding', 'gzip');
 	}
 
@@ -113,12 +124,7 @@ export async function fetchFragment(
 		clearTimeout(timeout);
 		return response;
 	} catch (error) {
-		if (error instanceof Error && error.name === 'AbortError') {
-			console.log('[Debug Info]: Fragment fetch timed out!');
-		} else {
-			console.error('[Debug Info]: Error fetching fragment:', error);
-		}
-		throw error;
+		return renderErrorResponse(error);
 	}
 }
 
