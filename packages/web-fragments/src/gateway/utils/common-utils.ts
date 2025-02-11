@@ -1,8 +1,6 @@
 import { HTMLRewriter } from 'htmlrewriter';
 import type { FragmentConfig, FragmentGatewayConfig } from '../utils/types';
 import { ServerResponse } from 'node:http';
-import stream from 'node:stream';
-import streamWeb from 'node:stream/web';
 
 /**
  * Prepares a fragment response for reframing by modifying script elements.
@@ -43,7 +41,7 @@ export const fragmentHostInitialization = ({
 	classNames: string;
 }) => {
 	return {
-		prefix: `<fragment-host class="${classNames}" "data-attibute-test="new_version" fragment-id="${fragmentId}" data-attribute-piercing="true"><template shadowrootmode="open">${content}`,
+		prefix: `<fragment-host class="${classNames}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${content}`,
 		suffix: `</template></fragment-host>`,
 	};
 };
@@ -135,14 +133,21 @@ export function renderErrorResponse(err: unknown): Response {
 	return new Response('Internal Server Error', { status: 500, headers: { 'Content-Type': 'text/html' } });
 }
 
-export function rewriteHtmlResponse({
-	// htmlRewriter,
+/**
+ * Rewrites the HTML response to include the fragment content, using HTMLRewriter
+ *
+ * @param {Object} params - The parameters for rewriting the response.
+ * @param {Response} hostInput - The original response to rewrite.
+ * @param {Response} fragmentResponse - The response containing the fragment content.
+ * @param {FragmentConfig} fragmentConfig - Configuration specifying how to embed the fragment.
+ * @param {FragmentGatewayConfig} gateway - Configuration for the fragment gateway.
+ */
+export async function rewriteHtmlResponse({
 	hostInput,
 	fragmentResponse,
 	fragmentConfig,
 	gateway,
 }: {
-	// htmlRewriter: any;
 	hostInput: Response;
 	fragmentResponse: Response;
 	fragmentConfig: FragmentConfig;
@@ -156,7 +161,7 @@ export function rewriteHtmlResponse({
 		classNames: prePiercingClassNames.join(' '),
 		content: '',
 	});
-	console.log('#######––––––––––––––––HTMLREWRITER');
+	const fragmentContent = await fragmentResponse.text();
 	return new HTMLRewriter()
 		.on('head', {
 			element(element: any) {
@@ -165,68 +170,16 @@ export function rewriteHtmlResponse({
 			},
 		})
 		.on('body', {
-			async element(element: any) {
-				console.log('xxxx on body');
-				try {
-					const fragmentContent = await fragmentResponse.text();
-
-					const fragmentHost = fragmentHostInitialization({
-						fragmentId,
-						classNames: prePiercingClassNames.join(' '),
-						content: fragmentContent,
-					});
-					console.log('[[Debug Info]: Fragment Response]: Received HTML content', typeof fragmentContent);
-					element.append(fragmentHost.prefix, { html: true });
-					element.append(fragmentHost.suffix, { html: true });
-				} catch (error) {
-					console.log(error);
-					throw error;
-				}
+			element(element: any) {
+				const fragmentHost = fragmentHostInitialization({
+					fragmentId,
+					classNames: prePiercingClassNames.join(' '),
+					content: fragmentContent,
+				});
+				console.log('[[Debug Info]: Fragment Response]: Received HTML content', typeof fragmentContent);
+				element.append(fragmentHost.prefix, { html: true });
+				element.append(fragmentHost.suffix, { html: true });
 			},
 		})
 		.transform(hostInput);
-}
-
-
-export async function embedFragmentIntoHost(
-    hostHtmlReadable: stream.Readable,
-    fragmentResponse: Response,
-    fragmentConfig: FragmentConfig,
-    gateway: FragmentGatewayConfig,
-) {
-    const { fragmentId, prePiercingClassNames } = fragmentConfig;
-    console.log('[[Debug Info]: Fragment Config]:', { fragmentId, prePiercingClassNames });
-
-    const { prefix: fragmentHostPrefix, suffix: fragmentHostSuffix } = fragmentHostInitialization({
-        fragmentId,
-        classNames: prePiercingClassNames.join(''),
-        content: '',
-    });
-    console.log('[[Debug Info]: Fragment Host]:', { fragmentHostPrefix, fragmentHostSuffix });
-
-    const webReadableInput: ReadableStream = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
-    const html = await fragmentResponse.text();
-    const rewrittenResponse = new HTMLRewriter()
-        .on('head', {
-            element(element: any) {
-                console.log('[[Debug Info]: HTMLRewriter]: Injecting styles into head');
-                element.append(gateway.prePiercingStyles, { html: true });
-            },
-        })
-        .on('body', {
-            element(element: any) {
-                const fragmentHost = fragmentHostInitialization({
-                    fragmentId,
-                    classNames: prePiercingClassNames.join(''),
-                    content: html,
-                });
-                console.log('[[Debug Info]: Fragment Response]: Received HTML content', typeof html);
-                element.append(fragmentHost.prefix, { html: true });
-                element.append(fragmentHost.suffix, { html: true });
-            },
-        })
-        .transform(new Response(webReadableInput));
-
-    const rewrittenBody = rewrittenResponse.body;
-    return stream.Readable.fromWeb(rewrittenBody as streamWeb.ReadableStream);
 }

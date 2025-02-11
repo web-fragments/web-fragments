@@ -12,7 +12,6 @@ import {
 	prepareFragmentForReframing,
 	attachForwardedHeaders,
 	renderErrorResponse,
-    embedFragmentIntoHost
 } from '../utils/common-utils';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
 
@@ -115,63 +114,20 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	 * @param {FragmentConfig} fragmentConfig - Configuration object for the fragment.
 	 * @returns {Promise<stream.Readable>} - A readable stream of the transformed HTML.
 	 */
-	// async function embedFragmentIntoHost(
-	// 	hostHtmlReadable: stream.Readable,
-	// 	fragmentResponse: Response,
-	// 	fragmentConfig: FragmentConfig,
-	// ) {
-	// 	const { fragmentId, prePiercingClassNames } = fragmentConfig;
-	// 	console.log('[[Debug Info]: Fragment Config]:', { fragmentId, prePiercingClassNames });
+	async function embedFragmentIntoHost(
+	    hostHtmlReadable: stream.Readable,
+	    fragmentResponse: Response,
+	    fragmentConfig: FragmentConfig,
+	    gateway: FragmentGateway
+	) {
+	    const webReadableInput = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
 
-	// 	const { prefix: fragmentHostPrefix, suffix: fragmentHostSuffix } = fragmentHostInitialization({
-	// 		fragmentId,
-	// 		classNames: prePiercingClassNames.join(''),
-	// 		content: '',
-	// 	});
-	// 	console.log('[[Debug Info]: Fragment Host]:', { fragmentHostPrefix, fragmentHostSuffix });
-
-	// 	const webReadableInput: ReadableStream = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
-	// 	const html = await fragmentResponse.text();
-	// 	const rewrittenResponse = new HTMLRewriter()
-	// 		.on('head', {
-	// 			element(element: any) {
-	// 				console.log('[[Debug Info]: HTMLRewriter]: Injecting styles into head');
-	// 				element.append(gateway.prePiercingStyles, { html: true });
-	// 			},
-	// 		})
-	// 		.on('body', {
-	// 			element(element: any) {
-	// 				const fragmentHost = fragmentHostInitialization({
-	// 					fragmentId,
-	// 					classNames: prePiercingClassNames.join(''),
-	// 					content: html,
-	// 				});
-	// 				console.log('[[Debug Info]: Fragment Response]: Received HTML content', typeof html);
-	// 				element.append(fragmentHost.prefix, { html: true });
-	// 				element.append(fragmentHost.suffix, { html: true });
-	// 			},
-	// 		})
-	// 		.transform(new Response(webReadableInput));
-
-	// 	const rewrittenBody = rewrittenResponse.body;
-	// 	return stream.Readable.fromWeb(rewrittenBody as streamWeb.ReadableStream);
-	// }
-
-	// async function embedFragmentIntoHost(
-	//     hostHtmlReadable: stream.Readable,
-	//     fragmentResponse: Response,
-	//     fragmentConfig: FragmentConfig,
-	//     gateway: FragmentGateway
-	// ) {
-	//     const webReadableInput = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
-
-	//     console.log('---------[Debug Info]: Embedding fragment into host node.js [common-utils]');
-	//     const rewrittenResponse = rewriteHtmlResponse({
-	//         hostInput: new Response(webReadableInput),
-	//         fragmentResponse,
-	//         fragmentConfig,
-	//         gateway
-	//     });
-	//     return stream.Readable.fromWeb(rewrittenResponse.body as streamWeb.ReadableStream);
-	// }
+	    const rewrittenResponse = await rewriteHtmlResponse({
+	        hostInput: new Response(webReadableInput),
+	        fragmentResponse,
+	        fragmentConfig,
+	        gateway
+	    });
+	    return stream.Readable.fromWeb(rewrittenResponse.body as streamWeb.ReadableStream);
+	}
 }

@@ -90,9 +90,7 @@ export function getWebMiddleware(
     function embedFragmentIntoHost(hostResponse: Response, fragmentConfig: FragmentConfig, gateway: FragmentGateway) {
         return (fragmentResponse: Response) => {
             if (!hostResponse.ok) return hostResponse;
-            console.log('---------[Debug Info]: Embedding fragment into host web [common-utils]');
             return rewriteHtmlResponse({
-                htmlRewriter: HTMLRewriter,
                 hostInput: hostResponse,
                 fragmentResponse,
                 fragmentConfig,

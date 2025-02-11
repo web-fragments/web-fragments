@@ -15,7 +15,14 @@ const gateway = new FragmentGateway({
       <style id="fragment-piercing-styles" type="text/css">
         fragment-host[data-piercing="true"] {
           position: absolute;
-          z-index: 9999999999999999999999999999999;
+          z-index: 1;
+          top: 280px;
+          left: 100px;
+
+          @media (min-width: 768px) {
+            top: 300px;
+            left: 230px;
+          }
         }
       </style>
     `,
