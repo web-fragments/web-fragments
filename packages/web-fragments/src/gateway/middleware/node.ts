@@ -1,10 +1,10 @@
-import { HTMLRewriter } from 'htmlrewriter';
-import { IncomingMessage, ServerResponse } from 'http';
 import { FragmentGateway } from 'web-fragments/gateway';
-import fs from 'fs';
-import path from 'path';
-import stream from 'stream';
-import streamWeb from 'stream/web';
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
+import stream from 'node:stream';
+import streamWeb from 'node:stream/web';
+
 import {
 	fetchFragment,
 	fragmentHostInitialization,
@@ -14,22 +14,6 @@ import {
 	renderErrorResponse,
 } from '../utils/common-utils';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
-
-const NodeReadable = stream?.Readable ?? (class {} as typeof import('stream').Readable);
-
-/**
- * Converts a Node.js readable stream to a Promise that resolves with a Buffer.
- * @param {IncomingMessage} stream - The incoming request stream.
- * @returns {Promise<Buffer>} - A promise resolving to the complete data as a Buffer.
- */
-async function streamToPromise(stream: IncomingMessage): Promise<Buffer> {
-	return new Promise((resolve, reject) => {
-		const chunks: Buffer[] = [];
-		stream.on('data', (chunk) => chunks.push(chunk));
-		stream.on('end', () => resolve(Buffer.concat(chunks as unknown as Uint8Array[])));
-		stream.on('error', reject);
-	});
-}
 
 /**
  * Creates middleware for handling fragment-based server-side rendering.
@@ -41,8 +25,11 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	console.log('[Debug Info]: Node middleware');
 	const { additionalHeaders = {}, mode = 'development' } = options;
 
-	return async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
-		const originalReqUrl = new URL(req.url!, `http://${req.headers.host}`);
+	return async (req: http.IncomingMessage, res: http.ServerResponse, next: () => void) => {
+		const originalReqUrl = new URL(
+			req.url!,
+			`${req.socket.encrypted ? 'https' : 'http'}://${req.hostname || req.ip || req.headers.host}`,
+		);
 		console.log('[Debug Info | Local request]:', originalReqUrl);
 
 		const matchedFragment = gateway.matchRequestToFragment(originalReqUrl.pathname);
@@ -93,18 +80,16 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 
 				// TODO: temporarily read the file from the fs
 				// 			 this should be replaced with reading the ServerResponse
-				const currentPagePath = path.join(process.cwd(), `dist/${reqUrl.pathname}.html`);
+				const currentPagePath = path.join(process.cwd(), `dist/${originalReqUrl.pathname}.html`);
 				if (!fs.existsSync(currentPagePath)) {
 					throw new Error(`Host page not found at ${currentPagePath}`);
 				}
-				const hostPageReadStream = fs.createReadStream(currentPagePath);
-				const hostPageReadableStream = stream.Readable.toWeb(hostPageReadStream) as ReadableStream<Uint8Array>;
-
-				
+				const hostHtmlReadable = fs.createReadStream(currentPagePath);
+				const hostHtmlReadableStream = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
 
 				const preparedFragmentResponse = await prepareFragmentForReframing(fragmentResponse);
 				const rewrittenHtmlReadable = await embedFragmentIntoHost(
-					hostPageReadableStream,
+					hostHtmlReadableStream,
 					preparedFragmentResponse,
 					matchedFragment,
 					gateway,
@@ -119,7 +104,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		} else {
 			if (fragmentResponse.body) {
 				res.setHeader('content-type', fragmentResponse.headers.get('content-type') || 'text/plain');
-				NodeReadable.fromWeb(fragmentResponse.body as any).pipe(res);
+				stream.Readable.fromWeb(fragmentResponse.body as any).pipe(res);
 			} else {
 				console.error('[Error] No body in fragment response');
 				res.statusCode = 500;
@@ -136,15 +121,13 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	 * @returns {Promise<stream.Readable>} - A readable stream of the transformed HTML.
 	 */
 	async function embedFragmentIntoHost(
-		hostHtmlReadable: stream.Readable,
+		hostHtmlReadableStream: ReadableStream<Uint8Array>,
 		fragmentResponse: Response,
 		fragmentConfig: FragmentConfig,
 		gateway: FragmentGateway,
 	) {
-		const webReadableInput = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
-
 		const rewrittenResponse = await rewriteHtmlResponse({
-			hostInput: new Response(webReadableInput),
+			hostInput: new Response(hostHtmlReadableStream),
 			fragmentResponse,
 			fragmentConfig,
 			gateway,
@@ -153,7 +136,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	}
 }
 
-function nodeRequestToWebRequest(nodeReq: IncomingMessage): Request {
+function nodeRequestToWebRequest(nodeReq: http.IncomingMessage): Request {
 	const headers = new Headers();
 
 	for (const [key, value] of Object.entries(nodeReq.headers)) {
@@ -164,11 +147,17 @@ function nodeRequestToWebRequest(nodeReq: IncomingMessage): Request {
 		}
 	}
 
-	const body = stream.Readable.toWeb(nodeReq) as ReadableStream<Uint8Array>;
+	let body;
+	if (nodeReq.method !== 'GET' && nodeReq.method !== 'HEAD') {
+		body = stream.Readable.toWeb(nodeReq) as ReadableStream<Uint8Array>;
+	}
 
-	return new Request(nodeReq.url!, {
-		method: nodeReq.method,
-		headers: headers,
-		body: body,
-	});
+	return new Request(
+		new URL(`${nodeReq.socket.encrypted ? 'https' : 'http'}://${nodeReq.headers.host || 'localhost'}${nodeReq.url}`),
+		{
+			method: nodeReq.method,
+			headers,
+			body,
+		},
+	);
 }

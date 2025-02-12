@@ -50,21 +50,26 @@
 		"types:gateway": "tsc -p src/gateway",
 		"types:root": "tsc -p .",
 		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
-		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\""
+		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\"",
+		"test:gateway": "vitest test/gateway"
 	},
 	"dependencies": {
-		"reframed": "workspace:*",
-		"htmlrewriter": "anfibiacreativa/htmlrewriter#fix-emoji-crash"
+		"htmlrewriter": "anfibiacreativa/htmlrewriter#fix-emoji-crash",
+		"reframed": "workspace:*"
 	},
 	"devDependencies": {
+		"@types/connect": "^3.4.38",
 		"@types/node": "^20.12.7",
 		"@vitejs/plugin-react": "^4.3.1",
 		"client": "link:@types/vite/client",
+		"connect": "^3.7.0",
 		"path-to-regexp": "^6.2.2",
 		"ts-node-dev": "^2.0.0",
 		"typescript": "^5.5.4",
 		"vite": "^5.3.3",
-		"vite-plugin-node-polyfills": "^0.23.0"
+		"vite-plugin-node-polyfills": "^0.23.0",
+		"vitest": "^3.0.5",
+		"vitest-fetch-mock": "^0.4.3"
 	},
 	"peerDependencies": {
 		"@cloudflare/workers-types": "^4.20240620.0"

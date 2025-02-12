@@ -53,11 +53,11 @@ export const fragmentHostInitialization = ({
  * @param {Response} fragmentResponse - The fragment response containing headers.
  * @param {FragmentConfig} fragmentConfig - Configuration specifying which headers to forward.
  */
-export function attachForwardedHeaders(
-	res: Response | ServerResponse,
+export function attachForwardedHeaders<ResponseType extends Response | ServerResponse>(
+	res: ResponseType,
 	fragmentResponse: Response,
 	fragmentConfig: FragmentConfig,
-) {
+): ResponseType {
 	const { forwardFragmentHeaders = [] } = fragmentConfig;
 	for (const header of forwardFragmentHeaders) {
 		const headerValue = fragmentResponse.headers.get(header);
@@ -69,6 +69,7 @@ export function attachForwardedHeaders(
 			}
 		}
 	}
+	return res;
 }
 
 /**
@@ -105,7 +106,7 @@ export async function fetchFragment(
 	//       custom logic so that we avoid returning full htmls if the header is
 	//       not set to 'document'
 	fragmentReq.headers.set('sec-fetch-dest', 'empty');
-	
+
 	// Add a header for signalling embedded mode
 	fragmentReq.headers.set('x-fragment-mode', 'embedded');
 

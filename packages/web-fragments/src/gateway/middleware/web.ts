@@ -1,26 +1,17 @@
+/**
+ * The Web middleware provides support for Web request-response handling using fetch-like behavior.
+ * This is a generic implementation for processing fragments in a web-based environment.
+ */
+
 import { FragmentGateway } from '../fragment-gateway';
 import {
 	fetchFragment,
 	rewriteHtmlResponse,
 	prepareFragmentForReframing,
 	renderErrorResponse,
+	attachForwardedHeaders,
 } from '../utils/common-utils';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
-import type { ServerResponse } from 'http';
-
-/**
- * The Web middleware provides support for Web request-response handling using fetch-like behavior.
- * This is a generic implementation for processing fragments in a web-based environment.
- */
-
-// @ts-ignore
-const HTMLRewriter = globalThis.HTMLRewriter;
-
-declare function attachForwardedHeaders(
-	res: Response | ServerResponse,
-	fragmentResponse: Response,
-	fragmentConfig: FragmentConfig,
-): Response;
 
 /**
  * Creates middleware for handling web-based fragment rendering.
