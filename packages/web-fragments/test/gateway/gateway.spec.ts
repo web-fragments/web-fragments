@@ -22,33 +22,45 @@ for (const environment of environments) {
 		let server: http.Server;
 
 		it(`should pass through the host response if the request doesn't match a fragment`, async () => {
-			const response = await testRequest(new Request('http://localhost/'), new Response('hello world'));
+			mockShellAppResponse(new Response('hello world'));
+
+			const response = await testRequest(new Request('http://localhost/'));
+
 			expect(response.status).toBe(200);
 			expect(await response.text()).toBe('hello world');
 
-			const response2 = await testRequest(new Request('http://localhost/baz'), new Response('hello moon'));
+			mockShellAppResponse(new Response('hello moon'));
+
+			const response2 = await testRequest(new Request('http://localhost/baz'));
+
 			expect(response2.status).toBe(200);
 			expect(await response2.text()).toBe('hello moon');
 		});
 
 		it('should match a fragment and return html that combines the host and fragment payloads', async () => {
+			mockShellAppResponse(
+				new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
+			);
 			mockFragmentFooResponse('/foo', new Response('<p>foo fragment</p>'));
 
 			const response = await testRequest(
 				new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
-				new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
 			);
+
 			expect(response.status).toBe(200);
 			expect(await response.text()).toBe(
 				`<html><body>legacy host content<fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></fragment-host></body></html>`,
 			);
 
+			mockShellAppResponse(
+				new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
+			);
 			mockFragmentBarResponse('/bar', new Response('<p>bar fragment</p>'));
 
 			const response2 = await testRequest(
 				new Request('http://localhost/bar', { headers: { 'sec-fetch-dest': 'document' } }),
-				new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
 			);
+
 			expect(response2.status).toBe(200);
 			expect(await response2.text()).toBe(
 				`<html><body>legacy host content<fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><p>bar fragment</p></template></fragment-host></body></html>`,
@@ -84,16 +96,17 @@ for (const environment of environments) {
 
 			switch (environment) {
 				case 'web': {
+					const webMiddleware = getWebMiddleware(fragmentGateway);
+
 					// The web case is simple and doesn't even require an HTTP server.
 					// We simply pass around Requests and Responses.
-					testRequest = function webFetch(request: Request, hostResponse?: Response): Promise<Response> {
-						const webMiddleware = getWebMiddleware(fragmentGateway);
-
+					testRequest = function webTestRequest(request: Request): Promise<Response> {
 						return webMiddleware(request, function nextFn() {
-							if (!hostResponse) {
-								throw new Error('No host response provided');
+							const appShellResponse = mockShellAppResponse.getResponse();
+							if (!appShellResponse) {
+								throw new Error('No app shell response provided, use mockShellAppResponse to set it');
 							}
-							return Promise.resolve(hostResponse);
+							return Promise.resolve(appShellResponse);
 						});
 					};
 
@@ -104,22 +117,26 @@ for (const environment of environments) {
 					const app = connect();
 					app.use(getNodeMiddleware(fragmentGateway));
 
-					let currentHostResponse: Response | undefined;
-
 					app.use(async (req, resp, next) => {
 						console.log('fallback middleware');
-						if (!currentHostResponse) {
-							throw new Error('Origin fallback hit, but no hostResponse defined!');
+						let appShellResponse = mockShellAppResponse.getResponse();
+
+						if (!appShellResponse) {
+							throw new Error('No app shell response provided, use mockShellAppResponse to set it');
 						}
 
+						// TODO: remove once we can rewrite node server responses
+						// we use global because vi.mock does some fancy code rewriting which makes local variables unavailable
+						globalThis.mockShellAppResponseText = await appShellResponse.clone().text();
+
 						resp.writeHead(
-							currentHostResponse.status,
-							currentHostResponse.statusText,
-							Object.fromEntries(Array.from(currentHostResponse.headers.entries())),
+							appShellResponse.status,
+							appShellResponse.statusText,
+							Object.fromEntries(Array.from(appShellResponse.headers.entries())),
 						);
 
-						if (currentHostResponse.body) {
-							stream.Readable.fromWeb(currentHostResponse.body as streamWeb.ReadableStream<any>).pipe(resp);
+						if (appShellResponse.body) {
+							stream.Readable.fromWeb(appShellResponse.body as streamWeb.ReadableStream<any>).pipe(resp);
 						} else {
 							resp.end();
 						}
@@ -130,14 +147,14 @@ for (const environment of environments) {
 
 					let serverStarted = new Promise((resolve) => {
 						server.listen(() => {
-							console.debug(`Server running at http://localhost:${server.address().port}`);
+							console.debug(`Server running at http://localhost:${server.address()!.port}`);
 							resolve(void 0);
 						});
 					});
 
 					await serverStarted;
 
-					testRequest = async function (request: Request, hostResponse?: Response): Promise<Response> {
+					testRequest = async function (request: Request): Promise<Response> {
 						const newUrl = new URL(new URL(request.url).pathname, `http://localhost:${server.address()!.port}`);
 
 						const newRequest = new Request(newUrl, {
@@ -151,11 +168,6 @@ for (const environment of environments) {
 							referrer: request.referrer,
 							integrity: request.integrity,
 						});
-
-						currentHostResponse = hostResponse;
-						// TODO: remove once we can rewrite node server responses
-						// we use global because vi.mock does some fancy code rewriting which makes local variables unavailable
-						globalThis.currentHostResponseText = await currentHostResponse?.clone().text();
 
 						// TODO: why not working?
 						// fetchMock.dontMockOnce();
@@ -174,7 +186,7 @@ for (const environment of environments) {
 								}
 								return new stream.Readable({
 									async read() {
-										this.push(globalThis.currentHostResponseText);
+										this.push(mockShellAppResponse.responseText);
 										this.push(null); // Signals end of stream
 									},
 								});
@@ -198,6 +210,10 @@ for (const environment of environments) {
 			}
 			fetchMock.resetMocks();
 			vi.resetModules();
+			mockShellAppResponse.response = null;
+			// TODO: remove once we can rewrite node server responses
+			mockShellAppResponse.responseText = null;
+			globalThis.mockShellAppResponseText = null;
 		});
 	});
 }
@@ -209,3 +225,15 @@ function mockFragmentFooResponse(pathname: string, response: Response) {
 function mockFragmentBarResponse(pathname: string, response: Response) {
 	fetchMock.doMockOnceIf('http://bar.test:4321' + pathname, response);
 }
+
+async function mockShellAppResponse(response: Response) {
+	mockShellAppResponse.response = response;
+	// TODO: remove once we can rewrite node server responses
+	mockShellAppResponse.responseText = await response.clone().text();
+}
+
+mockShellAppResponse.getResponse = function (): Response | null {
+	const r = mockShellAppResponse.response;
+	mockShellAppResponse.response = null;
+	return r;
+};
