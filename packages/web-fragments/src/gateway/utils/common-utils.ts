@@ -1,6 +1,6 @@
 import { HTMLRewriter } from 'htmlrewriter';
 import type { FragmentConfig, FragmentGatewayConfig } from '../utils/types';
-import { ServerResponse } from 'node:http';
+import { IncomingMessage, ServerResponse } from 'node:http';
 
 /**
  * Prepares a fragment response for reframing by modifying script elements.
@@ -190,3 +190,31 @@ export async function rewriteHtmlResponse({
 		})
 		.transform(hostInput);
 }
+
+/**
+ * Determines if a request is HTTPS.
+ * @param {IncomingMessage | Request} req - The request object.
+ * @returns {boolean} - Whether the request is HTTPS.
+ * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto
+ */
+
+export const isHttps = (req: IncomingMessage | Request): boolean => {
+    if (isFetchRequest(req)) {
+        // we need to check if the request is a Fetch API Request
+		// and handle it separately becuse of how the headers are accessed
+        return req.headers.get('x-forwarded-proto') === 'https';
+    } else {
+        // handle Node.js IncomingMessage
+        return req.headers['x-forwarded-proto'] === 'https' || (req.socket as any)?.encrypted === true;
+    }
+};
+
+/**
+ * Determines if a request is a Fetch API Request.
+ * @param {IncomingMessage | Request} req - The request object.
+ * @returns {boolean} - Whether the request is a Fetch API Request.
+ */
+
+export const isFetchRequest = (req: any): req is Request => {
+    return typeof req.headers?.get === 'function';
+};

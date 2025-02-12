@@ -1,6 +1,6 @@
 import { FragmentGateway } from 'web-fragments/gateway';
 import fs from 'node:fs';
-import http from 'node:http';
+import http, { IncomingMessage } from 'node:http';
 import path from 'node:path';
 import stream from 'node:stream';
 import streamWeb from 'node:stream/web';
@@ -12,6 +12,7 @@ import {
 	prepareFragmentForReframing,
 	attachForwardedHeaders,
 	renderErrorResponse,
+	isHttps,
 } from '../utils/common-utils';
 import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
 
@@ -26,9 +27,11 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	const { additionalHeaders = {}, mode = 'development' } = options;
 
 	return async (req: http.IncomingMessage, res: http.ServerResponse, next: () => void) => {
+
+
 		const originalReqUrl = new URL(
 			req.url!,
-			`${req.socket.encrypted ? 'https' : 'http'}://${req.hostname || req.ip || req.headers.host}`,
+			`${isHttps(req) ? 'https' : 'http'}://${req.headers.host}`,
 		);
 		console.log('[Debug Info | Local request]:', originalReqUrl);
 
@@ -153,7 +156,7 @@ function nodeRequestToWebRequest(nodeReq: http.IncomingMessage): Request {
 	}
 
 	return new Request(
-		new URL(`${nodeReq.socket.encrypted ? 'https' : 'http'}://${nodeReq.headers.host || 'localhost'}${nodeReq.url}`),
+		new URL(`${isHttps(nodeReq) ? 'https' : 'http'}://${nodeReq.headers.host || 'localhost'}${nodeReq.url}`),
 		{
 			method: nodeReq.method,
 			headers,
