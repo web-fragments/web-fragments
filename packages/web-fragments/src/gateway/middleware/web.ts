@@ -85,12 +85,10 @@ export function getWebMiddleware(
 			return appShellResponse;
 		}
 
-		// Append Vary header to prevent BFCache issues
-		const fragmentResponseWithHeaders = new Response(fragmentResponse.body, {
-			headers: fragmentResponse.headers,
-			status: fragmentResponse.status,
-			statusText: fragmentResponse.statusText,
-		});
+		// Append Vary header to prevent BFCache issues.
+		// We can't just append because the response is immutable
+		// see: https://github.com/whatwg/fetch/issues/608#issuecomment-332462271
+		const fragmentResponseWithHeaders = new Response(fragmentResponse.body, fragmentResponse);
 		fragmentResponseWithHeaders.headers.set('vary', 'sec-fetch-dest');
 
 		return fragmentResponseWithHeaders;
