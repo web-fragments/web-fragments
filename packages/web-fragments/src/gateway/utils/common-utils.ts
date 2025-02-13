@@ -171,8 +171,6 @@ export async function rewriteHtmlResponse({
 		content: '',
 	});
 	const fragmentContent = await fragmentResponse.text();
-	console.log('before rewritten html content: fragmentContent:', fragmentContent);
-	//console.log('before rewritten html content: appShell:', await hostInput.clone().text());
 	return new HTMLRewriter()
 		.on('head', {
 			element(element: any) {

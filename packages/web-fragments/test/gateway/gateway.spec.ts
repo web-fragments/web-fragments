@@ -270,16 +270,11 @@ for (const environment of environments) {
 					);
 
 					app.use(async (req, resp, next) => {
-						console.log('fallback middleware');
 						let appShellResponse = mockShellAppResponse.getResponse();
 
 						if (!appShellResponse) {
 							throw new Error('No app shell response provided, use mockShellAppResponse to set it');
 						}
-
-						// TODO: remove once we can rewrite node server responses
-						// we use global because vi.mock does some fancy code rewriting which makes local variables unavailable
-						//globalThis.mockShellAppResponseText = await appShellResponse.clone().text();
 
 						resp.writeHead(
 							appShellResponse.status,
@@ -288,7 +283,6 @@ for (const environment of environments) {
 						);
 
 						if (appShellResponse.body) {
-							console.log('piping body');
 							stream.Readable.fromWeb(appShellResponse.body as streamWeb.ReadableStream<any>).pipe(resp);
 						} else {
 							resp.end();
@@ -328,41 +322,6 @@ for (const environment of environments) {
 						return fetch.unpatchedFetch(newRequest);
 					};
 
-					// TODO: remove this once we can rewrite responses in node
-					// vi.mock('node:fs', async (importOriginal) => {
-					// 	const mock = {
-					// 		existsSync: function (path: string) {
-					// 			return (
-					// 				path.endsWith('/dist/foo.html') ||
-					// 				path.endsWith('/dist/bar.html') ||
-					// 				path.endsWith('/dist/foo/some/path.html')
-					// 			);
-					// 		},
-					// 		createReadStream: function (path: string) {
-					// 			if (
-					// 				!(
-					// 					path.endsWith('/dist/foo.html') ||
-					// 					path.endsWith('/dist/bar.html') ||
-					// 					path.endsWith('/dist/foo/some/path.html')
-					// 				)
-					// 			) {
-					// 				throw new Error('Unknown path in mocked createReadStream: ' + path);
-					// 			}
-					// 			return new stream.Readable({
-					// 				async read() {
-					// 					this.push(mockShellAppResponse.responseText);
-					// 					this.push(null); // Signals end of stream
-					// 				},
-					// 			});
-					// 		},
-					// 	};
-
-					// 	return {
-					// 		...mock,
-					// 		default: mock,
-					// 	};
-					// });
-
 					break;
 				}
 			}
@@ -375,14 +334,11 @@ for (const environment of environments) {
 			fetchMock.resetMocks();
 			vi.resetModules();
 			mockShellAppResponse.response = null;
-			// TODO: remove once we can rewrite node server responses
-			//mockShellAppResponse.responseText = null;
 		});
 	});
 }
 
 function mockFragmentFooResponse(pathname: string, response: Response) {
-	console.log('mocking: ', 'http://foo.test:1234' + pathname);
 	fetchMock.doMockIf('http://foo.test:1234' + pathname, response);
 }
 
@@ -392,8 +348,6 @@ function mockFragmentBarResponse(pathname: string, response: Response) {
 
 async function mockShellAppResponse(response: Response) {
 	mockShellAppResponse.response = response;
-	// TODO: remove once we can rewrite node server responses
-	//mockShellAppResponse.responseText = await response.clone().text();
 }
 
 mockShellAppResponse.getResponse = function (): Response | null {
