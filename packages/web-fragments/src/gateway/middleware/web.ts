@@ -86,9 +86,14 @@ export function getWebMiddleware(
 		}
 
 		// Append Vary header to prevent BFCache issues
-		fragmentResponse.headers.append('vary', 'sec-fetch-dest');
+		const fragmentResponseWithHeaders = new Response(fragmentResponse.body, {
+			headers: fragmentResponse.headers,
+			status: fragmentResponse.status,
+			statusText: fragmentResponse.statusText,
+		});
+		fragmentResponseWithHeaders.headers.set('vary', 'sec-fetch-dest');
 
-		return fragmentResponse;
+		return fragmentResponseWithHeaders;
 	};
 
 	/**
