@@ -52,7 +52,9 @@ export function getWebMiddleware(
 		// Returning a stub document here is our workaround to that problem.
 		if (req.headers.get('sec-fetch-dest') === 'iframe') {
 			console.log('[Debug Info]: Handling iframe request detected');
-			return new Response('<!doctype html><title>', { headers: { 'Content-Type': 'text/html' } });
+			return new Response('<!doctype html><title>', {
+				headers: { 'Content-Type': 'text/html', vary: 'sec-fetch-dest' },
+			});
 		}
 
 		const fragmentResponse = await fetchFragment(req, matchedFragment, additionalHeaders, mode);
@@ -60,26 +62,31 @@ export function getWebMiddleware(
 		// If this is a document request, we need to fetch the host application
 		// and if we get a successful HTML response, we need to rewrite the HTML to embed the fragment inside it
 		if (req.headers.get('sec-fetch-dest') === 'document') {
-			const hostResponse = await next();
-			const isHTMLResponse = hostResponse.headers.get('content-type')?.startsWith('text/html');
+			const appShellResponse = await next();
+			const isHTMLResponse = appShellResponse.headers.get('content-type')?.startsWith('text/html');
 
-			if (hostResponse.ok && isHTMLResponse) {
+			if (appShellResponse.ok && isHTMLResponse) {
 				try {
 					if (!fragmentResponse.ok) return fragmentResponse;
 
 					const preparedFragment = prepareFragmentForReframing(fragmentResponse);
 					const embeddedFragment = await embedFragmentIntoHost(
-						hostResponse,
+						appShellResponse,
 						matchedFragment,
 						gateway,
 					)(preparedFragment);
+					// Append Vary header to prevent BFCache issues
+					embeddedFragment.headers.append('vary', 'sec-fetch-dest');
 					return attachForwardedHeaders(embeddedFragment, fragmentResponse, matchedFragment);
 				} catch (error) {
 					return renderErrorResponse(error);
 				}
 			}
-			return hostResponse;
+			return appShellResponse;
 		}
+
+		// Append Vary header to prevent BFCache issues
+		fragmentResponse.headers.append('vary', 'sec-fetch-dest');
 
 		return fragmentResponse;
 	};
@@ -90,8 +97,6 @@ export function getWebMiddleware(
 	 * @param {FragmentConfig} fragmentConfig - Configuration object for the fragment.
 	 * @returns {Function} - A function that processes and integrates the fragment response.
 	 */
-	//
-
 	function embedFragmentIntoHost(hostResponse: Response, fragmentConfig: FragmentConfig, gateway: FragmentGateway) {
 		return (fragmentResponse: Response) => {
 			if (!hostResponse.ok) return hostResponse;

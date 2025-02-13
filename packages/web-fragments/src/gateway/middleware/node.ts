@@ -7,7 +7,6 @@ import streamWeb from 'node:stream/web';
 
 import {
 	fetchFragment,
-	fragmentHostInitialization,
 	rewriteHtmlResponse,
 	prepareFragmentForReframing,
 	attachForwardedHeaders,
@@ -20,20 +19,15 @@ import type { FragmentMiddlewareOptions, FragmentConfig } from '../utils/types';
  * Creates middleware for handling fragment-based server-side rendering.
  * @param {FragmentGateway} gateway - The fragment gateway instance.
  * @param {FragmentMiddlewareOptions} [options={}] - Optional middleware settings.
- * @returns {Function} - Express-style middleware function.
+ * @returns {Function} - Connect/Express-style middleware function.
  */
 export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMiddlewareOptions = {}) {
 	console.log('[Debug Info]: Node middleware');
 	const { additionalHeaders = {}, mode = 'development' } = options;
 
 	return async (req: http.IncomingMessage, res: http.ServerResponse, next: () => void) => {
-
-
-		const originalReqUrl = new URL(
-			req.url!,
-			`${isHttps(req) ? 'https' : 'http'}://${req.headers.host}`,
-		);
-		console.log('[Debug Info | Local request]:', originalReqUrl);
+		const originalReqUrl = nodeRequestToUrl(req);
+		console.log('[Debug Info | Local request]:', originalReqUrl.toString());
 
 		const matchedFragment = gateway.matchRequestToFragment(originalReqUrl.pathname);
 
@@ -53,7 +47,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		// Returning a stub document here is our workaround to that problem.
 		if (req.headers['sec-fetch-dest'] === 'iframe') {
 			console.log(`[Debug Info]: Handling iframe request`);
-			res.writeHead(200, { 'content-type': 'text/html' });
+			res.writeHead(200, { 'content-type': 'text/html', vary: 'sec-fetch-dest' });
 			res.end('<!doctype html><title>');
 			return;
 		}
@@ -71,6 +65,9 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 			mode,
 		);
 
+		// Append Vary header to prevent BFCache issues
+		fragmentResponse.headers.append('vary', 'sec-fetch-dest');
+
 		// If this is a document request, we need to fetch the host application
 		// and if we get a successful HTML response, we need to rewrite the HTML to embed the fragment inside it
 		if (req.headers['sec-fetch-dest'] === 'document') {
@@ -80,6 +77,8 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 				if (!fragmentResponse.ok) return fragmentResponse;
 
 				res.setHeader('content-type', 'text/html');
+				// Add vary header so that we don't have BFCache collision for requests with the same URL
+				res.setHeader('vary', 'sec-fetch-dest');
 
 				// TODO: temporarily read the file from the fs
 				// 			 this should be replaced with reading the ServerResponse
@@ -105,13 +104,14 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 				return renderErrorResponse(err);
 			}
 		} else {
+			res.statusCode = fragmentResponse.status;
+			res.statusMessage = fragmentResponse.statusText;
+			fragmentResponse.headers.forEach((value, name) => {
+				res.appendHeader(name, value);
+			});
+
 			if (fragmentResponse.body) {
-				res.setHeader('content-type', fragmentResponse.headers.get('content-type') || 'text/plain');
 				stream.Readable.fromWeb(fragmentResponse.body as any).pipe(res);
-			} else {
-				console.error('[Error] No body in fragment response');
-				res.statusCode = 500;
-				res.end('<p>Fragment response body is empty.</p>');
 			}
 		}
 	};
@@ -155,12 +155,13 @@ function nodeRequestToWebRequest(nodeReq: http.IncomingMessage): Request {
 		body = stream.Readable.toWeb(nodeReq) as ReadableStream<Uint8Array>;
 	}
 
-	return new Request(
-		new URL(`${isHttps(nodeReq) ? 'https' : 'http'}://${nodeReq.headers.host || 'localhost'}${nodeReq.url}`),
-		{
-			method: nodeReq.method,
-			headers,
-			body,
-		},
-	);
+	return new Request(nodeRequestToUrl(nodeReq), {
+		method: nodeReq.method,
+		headers,
+		body,
+	});
+}
+
+function nodeRequestToUrl(nodeReq: IncomingMessage): URL {
+	return new URL(`${isHttps(nodeReq) ? 'https' : 'http'}://${nodeReq.headers.host || 'localhost'}${nodeReq.url}`);
 }

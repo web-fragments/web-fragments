@@ -110,9 +110,6 @@ export async function fetchFragment(
 	// Add a header for signalling embedded mode
 	fragmentReq.headers.set('x-fragment-mode', 'embedded');
 
-	// Add vary header so that we don't have BFCache collision for requests with the same URL
-	fragmentReq.headers.set('vary', 'sec-fetch-dest');
-
 	if (mode === 'development') {
 		// brotli is not currently supported during local development (with `wrangler (pages) dev`)
 		// so we set the accept-encoding to gzip to avoid problems with it
@@ -121,11 +118,12 @@ export async function fetchFragment(
 	}
 
 	try {
+		console.log('[Debug info | fetchFragment] fetching:', fragmentReq.url.toString());
 		const response = await fetch(fragmentReq, { signal });
 		clearTimeout(timeout);
 		return response;
 	} catch (error) {
-		return renderErrorResponse(error);
+		return renderErrorResponse(error, fragmentReq);
 	}
 }
 
@@ -135,9 +133,13 @@ export async function fetchFragment(
  * @param {unknown} err - The error to handle.
  * @returns {Response} - The error response.
  */
-export function renderErrorResponse(err: unknown): Response {
+export function renderErrorResponse(err: unknown, req?: Request): Response {
+	console.log('WF Gateway Internal Server Error\n', err, req);
 	if (err instanceof Response) return err;
-	return new Response('Internal Server Error', { status: 500, headers: { 'Content-Type': 'text/html' } });
+	return new Response('WF Gateway Internal Server Error\n' + err, {
+		status: 500,
+		headers: { 'Content-Type': 'text/html' },
+	});
 }
 
 /**
@@ -199,14 +201,14 @@ export async function rewriteHtmlResponse({
  */
 
 export const isHttps = (req: IncomingMessage | Request): boolean => {
-    if (isFetchRequest(req)) {
-        // we need to check if the request is a Fetch API Request
+	if (isFetchRequest(req)) {
+		// we need to check if the request is a Fetch API Request
 		// and handle it separately becuse of how the headers are accessed
-        return req.headers.get('x-forwarded-proto') === 'https';
-    } else {
-        // handle Node.js IncomingMessage
-        return req.headers['x-forwarded-proto'] === 'https' || (req.socket as any)?.encrypted === true;
-    }
+		return req.headers.get('x-forwarded-proto') === 'https';
+	} else {
+		// handle Node.js IncomingMessage
+		return req.headers['x-forwarded-proto'] === 'https' || (req.socket as any)?.encrypted === true;
+	}
 };
 
 /**
@@ -216,5 +218,5 @@ export const isHttps = (req: IncomingMessage | Request): boolean => {
  */
 
 export const isFetchRequest = (req: any): req is Request => {
-    return typeof req.headers?.get === 'function';
+	return typeof req.headers?.get === 'function';
 };
