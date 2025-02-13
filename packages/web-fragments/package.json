@@ -51,7 +51,8 @@
 		"types:root": "tsc -p .",
 		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\"",
-		"test:gateway": "vitest test/gateway"
+		"test:gateway": "vitest test/gateway",
+		"test-debug:gateway": "vitest test/gateway --test-timeout=0 --no-file-parallelism"
 	},
 	"dependencies": {
 		"htmlrewriter": "anfibiacreativa/htmlrewriter#fix-emoji-crash",

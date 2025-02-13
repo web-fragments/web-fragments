@@ -66,7 +66,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 		);
 
 		// Append Vary header to prevent BFCache issues
-		fragmentResponse.headers.append('vary', 'sec-fetch-dest');
+		//fragmentResponse.headers.append('vary', 'sec-fetch-dest');
 
 		// If this is a document request, we need to fetch the host application
 		// and if we get a successful HTML response, we need to rewrite the HTML to embed the fragment inside it
@@ -80,25 +80,29 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 				// Add vary header so that we don't have BFCache collision for requests with the same URL
 				res.setHeader('vary', 'sec-fetch-dest');
 
+				const { readableStream: appShellHtmlReadableStream, serverResponse: outgoingServerResponse } =
+					interceptNodeResponse(res, next);
+
 				// TODO: temporarily read the file from the fs
 				// 			 this should be replaced with reading the ServerResponse
-				const currentPagePath = path.join(process.cwd(), `dist/${originalReqUrl.pathname}.html`);
-				if (!fs.existsSync(currentPagePath)) {
-					throw new Error(`Host page not found at ${currentPagePath}`);
-				}
-				const hostHtmlReadable = fs.createReadStream(currentPagePath);
-				const hostHtmlReadableStream = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
+				// const currentPagePath = path.join(process.cwd(), `dist/${originalReqUrl.pathname}.html`);
+				// if (!fs.existsSync(currentPagePath)) {
+				// 	throw new Error(`Host page not found at ${currentPagePath}`);
+				// }
+				// const hostHtmlReadable = fs.createReadStream(currentPagePath);
+				// const hostHtmlReadableStream = stream.Readable.toWeb(hostHtmlReadable) as ReadableStream<Uint8Array>;
 
 				const preparedFragmentResponse = await prepareFragmentForReframing(fragmentResponse);
 				const rewrittenHtmlReadable = await embedFragmentIntoHost(
-					hostHtmlReadableStream,
+					appShellHtmlReadableStream,
 					preparedFragmentResponse,
 					matchedFragment,
 					gateway,
 				);
 
-				attachForwardedHeaders(res, fragmentResponse, matchedFragment);
-				rewrittenHtmlReadable.pipe(res);
+				attachForwardedHeaders(outgoingServerResponse, fragmentResponse, matchedFragment);
+
+				rewrittenHtmlReadable.pipe(outgoingServerResponse);
 			} catch (err) {
 				console.error('[Error] Error during fragment embedding:', err);
 				return renderErrorResponse(err);
@@ -164,4 +168,94 @@ function nodeRequestToWebRequest(nodeReq: http.IncomingMessage): Request {
 
 function nodeRequestToUrl(nodeReq: IncomingMessage): URL {
 	return new URL(`${isHttps(nodeReq) ? 'https' : 'http'}://${nodeReq.headers.host || 'localhost'}${nodeReq.url}`);
+}
+
+function interceptNodeResponse(
+	res: http.ServerResponse,
+	next: () => void,
+): { readableStream: ReadableStream<Uint8Array>; serverResponse: http.ServerResponse } {
+	let streamController: ReadableStreamDefaultController<any>;
+	const readableStream = new ReadableStream<Uint8Array>({
+		start(controller) {
+			streamController = controller;
+		},
+	});
+
+	//queueMicrotask(() => {
+	// patch res
+	const orig = {
+		write: res.write.bind(res),
+		end: res.end.bind(res),
+		// maybe also writeHead and flushHeaders?
+	};
+
+	res.write = function interceptingWrite(chunk: any) {
+		console.log('----- fake write');
+		const encoding =
+			chunk instanceof String
+				? arguments[1] instanceof String
+					? (arguments[1] as BufferEncoding)
+					: 'utf8'
+				: undefined;
+		const callback = arguments[1] instanceof Function ? arguments[1] : arguments[2];
+
+		const buffer = Buffer.from(chunk, encoding);
+		console.log('enqueeeing', new TextDecoder().decode(buffer));
+		streamController.enqueue(buffer);
+		if (callback) callback(null);
+		return true;
+	};
+
+	res.end = function interceptingEnd() {
+		console.log('----- fake end', arguments, arguments[0] instanceof Function);
+		const chunk = arguments[0] instanceof Function ? null : arguments[0];
+		const encoding =
+			chunk instanceof String
+				? arguments[1] instanceof String
+					? (arguments[1] as BufferEncoding)
+					: 'utf8'
+				: undefined;
+		const callback =
+			arguments[0] instanceof Function ? arguments[0] : arguments[1] instanceof Function ? arguments[1] : arguments[2];
+
+		if (chunk) {
+			console.log('assss', typeof chunk, encoding, chunk);
+			const buffer = Buffer.from(chunk, encoding);
+			streamController.enqueue(buffer);
+		}
+		streamController.close();
+		if (callback) callback(null);
+		console.log('======= unpatching');
+		res.write = orig.write;
+		res.end = orig.end;
+		return res;
+	};
+
+	// call next
+	next();
+
+	// unpatch res when res.end is called
+	// console.log('======= unpatching');
+	// res.unpatch = () => {
+	// 	res.write = orig.write;
+	// 	res.end = orig.end;
+	// };
+	//});
+
+	// TODO:
+	// possibly do all of the above async so that we can return the readableStream early
+
+	const serverResponse = Object.create(res);
+	serverResponse.write = orig.write;
+	serverResponse.end = orig.end;
+	// serverResponse.write = function fff() {
+	// 	console.log('outgoing serverResponse write', new TextDecoder().decode(arguments[0]));
+	// 	return orig.write.apply(res, arguments);
+	// };
+	// serverResponse.end = function xxx() {
+	// 	console.log('outgoing serverResponse end', arguments);
+	// 	return orig.end.apply(res, arguments);
+	// };
+
+	return { readableStream, serverResponse };
 }
