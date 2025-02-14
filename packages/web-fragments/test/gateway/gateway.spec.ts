@@ -326,7 +326,12 @@ for (const environment of environments) {
 						// TODO: why not working?
 						// fetchMock.dontMockOnce();
 						// fetch(newRequest);
-						return fetch.unpatchedFetch(newRequest);
+						try {
+							return fetch.unpatchedFetch(newRequest);
+						} catch (e) {
+							console.error('testRequest fetch error', e);
+							throw e;
+						}
 					};
 
 					break;

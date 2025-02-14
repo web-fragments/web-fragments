@@ -170,7 +170,8 @@ function nodeRequestToUrl(nodeReq: IncomingMessage): URL {
 }
 
 interface OriginResponse {
-	head: Promise<ResponseInit>;
+	// readyToSendHead is a back channel so that we know when to actually send headers, see writeHead patch below
+	head: Promise<ResponseInit> & { readyToSendHead?: true };
 	body: ReadableStream<Uint8Array>;
 }
 
@@ -226,20 +227,26 @@ function interceptNodeResponse(
 	};
 
 	response.writeHead = function interceptingWriteHead(statusCode: number): http.ServerResponse {
+		// @ts-ignore readyToSendHead is a back channel
+		if (originHeadPromise?.readyToSendHead) {
+			console.log('writeHead (intercepted with readyToSendHead signal)', ...arguments);
+			return orig.writeHead.apply(this, arguments);
+		}
 		const statusMessage: string = arguments[1] instanceof String ? (arguments[1] as string) : '';
 		const headers: http.OutgoingHttpHeaders =
 			arguments[1] instanceof Object ? (arguments[1] as http.OutgoingHttpHeaders) : arguments[2];
 
-		console.log('writeHead', statusCode, statusMessage, headers);
+		console.log('writeHead (intercepted)', statusCode, statusMessage, headers);
 		retrieveOrigHead(statusCode, statusMessage, headers);
 
 		// restore writeHead
 		// TODO: we might be restoring too early here, but it's unclear if there is a better way to do it
-		response.writeHead = orig.writeHeadUnbound;
+		//response.writeHead = orig.writeHeadUnbound;
 		return response;
-	} satisfies typeof http.ServerResponse.prototype.writeHead;
+	}; //satisfies typeof http.ServerResponse.prototype.writeHead;
 
 	response.write = function interceptingWrite(chunk: any) {
+		console.log('write (intercepted)', chunk);
 		const encoding =
 			chunk instanceof String
 				? arguments[1] instanceof String
@@ -255,6 +262,7 @@ function interceptNodeResponse(
 	};
 
 	response.end = function interceptingEnd() {
+		console.log('end (intercepted)', arguments);
 		const chunk = arguments[0] instanceof Function ? null : arguments[0];
 		const encoding =
 			chunk instanceof String
@@ -282,13 +290,13 @@ function interceptNodeResponse(
 	// the patched methods in a way that will keep the methods patched for anyone who doesn't
 	// have a reference to this new response object.
 	const restoredResponse = Object.create(response);
-	restoredResponse.flushHeaders = orig.flushHeaders;
-	restoredResponse.writeHead = orig.writeHead;
+	//restoredResponse.flushHeaders = orig.flushHeaders;
+	//restoredResponse.writeHead = orig.writeHead;
 	restoredResponse.write = orig.write;
 	restoredResponse.end = orig.end;
 
 	return {
-		originResponse: { head: originHeadPromise, body: readableStream },
+		originResponse: { head: originHeadPromise, body: readableStream, readyToSendHead: false },
 		serverResponse: restoredResponse,
 	};
 }
@@ -301,6 +309,13 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	const webMiddleware = getWebMiddleware(gateway, options);
 
 	return async (nodeRequest: http.IncomingMessage, nodeResponse: http.ServerResponse, nodeNext: () => void) => {
+		// const originalReqUrl = nodeRequestToUrl(req);
+		// const matchedFragment = gateway.matchRequestToFragment(originalReqUrl.pathname);
+		if (!(nodeRequest.url && gateway.matchRequestToFragment(nodeRequest.url))) {
+			console.log('[Debug Info]: No fragment match, calling next()');
+			return nodeNext();
+		}
+
 		const webRequest = nodeRequestToWebRequest(nodeRequest);
 		const { originResponsePromise, sendResponse } = nodeToWebResponse(nodeResponse, nodeNext);
 		const webNext = function webNodeCompatNext() {
@@ -356,8 +371,24 @@ function nodeToWebResponse(
 
 		console.log('asdfasdfasdf', nodeResponse.writeHead, outboundServerResponse.writeHead);
 		const headersAsObject = Object.fromEntries(Array.from(response.headers.entries()));
+
+		// back channel to signal that we are ready to send the http head via the outbound connection
+		originResponse.head.readyToSendHead = true;
 		outboundServerResponse.writeHead(response.status, response.statusText, headersAsObject);
-		stream.Readable.fromWeb(response.body as streamWeb.ReadableStream<any>).pipe(outboundServerResponse);
+		queueMicrotask(() => {
+			console.log('piping body');
+
+			stream.Readable.fromWeb(response.body as streamWeb.ReadableStream<any>)
+				.pipe(outboundServerResponse)
+				.on('error', (err) => {
+					console.error('error piping body', err);
+				})
+				.on('close', () => {
+					console.log('piping body close');
+				});
+
+			console.log('piping body end');
+		});
 	};
 
 	return { originResponsePromise, sendResponse };
