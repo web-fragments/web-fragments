@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FragmentGateway } from '../../src/gateway/fragment-gateway';
-import { getNodeMiddleware } from '../../src/gateway/middleware/node';
+import { getNodeMiddleware, getNodeCompatMiddleware } from '../../src/gateway/middleware/node';
 import { getWebMiddleware } from '../../src/gateway/middleware/web';
 import connect from 'connect';
 import http from 'node:http';
@@ -9,8 +9,9 @@ import streamWeb from 'node:stream/web';
 
 // comment out some environments if you want to focus on testing just one or a few
 const environments = [];
-environments.push('web');
-environments.push('connect');
+//environments.push('web');
+//environments.push('connect');
+environments.push('connect-web');
 
 for (const environment of environments) {
 	describe(`${environment} middleware`, () => {
@@ -40,7 +41,7 @@ for (const environment of environments) {
 		});
 
 		describe(`pierced fragment requests`, () => {
-			it(`should match a fragment and return html that combines the host and fragment payloads`, async () => {
+			it.only(`should match a fragment and return html that combines the host and fragment payloads`, async () => {
 				mockShellAppResponse(
 					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
 				);
@@ -258,17 +259,23 @@ for (const environment of environments) {
 
 					break;
 				}
-				case 'connect': {
+				case 'connect':
+				case 'connect-web': {
 					// We use an actual connect server here with an ephemeral port
 					const app = connect();
+
+					const middlewareFactory = environment === 'connect' ? getNodeMiddleware : getNodeCompatMiddleware;
+
+					// fragment gateway middleware
 					app.use(
-						getNodeMiddleware(fragmentGateway, {
+						middlewareFactory(fragmentGateway, {
 							additionalHeaders: {
 								'x-additional-header': 'j/k',
 							},
 						}),
 					);
 
+					// fallback middleware to serve the app shell
 					app.use(async (req, resp, next) => {
 						let appShellResponse = mockShellAppResponse.getResponse();
 

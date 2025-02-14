@@ -63,10 +63,13 @@ export function getWebMiddleware(
 		// and if we get a successful HTML response, we need to rewrite the HTML to embed the fragment inside it
 		if (req.headers.get('sec-fetch-dest') === 'document') {
 			const appShellResponse = await next();
+
+			// TODO: startsWith needed? should we use this elsewhere too?
 			const isHTMLResponse = appShellResponse.headers.get('content-type')?.startsWith('text/html');
 
 			if (appShellResponse.ok && isHTMLResponse) {
 				try {
+					// TODO: is this right? we return fragmentResponse???
 					if (!fragmentResponse.ok) return fragmentResponse;
 
 					const preparedFragment = prepareFragmentForReframing(fragmentResponse);
