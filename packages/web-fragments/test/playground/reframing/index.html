@@ -4,7 +4,7 @@
 		<meta charset="UTF-8" />
 		<title>WF Playground: reframing</title>
 		<style>
-			fragment-host {
+			web-fragment {
 				border: 1px red dashed;
 			}
 		</style>
@@ -12,11 +12,11 @@
 	<body>
 		<h1>WF Playground: reframing</h1>
 
-		<fragment-host></fragment-host>
+		<web-fragment fragment-id="reframing"></web-fragment>
 
 		<script type="module">
-			import { register, FragmentHost } from 'web-fragments/elements';
-			register();
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
 
 			window.fragmentContext = () => document.querySelector('iframe').contentWindow;
 		</script>

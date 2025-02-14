@@ -16,8 +16,8 @@ test('script loading in fragments', async ({ page }) => {
 		await expect(page.locator('test-component').first()).toHaveText('hello from main');
 	});
 
-	const fragment1 = page.locator('fragment-host').nth(0);
-	const fragment2 = page.locator('fragment-host').nth(1);
+	const fragment1 = page.locator('web-fragment').nth(0);
+	const fragment2 = page.locator('web-fragment').nth(1);
 
 	await step('ensure the first fragment loaded with custom elements', async () => {
 		// TODO: this expectation is wrong, but we have it here to document the current behavior

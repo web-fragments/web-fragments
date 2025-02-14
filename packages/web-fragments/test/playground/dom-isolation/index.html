@@ -2,9 +2,9 @@
 <html>
 	<head>
 		<meta charset="UTF-8" />
-		<title>WF TestBed: dom-isolation</title>
+		<title>WF Playground: dom-isolation</title>
 		<style>
-			fragment-host {
+			web-fragment-host {
 				border: 1px red dashed;
 			}
 			p {
@@ -19,14 +19,14 @@
 		</style>
 	</head>
 	<body>
-		<h1>WF TestBed: dom-isolation</h1>
+		<h1>WF Playground: dom-isolation</h1>
 
-		<fragment-host></fragment-host>
+		<web-fragment fragment-id="dom-isolation"></web-fragment>
 
 		<p>This text should be green <span>and pink</span><b>!!!</b></p>
 		<script type="module">
-			import { register, FragmentHost } from 'web-fragments/elements';
-			register();
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
 		</script>
 	</body>
 </html>

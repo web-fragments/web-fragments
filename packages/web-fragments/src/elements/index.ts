@@ -1,4 +1,4 @@
-export { FragmentHost } from './fragment-host';
-export { FragmentOutlet } from './fragment-outlet';
+export { WebFragmentHost } from './web-fragment-host';
+export { WebFragment } from './web-fragment';
 
-export { register } from './register';
+export { initializeWebFragments } from './register';

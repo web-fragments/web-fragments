@@ -2,41 +2,43 @@
 <html>
 	<head>
 		<meta charset="UTF-8" />
-		<title>WF TestBed: fragment-creation</title>
+		<title>WF Playground: fragment-creation</title>
 		<style>
-			fragment-host {
+			web-fragment {
 				border: 1px red dashed;
 			}
 		</style>
 	</head>
 	<body>
-		<h1>WF TestBed: fragment-creation</h1>
+		<h1>WF Playground: fragment-creation</h1>
 
 		<script type="module">
-			import { register } from 'web-fragments/elements';
-			register();
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
 		</script>
 
-		<fragment-host></fragment-host>
+		<web-fragment fragment-id="fragment-creation"></web-fragment>
 
 		<script type="module">
-			const fragment2 = document.createElement('fragment-host');
+			const fragment2 = document.createElement('web-fragment');
 			fragment2.id = 'fragment2';
+			fragment2.setAttribute('fragment-id', 'fragment-creation2');
 			document.body.appendChild(fragment2);
 		</script>
 
 		<script type="module">
-			import { FragmentHost } from 'web-fragments/elements';
+			import { WebFragment } from 'web-fragments';
 
-			const fragment3 = new FragmentHost();
+			const fragment3 = new WebFragment();
 			fragment3.id = 'fragment3';
+			fragment3.setAttribute('fragment-id', 'fragment-creation3');
 			document.body.appendChild(fragment3);
 		</script>
 
 		<!-- 		
 		TODO: enable when we support standalone fragments
 		<script type="module">
-			import { FragmentHost } from 'web-fragments/elements';
+			import { FragmentHost } from 'web-fragments';
 
 			const fragment4 = new FragmentHost();
 			fragment4.id = 'fragment4';

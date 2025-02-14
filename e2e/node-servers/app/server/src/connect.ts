@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3006;
 const gateway = new FragmentGateway({
     prePiercingStyles: `
       <style id="fragment-piercing-styles" type="text/css">
-        fragment-host[data-piercing="true"] {
+        web-fragment-host[data-piercing="true"] {
           position: absolute;
           z-index: 1;
           top: 280px;

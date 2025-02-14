@@ -12,6 +12,11 @@ if (process.env.NODE_ENV === 'development') {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+	resolve: {
+		alias: {
+			'web-fragments': new URL('../../packages/web-fragments/src/elements/', import.meta.url).pathname,
+		},
+	},
 	plugins: [react(), wranglerPagesDevWithReload()],
 });
 

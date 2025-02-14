@@ -60,8 +60,8 @@ beforeEach(async ({ page, browserName }) => {
 		goToBarButton: mainSection.locator('button').getByText('go to /bar'),
 	};
 
-	boundFragment = page.locator('fragment-host');
-	//standaloneFragment = page.locator('fragment-host[src="/location-and-history/standalone"]');
+	boundFragment = page.locator('web-fragment');
+	//standaloneFragment = page.locator('web-fragment[src="/location-and-history/standalone"]');
 
 	boundContext = await getFragmentContext(boundFragment);
 	//standaloneContext = await getFragmentContext(standaloneFragment);
@@ -88,8 +88,8 @@ beforeEach(async ({ page, browserName }) => {
 
 test('location.href initialization', async ({ page }) => {
 	await step('ensure the test harness app loaded', async () => {
-		await expect(page).toHaveTitle('WF TestBed: location-and-history');
-		await expect(page.locator('h1')).toHaveText('WF TestBed: location-and-history');
+		await expect(page).toHaveTitle('WF Playground: location-and-history');
+		await expect(page.locator('h1')).toHaveText('WF Playground: location-and-history');
 	});
 	await step('ensure that initial location.href of the main frame is correct', async () => {
 		expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
@@ -252,7 +252,7 @@ test('bfcache should not cause bound fragment to be mistaken for the shell app e
 	browserName,
 }) => {
 	await expect(page).toHaveURL(/http:\/\/localhost:\d+\/location-and-history\//);
-	await expect(page).toHaveTitle('WF TestBed: location-and-history');
+	await expect(page).toHaveTitle('WF Playground: location-and-history');
 
 	expect(await main.historyLength()).toBe(2);
 
@@ -263,8 +263,8 @@ test('bfcache should not cause bound fragment to be mistaken for the shell app e
 
 	await page.goForward();
 
-	await expect(page).toHaveTitle('WF TestBed: location-and-history');
-	expect(await page.evaluate(() => document.title)).toBe('WF TestBed: location-and-history');
+	await expect(page).toHaveTitle('WF Playground: location-and-history');
+	expect(await page.evaluate(() => document.title)).toBe('WF Playground: location-and-history');
 
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);

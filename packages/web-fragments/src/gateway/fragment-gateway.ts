@@ -89,7 +89,7 @@ export interface FragmentConfig {
 	 * to the final pierced view (so that the piercing operation can look seamless).
 	 *
 	 * For best results they should use the following selector:
-	 * :not(fragment-outlet) > fragment-host[fragment-id="fragmentId"]
+	 * :not(web-fragment) > web-fragment-host[fragment-id="fragmentId"]
 	 */
 	prePiercingClassNames: string[];
 	/**

@@ -1,6 +1,6 @@
 import { reframed } from './reframed/reframed';
 
-export class FragmentHost extends HTMLElement {
+export class WebFragmentHost extends HTMLElement {
 	iframe: HTMLIFrameElement | undefined;
 	ready: Promise<void> | undefined;
 	isInitialized = false;
@@ -13,7 +13,7 @@ export class FragmentHost extends HTMLElement {
 
 	async connectedCallback() {
 		/**
-		 * Because we move the entire fragment host to the fragment outlet,
+		 * Because we move the entire fragment host to the web fragment,
 		 * we don't need to run this connectedCallback again. Only run once the first time the element is added to the document.
 		 */
 		if (!this.isInitialized) {
@@ -24,12 +24,13 @@ export class FragmentHost extends HTMLElement {
 				headers: { 'x-fragment-mode': 'embedded' },
 			});
 
+			// TODO: is this the best way to expose the reframed iframe? review and discuss...
 			this.iframe = iframe;
 			this.ready = ready;
 
 			/**
-			 * <fragment-outlet> will dispatch the fragment-outlet-ready event.
-			 * When that happens, move the entire host element + shadowRoot into the fragment-outlet
+			 * <web-fragment> will dispatch the web-fragment-ready event.
+			 * When that happens, move the entire host element + shadowRoot into the web-fragment
 			 */
 			document.addEventListener('fragment-outlet-ready', this.handlePiercing);
 		}
@@ -57,15 +58,15 @@ export class FragmentHost extends HTMLElement {
 			return;
 		}
 
-		// Call preventDefault() to signal the fragment-outlet that
-		// we will pierce this fragment-host into it, so it shouldn't render its own.
+		// Call preventDefault() to signal the web-fragment that
+		// we will pierce this web-fragment-host into it, so it shouldn't render its own.
 		event.preventDefault();
 
 		// Wait until reframed() has signaled that the new iframe context is ready.
 		await this.ready;
 
-		// Any script tags injected into the <fragment-host> via reframe have already been made inert through writeable-dom.
-		// We need to do the same when we move <fragment-host> into <fragment-outlet>
+		// Any script tags injected into the <web-fragment-host> via reframe have already been made inert through writeable-dom.
+		// We need to do the same when we move <web-fragment-host> into <web-fragment>>
 		this.neutralizeScriptTags();
 
 		// Preserve the existing stylesheets to avoid a FOUC when reinserting this element into the DOM
@@ -74,7 +75,7 @@ export class FragmentHost extends HTMLElement {
 		const activeElement = this.shadowRoot?.activeElement;
 		const selectionRange = this.getSelectionRange();
 
-		// Move <fragment-host> into <fragment-outlet> and set a flag to return early in the disconnectedCallback
+		// Move <web-fragment-host> into <web-fragment> and set a flag to return early in the disconnectedCallback
 		this.isPortaling = true;
 		const targetElement = event.target as HTMLElement;
 		targetElement.replaceChildren(this);
@@ -95,7 +96,7 @@ export class FragmentHost extends HTMLElement {
 
 	// A best-effort attempt at avoiding a FOUC.
 	//
-	// Teleporting the fragment-host into the fragment-outlet requires removing then re-inserting the node from the document,
+	// Teleporting the web-fragment-host into the web-fragment requires removing then re-inserting the node from the document,
 	// which causes the browser to perform all of the steps for node removal and insertion respectively,
 	// namely unloading styles and (potentially asynchronously) reloading them. We can mostly mitigate the FOUC
 	// by copying all of the loaded style rules into Constructed Stylesheets and attaching them to the shadow root

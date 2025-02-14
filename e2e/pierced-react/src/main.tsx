@@ -1,3 +1,4 @@
+import { initializeWebFragments } from 'web-fragments';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 // import App from "./App.tsx";
@@ -6,6 +7,8 @@ import QwikPage from './routes/qwik';
 import RemixPage from './routes/remix';
 import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+
+initializeWebFragments();
 
 const router = createBrowserRouter([
 	{

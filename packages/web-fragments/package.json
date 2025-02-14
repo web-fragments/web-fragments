@@ -3,29 +3,25 @@
 	"description": "",
 	"type": "module",
 	"exports": {
+		".": {
+			"import": "./src/elements/index.ts"
+		},
 		"./gateway": {
 			"import": "./src/gateway/index.ts"
 		},
 		"./gateway/node": {
 			"import": "./src/gateway/middleware/node.ts"
-		},
-		"./elements": {
-			"import": "./src/elements/index.ts"
 		}
 	},
 	"publishConfig": {
 		"exports": {
-			"./gateway": {
-				"import": "./dist/gateway.js",
-				"types": "./dist/gateway/index.d.ts"
-			},
-			"./elements": {
+			".": {
 				"import": "./dist/elements.js",
 				"types": "./dist/elements/index.d.ts"
 			},
-			"./gateway/web": {
-				"import": "./dist/gateway/web.js",
-				"types": "./dist/gateway/web.d.ts"
+			"./gateway": {
+				"import": "./dist/gateway.js",
+				"types": "./dist/gateway/index.d.ts"
 			},
 			"./gateway/node": {
 				"import": "./dist/gateway/node.js",

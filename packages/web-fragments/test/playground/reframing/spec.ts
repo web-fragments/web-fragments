@@ -10,9 +10,9 @@ let fragmentContext: Frame;
 beforeEach(async ({ page, browserName }) => {
 	await page.goto('/reframing/');
 	// wait for the fragment to load
-	await page.waitForSelector('fragment-host h2');
+	await page.waitForSelector('web-fragment h2');
 
-	fragment = page.locator('fragment-host');
+	fragment = page.locator('web-fragment');
 	fragmentContext = await getFragmentContext(fragment);
 });
 

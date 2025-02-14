@@ -1,6 +1,6 @@
-import { register } from 'web-fragments/elements';
+import { initializeWebFragments } from 'web-fragments';
 
-register();
+initializeWebFragments();
 
 function counter(): { increment: () => number } {
 	let count = 0;
@@ -20,11 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
     <section>
         <div class="wrapper">
             <div class="fragment-container">
-                <h2>Reframed - from target</h2>
-                <fragment-outlet fragment-id="${fwName}" />
+                <h2>Pierced fragment</h2>
+                <web-fragment fragment-id="${fwName}"></web-fragment>
             </div>
             <div class="fragment-container">
-                <h2>Reframed - with fetch</h2>
+                <h2>Fetched fragment</h2>
                 <button class="button" id="toggle-host">Toggle Host</button>
                 <div class="host-wrapper">
                 </div>
@@ -52,7 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			const hostWrapper = document.querySelector('.host-wrapper') as HTMLElement;
 			if (!toggled) {
 				toggled = true;
-				hostWrapper.appendChild(document.createElement('fragment-host'));
+				const fragment = document.createElement('web-fragment');
+				fragment.setAttribute('fragment-id', `${fwName}2`);
+				hostWrapper.appendChild(fragment);
 			} else {
 				toggled = false;
 				hostWrapper.innerHTML = '';
