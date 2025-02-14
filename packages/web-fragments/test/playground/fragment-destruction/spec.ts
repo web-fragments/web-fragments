@@ -9,13 +9,13 @@ describe('fragment destruction', () => {
 		await page.goto('/fragment-destruction/');
 
 		await step('ensure the test harness app loaded', async () => {
-			await expect(page).toHaveTitle('WF TestBed: fragment-destruction');
-			await expect(page.locator('h1')).toHaveText('WF TestBed: fragment-destruction');
+			await expect(page).toHaveTitle('WF Playground: fragment-destruction');
+			await expect(page.locator('h1')).toHaveText('WF Playground: fragment-destruction');
 		});
 	});
 
 	test('DOM cleanup', async ({ page }) => {
-		const fragments = page.locator('fragment-host');
+		const fragments = page.locator('web-fragment');
 		await expect(fragments.getByRole('heading')).toHaveText('hello world!');
 
 		await step('removing a fragment should cause its DOM and iframe to be removed from the main document', async () => {
@@ -25,7 +25,7 @@ describe('fragment destruction', () => {
 	});
 
 	test('JS task cleanup', async ({ page }) => {
-		const fragments = page.locator('fragment-host');
+		const fragments = page.locator('web-fragment');
 		await expect(fragments.getByRole('heading')).toHaveText('hello world!');
 		const lastMessageSpan = page.locator('p > span#lastMessage');
 		await expect(lastMessageSpan).toHaveText(/hello\d+/);
@@ -49,11 +49,11 @@ describe('fragment destruction', () => {
 		// manual testing doesn't show any memory leaks
 		if (browserName === 'webkit' || browserName === 'firefox') return;
 
-		const fragments = page.locator('fragment-host');
+		const fragments = page.locator('web-fragment');
 		await expect(fragments.getByRole('heading')).toHaveText('hello world!');
 
 		await page.evaluate(() => {
-			const garbage = document.querySelector('fragment-host')?.iframe?.contentWindow.garbage;
+			const garbage = document.querySelector('web-fragment')?.iframe?.contentWindow?.garbage;
 			if (!garbage) throw new Error('garbage not found');
 
 			globalThis.garbageArrayWeakRef = new WeakRef(garbage.array);
@@ -81,7 +81,7 @@ describe('fragment destruction', () => {
 	// An alternative way to measure memory might be to monitor the memory usage of the browser process started
 	// by playwright, but it's unclear how precise and reliable that would be. More exploration needed.
 	test.fail('memory cleanup stress test', async ({ page }) => {
-		const fragments = page.locator('fragment-host');
+		const fragments = page.locator('web-fragment');
 		await expect(fragments.getByRole('heading')).toHaveText('hello world!');
 		const memoryUsageSpan = page.locator('span#memoryUsage');
 		await expect(memoryUsageSpan).toHaveText(/\d+/);
@@ -116,7 +116,6 @@ describe('fragment destruction', () => {
 	});
 });
 
-// setting src to an empty string should destroy the fragment but not fragment-host
-// setting src to * should be specially treated as routable fragment
+// setting src to * should be specially treated as bound fragment
 // setting src to anything else should be passed to fetch as is
-// location.reload() in a fragment should cause the same behavior as resetting setting src to the original fragment src
+// location.reload() in a fragment should cause a reload in the main frame for bound fragments and in the iframe for standalone fragments

@@ -4,7 +4,7 @@
 		<meta charset="UTF-8" />
 		<title>WF Playground: web-components</title>
 		<style>
-			fragment-host {
+			web-fragment {
 				border: 1px red dashed;
 			}
 		</style>
@@ -13,12 +13,12 @@
 		<h1>WF Playground: web-components</h1>
 
 		<test-component></test-component>
-		<fragment-host></fragment-host>
-		<fragment-host></fragment-host>
+		<web-fragment fragment-id="web-components"></web-fragment>
+		<web-fragment fragment-id="web-components2"></web-fragment>
 
 		<script type="module">
-			import { register, FragmentHost } from 'web-fragments/elements';
-			register();
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
 		</script>
 		<script type="module">
 			window.customElements.define(

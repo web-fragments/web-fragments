@@ -2,23 +2,23 @@
 <html>
 	<head>
 		<meta charset="UTF-8" />
-		<title>WF TestBed: script-isolation</title>
+		<title>WF Playground: script-isolation</title>
 		<style>
-			fragment-host {
+			web-fragment {
 				border: 1px red dashed;
 			}
 		</style>
 	</head>
 	<body>
-		<h1>WF TestBed: script-isolation</h1>
+		<h1>WF Playground: script-isolation</h1>
 		<hr />
-		<fragment-host></fragment-host>
+		<web-fragment fragment-id="script-isolation"></web-fragment>
 		<!-- TODO: disabled for now since we don't support standalone fragments -->
-		<!-- <fragment-host src="/script-isolation/fragment-b"></fragment-host> -->
-		<fragment-host></fragment-host>
+		<!-- <web-fragment src="/script-isolation/fragment-b"></web-fragment> -->
+		<web-fragment fragment-id="script-isolation2"></web-fragment>
 		<script type="module">
-			import { register } from 'web-fragments/elements';
-			register();
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
 		</script>
 	</body>
 </html>

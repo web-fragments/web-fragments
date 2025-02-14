@@ -1,7 +1,10 @@
-import { FragmentOutlet } from './fragment-outlet';
-import { FragmentHost } from './fragment-host';
+import { WebFragment } from './web-fragment';
+import { WebFragmentHost } from './web-fragment-host';
 
-export function register() {
-	window.customElements.define('fragment-outlet', FragmentOutlet);
-	window.customElements.define('fragment-host', FragmentHost);
+/**
+ * Register the web fragment elements
+ */
+export function initializeWebFragments() {
+	window.customElements.define('web-fragment', WebFragment);
+	window.customElements.define('web-fragment-host', WebFragmentHost);
 }

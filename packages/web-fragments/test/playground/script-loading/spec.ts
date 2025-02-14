@@ -8,11 +8,11 @@ test('script loading in fragments', async ({ page }) => {
 	await page.goto('/script-loading/');
 
 	await step('ensure the test harness app loaded', async () => {
-		await expect(page).toHaveTitle('WF TestBed: script-loading');
-		await expect(page.locator('h1')).toHaveText('WF TestBed: script-loading');
+		await expect(page).toHaveTitle('WF Playground: script-loading');
+		await expect(page.locator('h1')).toHaveText('WF Playground: script-loading');
 	});
 
-	const fragment = page.locator('fragment-host');
+	const fragment = page.locator('web-fragment');
 
 	await step('ensure the script-loading fragment renders', async () => {
 		await expect(fragment.locator('h2')).toHaveText('script-loading fragment');

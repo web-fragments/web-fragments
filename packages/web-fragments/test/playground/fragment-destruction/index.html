@@ -2,42 +2,42 @@
 <html>
 	<head>
 		<meta charset="UTF-8" />
-		<title>WF TestBed: fragment-destruction</title>
+		<title>WF Playground: fragment-destruction</title>
 		<style>
-			fragment-host {
+			web-fragment {
 				border: 1px red dashed;
 			}
 		</style>
 	</head>
 	<body>
-		<h1>WF TestBed: fragment-destruction</h1>
+		<h1>WF Playground: fragment-destruction</h1>
 
 		<p>Last message from fragment: <span id="lastMessage"></span></p>
 		<p><code>performance.memory.usedJSHeapSize:</code> <span id="memoryUsage"></span></p>
 
 		<script type="module">
-			import { register } from 'web-fragments/elements';
-			register();
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
 		</script>
 
 		<button id="remove">remove fragment</button>
 		<!-- <button id="reset">reset fragment src</button> -->
 		<button id="add">add fragment</button>
 
-		<fragment-host></fragment-host>
+		<web-fragment fragment-id="fragment-destruction"></web-fragment>
 
 		<script type="module">
 			document.querySelector('button#remove').addEventListener('click', (event) => {
-				document.querySelector('fragment-host')?.remove();
+				document.querySelector('web-fragment')?.remove();
 			});
 
 			// document.querySelector('button#reset').addEventListener('click', (event) => {
-			// 	document.querySelector('fragment-host').src = '';
+			// 	document.querySelector('web-fragment').src = '';
 			// });
 
 			let fragmentCounter = 0;
 			document.querySelector('button#add').addEventListener('click', (event) => {
-				const f = document.createElement('fragment-host');
+				const f = document.createElement('web-fragment');
 				fragmentCounter++;
 				f.src = '/fragment-destruction/fragment?counter=' + fragmentCounter;
 				document.body.appendChild(f);

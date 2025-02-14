@@ -8,11 +8,11 @@ test('dom isolation of fragments', async ({ page }) => {
 	await page.goto('/dom-isolation/');
 
 	await step('ensure the test harness app loaded', async () => {
-		await expect(page).toHaveTitle('WF TestBed: dom-isolation');
-		await expect(page.locator('h1')).toHaveText('WF TestBed: dom-isolation');
+		await expect(page).toHaveTitle('WF Playground: dom-isolation');
+		await expect(page.locator('h1')).toHaveText('WF Playground: dom-isolation');
 	});
 
-	const fragment = page.locator('fragment-host');
+	const fragment = page.locator('web-fragment');
 
 	await step('ensure the dom-isolation fragment renders', async () => {
 		await expect(fragment.getByRole('heading')).toHaveText('dom-isolation fragment');
@@ -35,13 +35,19 @@ test('dom isolation of fragments', async ({ page }) => {
 	});
 
 	await step('the fragment should have an empty light dom', async () => {
-		expect(await fragment.innerHTML()).toBe('');
+		// TODO: this is currently not true because the web-fragment-host is the only child. This will be fixed once web-fragment has its own shadow root.
+		//expect(await fragment.innerHTML()).toBe('');
+		expect(await (await fragment.locator('web-fragment-host')).innerHTML()).toBe('');
 	});
 
 	await step('the fragment should have an open shadow root with content', async () => {
-		expect(await fragment.evaluate((element) => element.shadowRoot?.nodeName)).toBe('#document-fragment');
-		expect(await fragment.evaluate((element) => element.shadowRoot?.querySelector('h2')?.innerText)).toBe(
-			'dom-isolation fragment',
+		// TODO: we currently need to traverse through the fragment host
+		// Just like the note above, this will be fixed once web-fragment has its own shadow root.
+		expect(await fragment.evaluate((element) => element.firstElementChild.shadowRoot?.nodeName)).toBe(
+			'#document-fragment',
 		);
+		expect(
+			await fragment.evaluate((element) => element.firstElementChild.shadowRoot?.querySelector('h2')?.innerText),
+		).toBe('dom-isolation fragment');
 	});
 });

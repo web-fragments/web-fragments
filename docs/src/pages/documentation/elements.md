@@ -15,24 +15,12 @@ Before using the `web fragments` custom elements in an application, they must be
 
 Please notice that different frameworks may require additional utilities to work with `custom elements`. For example `Angular` needs `CUSTOM_ELEMENTS_SCHEMA` to be provided.
 
-The library exports the following `register()` function:
+The library exports the `initializeWebFragments()` function that should be called early in the application bootstrapping.
 
 ```javascript
-import { FragmentOutlet } from "./fragment-outlet";
-import { FragmentHost } from "./fragment-host";
+import { initializeWebFragments } from "web-fragments";
 
-export function register() {
-	window.customElements.define("fragment-outlet", FragmentOutlet);
-	window.customElements.define("fragment-host", FragmentHost);
-}
-```
-
-that should be executed early in the application bootstrapping.
-
-```javascript
-import { register } from "web-fragments/elements";
-
-register();
+initializeWebFragments();
 ```
 
 ## Fragment Outlet

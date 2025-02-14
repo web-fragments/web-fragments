@@ -2,21 +2,21 @@
 <html>
 	<head>
 		<meta charset="UTF-8" />
-		<title>WF TestBed: script-loading</title>
+		<title>WF Playground: script-loading</title>
 		<style>
-			fragment-host {
+			web-fragment {
 				border: 1px red dashed;
 			}
 		</style>
 	</head>
 	<body>
-		<h1>WF TestBed: script-loading</h1>
+		<h1>WF Playground: script-loading</h1>
 
-		<fragment-host></fragment-host>
+		<web-fragment fragment-id="script-loading"></web-fragment>
 
 		<script type="module">
-			import { register } from 'web-fragments/elements';
-			register();
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
 		</script>
 	</body>
 </html>

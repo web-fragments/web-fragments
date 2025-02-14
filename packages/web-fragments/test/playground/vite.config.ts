@@ -9,7 +9,7 @@ export default defineConfig({
 	appType: 'mpa',
 	resolve: {
 		alias: {
-			'web-fragments/elements': new URL('../../src/elements/', import.meta.url).pathname,
+			'web-fragments': new URL('../../src/elements/', import.meta.url).pathname,
 		},
 	},
 	build: {

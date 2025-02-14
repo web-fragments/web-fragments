@@ -28,12 +28,12 @@ function App() {
 
 			<section style={{ display: 'flex', justifyContent: 'center' }}>
 				<div className="fragment-container pierced">
-					<h2>Reframed - from target</h2>
-					<fragment-outlet fragment-id="qwik" />
+					<h2>Pierced fragment</h2>
+					<web-fragment fragment-id="qwik" />
 				</div>
 				<div className="fragment-container">
 					<div style={{ width: '100%' }}>
-						<h2>Reframed - with fetch</h2>
+						<h2>Fetched fragment</h2>
 						<button
 							onClick={toggleShowHost}
 							style={{
@@ -45,7 +45,7 @@ function App() {
 							Toggle host
 						</button>
 					</div>
-					{showHost && <fragment-host></fragment-host>}
+					{showHost && <web-fragment fragment-id="qwik2" />}
 				</div>
 			</section>
 		</>

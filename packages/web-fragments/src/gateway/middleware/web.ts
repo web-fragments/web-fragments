@@ -261,9 +261,9 @@ export function getWebMiddleware(
 					async element(element) {
 						(element.append as any as (content: ReadableStream, options: { html: boolean }) => void)(
 							asReadableStream`
-								<fragment-host class="${prePiercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true">
+								<web-fragment-host class="${prePiercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true">
 									<template shadowrootmode="open">${fragmentResponse.body ?? ''}</template>
-								</fragment-host>`,
+								</web-fragment-host>`,
 							{ html: true },
 						);
 					},
@@ -281,7 +281,7 @@ export function getWebMiddleware(
 				.on('body', {
 					element(element) {
 						element.append(
-							`<fragment-host class="${prePiercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${fragmentContent}</template></fragment-host>`,
+							`<web-fragment-host class="${prePiercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${fragmentContent}</template></web-fragment-host>`,
 							{ html: true },
 						);
 					},
