@@ -123,6 +123,7 @@ export async function fetchFragment(
 		clearTimeout(timeout);
 		return response;
 	} catch (error) {
+		console.log('fetchFragment error:', error);
 		return renderErrorResponse(error, fragmentReq);
 	}
 }

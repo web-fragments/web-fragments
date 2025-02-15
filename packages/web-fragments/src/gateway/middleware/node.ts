@@ -178,6 +178,7 @@ interface OriginResponse {
 function interceptNodeResponse(
 	response: http.ServerResponse,
 	next: () => void,
+	callNodeNextPromise: Promise<void>,
 ): { originResponse: OriginResponse; serverResponse: http.ServerResponse } {
 	let streamController: ReadableStreamDefaultController<any>;
 	const readableStream = new ReadableStream<Uint8Array>({
@@ -189,7 +190,7 @@ function interceptNodeResponse(
 	// patch response
 	const orig = {
 		flushHeaders: response.flushHeaders.bind(response),
-		write: response.write, //.bind(response),
+		write: response.write.bind(response),
 		writeHead: response.writeHead.bind(response),
 		writeHeadUnbound: response.writeHead,
 		end: response.end.bind(response),
@@ -219,18 +220,36 @@ function interceptNodeResponse(
 		originHeadResolve(originHead);
 	}
 
-	response.flushHeaders = function interceptingFlushHeaders() {
-		console.log('flushHeaders');
-		// TODO: is it ok to completely ignore?
-		// should we just resolve the originHeadPromise here?
-		return response;
-	};
+	// response.flushHeaders = function interceptingFlushHeaders() {
+	// 	console.log('flushHeaders');
+	// 	// TODO: is it ok to completely ignore?
+	// 	// should we just resolve the originHeadPromise here?
+	// 	return response;
+	// };
+
+	response.on('drain', () => {
+		console.log('drain...');
+	});
+
+	response.on('prefinish', () => {
+		console.log('prefinish...');
+	});
+
+	response.on('end', () => {
+		console.log('end...');
+	});
+
+	response.on('finish', () => {
+		console.log('finish...');
+	});
 
 	response.writeHead = function interceptingWriteHead(statusCode: number): http.ServerResponse {
 		// @ts-ignore readyToSendHead is a back channel
 		if (originHeadPromise?.readyToSendHead) {
 			console.log('writeHead (intercepted with readyToSendHead signal)', ...arguments);
-			return orig.writeHead.apply(this, arguments);
+			//return orig.writeHead.apply(this, arguments);
+			// @ts-ignore
+			return orig.writeHead(...arguments);
 		}
 		const statusMessage: string = arguments[1] instanceof String ? (arguments[1] as string) : '';
 		const headers: http.OutgoingHttpHeaders =
@@ -282,8 +301,10 @@ function interceptNodeResponse(
 		return response;
 	};
 
-	// call the next node middleware
-	next();
+	// call the next node middleware if we receive a signal to do so
+	callNodeNextPromise.then(() => {
+		next();
+	});
 
 	// create a new ServerResponse object that has it's prototype set to the original response
 	// this allows us to inherit everything from the original response while still restoring
@@ -296,7 +317,7 @@ function interceptNodeResponse(
 	restoredResponse.end = orig.end;
 
 	return {
-		originResponse: { head: originHeadPromise, body: readableStream, readyToSendHead: false },
+		originResponse: { head: originHeadPromise, body: readableStream },
 		serverResponse: restoredResponse,
 	};
 }
@@ -311,14 +332,20 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 	return async (nodeRequest: http.IncomingMessage, nodeResponse: http.ServerResponse, nodeNext: () => void) => {
 		// const originalReqUrl = nodeRequestToUrl(req);
 		// const matchedFragment = gateway.matchRequestToFragment(originalReqUrl.pathname);
-		if (!(nodeRequest.url && gateway.matchRequestToFragment(nodeRequest.url))) {
+		console.log('[Debug Info | Local request]:', nodeRequest.url);
+		if (!(nodeRequest.url && gateway.matchRequestToFragment(nodeRequestToUrl(nodeRequest).pathname))) {
 			console.log('[Debug Info]: No fragment match, calling next()');
 			return nodeNext();
 		}
 
 		const webRequest = nodeRequestToWebRequest(nodeRequest);
-		const { originResponsePromise, sendResponse } = nodeToWebResponse(nodeResponse, nodeNext);
+
+		const { promise: callNodeNextPromise, resolve: callNodeNextResolve } = Promise.withResolvers<void>();
+		const { originResponsePromise, sendResponse } = nodeToWebResponse(nodeResponse, nodeNext, callNodeNextPromise);
 		const webNext = function webNodeCompatNext() {
+			console.log('webNodeCompatNext called!!!');
+			// signal that we want nodeNext fn to be called
+			callNodeNextResolve();
 			return originResponsePromise;
 		};
 
@@ -330,11 +357,16 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 function nodeToWebResponse(
 	nodeResponse: http.ServerResponse,
 	nodeNext: () => void,
+	callNodeNextPromise: Promise<void>,
 ): {
 	originResponsePromise: Promise<Response>;
 	sendResponse: (response: Response) => void;
 } {
-	const { originResponse, serverResponse: outboundServerResponse } = interceptNodeResponse(nodeResponse, nodeNext);
+	const { originResponse, serverResponse: outboundServerResponse } = interceptNodeResponse(
+		nodeResponse,
+		nodeNext,
+		callNodeNextPromise,
+	);
 
 	let originResponsePromise = originResponse.head.then((head) => new Response(originResponse.body, head));
 
@@ -359,7 +391,7 @@ function nodeToWebResponse(
 	// );
 	//});
 
-	const sendResponse = (response: Response) => {
+	const sendResponse = async (response: Response) => {
 		console.log('sendResponse', response);
 		// response.headers.forEach((value, key) => {
 		// 	nodeResponse.setHeader(key, value);
@@ -369,26 +401,45 @@ function nodeToWebResponse(
 		// nodeResponse.statusCode = response.status;
 		// nodeResponse.statusMessage = response.statusText;
 
-		console.log('asdfasdfasdf', nodeResponse.writeHead, outboundServerResponse.writeHead);
+		// TODO: is this going to preserve several cookies?
 		const headersAsObject = Object.fromEntries(Array.from(response.headers.entries()));
 
 		// back channel to signal that we are ready to send the http head via the outbound connection
 		originResponse.head.readyToSendHead = true;
+		// await new Promise((resolve) => {
+		// 	setTimeout(resolve, 5000);
+		// });
+
+		// outboundServerResponse.statusCode = response.status;
+		// outboundServerResponse.statusMessage = response.statusText;
+		// // response.headers.forEach((value, name) => {
+		// 	// TODO: handle duplicate headers? like cookie?
+		// 	console.log('setting header', name, value);
+		// 	outboundServerResponse.setHeader(name, value);
+		// });
+		console.log('headers set?', outboundServerResponse.headersSent);
+		//outboundServerResponse.setHeader('transfer-encoding', '');
+
+		console.log('about to write headers!!!');
 		outboundServerResponse.writeHead(response.status, response.statusText, headersAsObject);
-		queueMicrotask(() => {
-			console.log('piping body');
 
-			stream.Readable.fromWeb(response.body as streamWeb.ReadableStream<any>)
-				.pipe(outboundServerResponse)
-				.on('error', (err) => {
-					console.error('error piping body', err);
-				})
-				.on('close', () => {
-					console.log('piping body close');
-				});
+		console.log('piping body');
 
-			console.log('piping body end');
-		});
+		//setTimeout(() => {
+		stream.Readable.fromWeb(response.body as streamWeb.ReadableStream<any>)
+			.pipe(outboundServerResponse)
+			.on('drain', () => {
+				console.log('drain piping body');
+			})
+			.on('error', (err) => {
+				console.log('error piping body', err);
+			})
+			.on('close', () => {
+				console.log('piping body close');
+			});
+
+		console.log('piping body end');
+		//}, 10000);
 	};
 
 	return { originResponsePromise, sendResponse };

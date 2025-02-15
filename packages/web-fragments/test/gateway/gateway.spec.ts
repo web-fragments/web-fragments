@@ -9,7 +9,7 @@ import streamWeb from 'node:stream/web';
 
 // comment out some environments if you want to focus on testing just one or a few
 const environments = [];
-//environments.push('web');
+environments.push('web');
 //environments.push('connect');
 environments.push('connect-web');
 
@@ -41,11 +41,14 @@ for (const environment of environments) {
 		});
 
 		describe(`pierced fragment requests`, () => {
-			it.only(`should match a fragment and return html that combines the host and fragment payloads`, async () => {
+			it(`should match a fragment and return html that combines the host and fragment payloads`, async () => {
 				mockShellAppResponse(
 					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
 				);
 				mockFragmentFooResponse('/foo', new Response('<p>foo fragment</p>'));
+
+				//console.log('not shutting down');
+				//await new Promise((resolve) => setTimeout(resolve, 10000000));
 
 				const response = await testRequest(
 					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
@@ -283,6 +286,9 @@ for (const environment of environments) {
 							throw new Error('No app shell response provided, use mockShellAppResponse to set it');
 						}
 
+						// debugging notes:
+						// - this is usually synchronous, but we implemented it in an async way
+						// - which means we don't actually write the header before we start piping the body
 						resp.writeHead(
 							appShellResponse.status,
 							appShellResponse.statusText,
@@ -300,6 +306,7 @@ for (const environment of environments) {
 					server = http.createServer(app);
 
 					let serverStarted = new Promise((resolve) => {
+						//server.listen(53947, () => {
 						server.listen(() => {
 							console.debug(`Server running at http://localhost:${server.address()!.port}`);
 							resolve(void 0);

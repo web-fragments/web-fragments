@@ -28,6 +28,7 @@ export function getWebMiddleware(
 	console.log('[Debug Info]: Web middleware');
 
 	return async (req: Request, next: () => Promise<Response>): Promise<Response> => {
+		console.log('[Debug Info]: Web middleware request:', new URL(req.url).pathname);
 		const matchedFragment = gateway.matchRequestToFragment(new URL(req.url).pathname);
 		console.log('[Debug Info]: matched fragment:', matchedFragment);
 
@@ -62,6 +63,7 @@ export function getWebMiddleware(
 		// If this is a document request, we need to fetch the host application
 		// and if we get a successful HTML response, we need to rewrite the HTML to embed the fragment inside it
 		if (req.headers.get('sec-fetch-dest') === 'document') {
+			console.log('sec-fetch-dest==="document" => fetching appShell');
 			const appShellResponse = await next();
 
 			// TODO: startsWith needed? should we use this elsewhere too?
@@ -91,10 +93,22 @@ export function getWebMiddleware(
 		// Append Vary header to prevent BFCache issues.
 		// We can't just append because the response is immutable
 		// see: https://github.com/whatwg/fetch/issues/608#issuecomment-332462271
-		const fragmentResponseWithHeaders = new Response(fragmentResponse.body, fragmentResponse);
-		fragmentResponseWithHeaders.headers.set('vary', 'sec-fetch-dest');
+		// const fragmentResponseWithHeaders = new Response(fragmentResponse.body, fragmentResponse);
+		// fragmentResponseWithHeaders.headers.set('vary', 'sec-fetch-dest');
+		const finalHeaders = new Headers({
+			vary: 'sec-fetch-dest',
+			'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
+			//'transfer-encoding': '',
+		});
 
-		return fragmentResponseWithHeaders;
+		console.log('returning response');
+		return new Response(fragmentResponse.body, {
+			status: fragmentResponse.status,
+			statusText: fragmentResponse.statusText,
+			headers: finalHeaders,
+		});
+		//return fragmentResponseWithHeaders;
+		//return fragmentResponse;
 	};
 
 	/**
