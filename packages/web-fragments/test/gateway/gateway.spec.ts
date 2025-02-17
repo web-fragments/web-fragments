@@ -10,8 +10,7 @@ import streamWeb from 'node:stream/web';
 // comment out some environments if you want to focus on testing just one or a few
 const environments = [];
 environments.push('web');
-//environments.push('connect');
-environments.push('connect-web');
+environments.push('connect');
 
 for (const environment of environments) {
 	describe(`${environment} middleware`, () => {
@@ -262,16 +261,13 @@ for (const environment of environments) {
 
 					break;
 				}
-				case 'connect':
-				case 'connect-web': {
+				case 'connect': {
 					// We use an actual connect server here with an ephemeral port
 					const app = connect();
 
-					const middlewareFactory = environment === 'connect' ? getNodeMiddleware : getNodeCompatMiddleware;
-
 					// fragment gateway middleware
 					app.use(
-						middlewareFactory(fragmentGateway, {
+						getNodeMiddleware(fragmentGateway, {
 							additionalHeaders: {
 								'x-additional-header': 'j/k',
 							},
