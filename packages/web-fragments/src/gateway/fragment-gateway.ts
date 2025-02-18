@@ -1,5 +1,5 @@
 import { MatchFunction, match } from 'path-to-regexp';
-import type { FragmentConfig, FragmentGatewayConfig } from './utils/types';
+import type { FragmentConfig, FragmentGatewayConfig } from './middleware/types';
 
 export class FragmentGateway {
 	private fragmentConfigs: Map<string, FragmentConfig> = new Map();
