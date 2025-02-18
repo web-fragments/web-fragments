@@ -14,9 +14,6 @@
 		},
 		"./elements": {
 			"import": "./src/elements/index.ts"
-		},
-		"./utils": {
-			"import": "./src/gateway/utils/common-utils.ts"
 		}
 	},
 	"publishConfig": {

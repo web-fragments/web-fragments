@@ -1,6 +1,6 @@
 # Middleware support
 
-To support a diversity of request/response models, we are offering different middleware implementation types. 
+To support a diversity of request/response models, we are offering different middleware implementation types.
 
 ## Standard middleware type
 
@@ -46,7 +46,7 @@ const middleware = getStandardMiddleware(gateway, { mode: 'production' });
 export const onRequest: PagesFunction = async (context) => {
   const { request, next } = context;
   console.log('Incoming request', request.url);
-  
+
   // run the standard middleware function
   return middleware(request, next);
 };
@@ -65,7 +65,7 @@ self.addEventListener('fetch', (event) => {
 });
 ```
 
-#### Service worker registration example
+<!-- #### Service worker registration example (not implemented)
 ```javascript
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker
@@ -76,7 +76,7 @@ if ('serviceWorker' in navigator) {
       console.error('Service Worker registration failed:', error);
     });
 }
-```
+``` -->
 
 ## Node.js support middleware type
 
