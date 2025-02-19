@@ -37,6 +37,24 @@ for (const environment of environments) {
 				expect(response2.status).toBe(200);
 				expect(await response2.text()).toBe('<p>hello moon</p>');
 			});
+
+			it('should serve an error response from the app shell as is', async () => {
+				mockShellAppResponse(new Response('<p>app shell no bueno 😢</p>', { status: 500, statusText: 'no bueno' }));
+
+				const response = await testRequest(new Request('http://localhost/'));
+
+				expect(response.status).toBe(500);
+				expect(response.statusText).toBe('no bueno');
+				expect(await response.text()).toBe('<p>app shell no bueno 😢</p>');
+
+				// make one more request to a different non-fragment path
+				mockShellAppResponse(new Response('<p>does not exist here! 👻</p>', { status: 404 }));
+
+				const response404 = await testRequest(new Request('http://localhost/not-here'));
+
+				expect(response404.status).toBe(404);
+				expect(await response404.text()).toBe('<p>does not exist here! 👻</p>');
+			});
 		});
 
 		describe(`pierced fragment requests`, () => {
@@ -45,9 +63,6 @@ for (const environment of environments) {
 					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
 				);
 				mockFragmentFooResponse('/foo', new Response('<p>foo fragment</p>'));
-
-				//console.log('not shutting down');
-				//await new Promise((resolve) => setTimeout(resolve, 10000000));
 
 				const response = await testRequest(
 					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
@@ -79,7 +94,8 @@ for (const environment of environments) {
 			it(`should append additional headers to the composed response`, async () => {
 				fetchMock.doMockIf((request) => {
 					if (request.url.toString() === 'http://foo.test:1234/foo') {
-						expect(request.headers.get('x-additional-header')).toBe('j/k');
+						expect(request.headers.get('accept-language')).toBe('sk-SK');
+						expect(request.headers.get('x-color-mode')).toBe('dark');
 						return true;
 					}
 					return false;
@@ -92,6 +108,8 @@ for (const environment of environments) {
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe('<p>foo fragment</p>');
 			});
+
+			it('should serve the pierced fragment even if the the app shell errors', async () => {});
 		});
 
 		describe(`fragment iframe requests`, () => {
@@ -245,7 +263,8 @@ for (const environment of environments) {
 				case 'web': {
 					const webMiddleware = getWebMiddleware(fragmentGateway, {
 						additionalHeaders: {
-							'x-additional-header': 'j/k',
+							'accept-language': 'sk-SK',
+							'x-color-mode': 'dark',
 						},
 					});
 
@@ -271,7 +290,8 @@ for (const environment of environments) {
 					app.use(
 						getNodeMiddleware(fragmentGateway, {
 							additionalHeaders: {
-								'x-additional-header': 'j/k',
+								'accept-language': 'sk-SK',
+								'x-color-mode': 'dark',
 							},
 						}),
 					);

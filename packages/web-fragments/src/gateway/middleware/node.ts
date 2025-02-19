@@ -1,7 +1,6 @@
 import http from 'node:http';
 
-import { FragmentGateway } from 'web-fragments/gateway';
-import type { FragmentMiddlewareOptions } from '../utils/types';
+import { FragmentGateway, FragmentMiddlewareOptions } from 'web-fragments/gateway';
 import { getWebMiddleware } from './web';
 import { nodeToWebMiddleware, nodeRequestToUrl } from './node-to-web-adapter';
 
@@ -13,7 +12,6 @@ import { nodeToWebMiddleware, nodeRequestToUrl } from './node-to-web-adapter';
  */
 export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMiddlewareOptions = {}) {
 	console.log('[Debug Info]: Node Compat middleware');
-	const { additionalHeaders = {}, mode = 'development' } = options;
 
 	const webMiddleware = getWebMiddleware(gateway, options);
 

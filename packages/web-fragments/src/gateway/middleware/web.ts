@@ -2,9 +2,8 @@
  * The middleware provides support for Web request-response handling using fetch-like behavior, and for Node.js native http request and responses object, including using Connect framework, via the imported adaptor.
  */
 
-import { FragmentGateway } from '../fragment-gateway';
+import { FragmentGateway, FragmentMiddlewareOptions, FragmentConfig, FragmentGatewayConfig } from '../fragment-gateway';
 import { HTMLRewriter } from 'htmlrewriter';
-import type { FragmentMiddlewareOptions, FragmentConfig, FragmentGatewayConfig } from './types';
 
 /**
  * Initializes a fragment host element with given attributes.
