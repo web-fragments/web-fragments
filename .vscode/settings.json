@@ -16,7 +16,7 @@
 		"editor.formatOnSave": true
 	},
 	"editor.formatOnSave": true,
-	"editor.wordWrap": "bounded",
+	"editor.wordWrap": "wordWrapColumn",
 	"workbench.editor.labelFormat": "short",
 	"editor.wordWrapColumn": 120
 }
