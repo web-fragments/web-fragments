@@ -2,6 +2,18 @@ import stream from 'node:stream';
 import streamWeb from 'node:stream/web';
 import http from 'node:http';
 
+/**
+ * Converts a Web-style middleware to a Node-style middleware.
+ *
+ * This function enables Web-style middlewares to be used in Node.js HTTP servers like express, connect, etc.
+ *
+ * The implementation is lazy and stream-based to avoid unnecessary buffering of request/response bodies.
+ *
+ * See https://www.tldraw.com/f/-759LrWk9uMRXIQYg9Nth?d=v-539.-420.4188.2805.page for a visual representation of the data flow.
+ *
+ * @param webMiddleware The middleware to adopt.
+ * @returns The resulting node-style middleware.
+ */
 export function nodeToWebMiddleware(webMiddleware: (req: Request, next: () => Promise<Response>) => Promise<Response>) {
 	return async function nodeMiddleware(
 		nodeRequest: http.IncomingMessage,
@@ -13,7 +25,6 @@ export function nodeToWebMiddleware(webMiddleware: (req: Request, next: () => Pr
 		const { promise: callNodeNextPromise, resolve: callNodeNextResolve } = Promise.withResolvers<void>();
 		const { originResponsePromise, sendResponse } = nodeToWebResponse(nodeResponse, nodeNext, callNodeNextPromise);
 		const webNext = function webNodeCompatNext() {
-			console.log('webNodeCompatNext called!!!');
 			// signal that we want nodeNext fn to be called
 			callNodeNextResolve();
 			return originResponsePromise;
@@ -52,8 +63,7 @@ export function nodeRequestToUrl(nodeReq: http.IncomingMessage): URL {
 }
 
 interface OriginResponse {
-	// readyToSendHead is a back channel so that we know when to actually send headers, see writeHead patch below
-	head: Promise<ResponseInit> & { readyToSendHead?: true };
+	head: Promise<ResponseInit>;
 	body: ReadableStream<Uint8Array>;
 }
 
@@ -82,7 +92,7 @@ function interceptNodeResponse(
 
 	let { promise: originHeadPromise, resolve: originHeadResolve } = Promise.withResolvers<ResponseInit>();
 	function retrieveOrigHead(
-		statusCode: number,
+		statusCode?: number,
 		statusMessage?: string,
 		headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[],
 	) {
@@ -99,40 +109,19 @@ function interceptNodeResponse(
 			headers: { ...(response.getHeaders() as Record<string, string>), ...(headers as Record<string, string>) },
 		};
 
+		Object.keys(originHead.headers!).forEach((name) => {
+			response.removeHeader(name);
+		});
+
 		originHeadResolve(originHead);
 	}
 
-	// response.flushHeaders = function interceptingFlushHeaders() {
-	// 	console.log('flushHeaders');
-	// 	// TODO: is it ok to completely ignore?
-	// 	// should we just resolve the originHeadPromise here?
-	// 	return response;
-	// };
-
-	response.on('drain', () => {
-		console.log('drain...');
-	});
-
-	response.on('prefinish', () => {
-		console.log('prefinish...');
-	});
-
-	response.on('end', () => {
-		console.log('end...');
-	});
-
-	response.on('finish', () => {
-		console.log('finish...');
-	});
+	response.flushHeaders = function interceptingFlushHeaders() {
+		console.log('flushHeaders');
+		retrieveOrigHead();
+	} satisfies typeof http.ServerResponse.prototype.flushHeaders;
 
 	response.writeHead = function interceptingWriteHead(statusCode: number): http.ServerResponse {
-		// @ts-ignore readyToSendHead is a back channel
-		if (originHeadPromise?.readyToSendHead) {
-			console.log('writeHead (intercepted with readyToSendHead signal)', ...arguments);
-			//return orig.writeHead.apply(this, arguments);
-			// @ts-ignore
-			return orig.writeHead(...arguments);
-		}
 		const statusMessage: string = arguments[1] instanceof String ? (arguments[1] as string) : '';
 		const headers: http.OutgoingHttpHeaders =
 			arguments[1] instanceof Object ? (arguments[1] as http.OutgoingHttpHeaders) : arguments[2];
@@ -140,11 +129,8 @@ function interceptNodeResponse(
 		console.log('writeHead (intercepted)', statusCode, statusMessage, headers);
 		retrieveOrigHead(statusCode, statusMessage, headers);
 
-		// restore writeHead
-		// TODO: we might be restoring too early here, but it's unclear if there is a better way to do it
-		//response.writeHead = orig.writeHeadUnbound;
 		return response;
-	}; //satisfies typeof http.ServerResponse.prototype.writeHead;
+	} satisfies typeof http.ServerResponse.prototype.writeHead;
 
 	response.write = function interceptingWrite(chunk: any) {
 		console.log('write (intercepted)', chunk);
@@ -160,7 +146,7 @@ function interceptNodeResponse(
 		streamController.enqueue(buffer);
 		if (callback) callback(null);
 		return true;
-	};
+	} satisfies typeof http.ServerResponse.prototype.write;
 
 	response.end = function interceptingEnd() {
 		console.log('end (intercepted)', arguments);
@@ -181,7 +167,7 @@ function interceptNodeResponse(
 		streamController.close();
 		if (callback) callback(null);
 		return response;
-	};
+	} satisfies typeof http.ServerResponse.prototype.end;
 
 	// call the next node middleware if we receive a signal to do so
 	callNodeNextPromise.then(() => {
@@ -193,8 +179,9 @@ function interceptNodeResponse(
 	// the patched methods in a way that will keep the methods patched for anyone who doesn't
 	// have a reference to this new response object.
 	const restoredResponse = Object.create(response);
-	//restoredResponse.flushHeaders = orig.flushHeaders;
-	//restoredResponse.writeHead = orig.writeHead;
+
+	restoredResponse.flushHeaders = orig.flushHeaders;
+	restoredResponse.writeHead = orig.writeHead;
 	restoredResponse.write = orig.write;
 	restoredResponse.end = orig.end;
 
@@ -220,76 +207,15 @@ function nodeToWebResponse(
 
 	let originResponsePromise = originResponse.head.then((head) => new Response(originResponse.body, head));
 
-	//const [headerFlushingStream, originReadableStream2] = originResponse.body.tee();
-	//
-	//let originResponsePromise = new Promise<Response>((resolve) => {
-	// headerFlushingStream.pipeThrough(
-	// 	new TransformStream({
-	// 		start(controller) {
-	// 			console.log('Starting stream processing...');
-	// 			const contentType = nodeResponse.getHeader('content-type') as string;
-	// 			const responseInit = {
-	// 				headers: contentType ? { 'content-type': contentType } : undefined,
-	// 				status: nodeResponse.statusCode,
-	// 				statusText: nodeResponse.statusMessage,
-	// 			};
-	// 			const response = new Response(originReadableStream2, responseInit);
-	// 			resolve(response);
-	// 			controller.terminate();
-	// 		},
-	// 	}),
-	// );
-	//});
-
 	const sendResponse = async (response: Response) => {
 		console.log('sendResponse', response);
-		// response.headers.forEach((value, key) => {
-		// 	nodeResponse.setHeader(key, value);
-		// 	console.log('sending headers:', key, value);
-		// });
+		response.headers.forEach((value, name) => {
+			nodeResponse.appendHeader(name, value);
+			console.log('setHeader', name, value);
+		});
+		outboundServerResponse.writeHead(response.status, response.statusText);
 
-		// nodeResponse.statusCode = response.status;
-		// nodeResponse.statusMessage = response.statusText;
-
-		// TODO: is this going to preserve several cookies?
-		const headersAsObject = Object.fromEntries(Array.from(response.headers.entries()));
-
-		// back channel to signal that we are ready to send the http head via the outbound connection
-		originResponse.head.readyToSendHead = true;
-		// await new Promise((resolve) => {
-		// 	setTimeout(resolve, 5000);
-		// });
-
-		// outboundServerResponse.statusCode = response.status;
-		// outboundServerResponse.statusMessage = response.statusText;
-		// // response.headers.forEach((value, name) => {
-		// 	// TODO: handle duplicate headers? like cookie?
-		// 	console.log('setting header', name, value);
-		// 	outboundServerResponse.setHeader(name, value);
-		// });
-		console.log('headers set?', outboundServerResponse.headersSent);
-		//outboundServerResponse.setHeader('transfer-encoding', '');
-
-		console.log('about to write headers!!!');
-		outboundServerResponse.writeHead(response.status, response.statusText, headersAsObject);
-
-		console.log('piping body');
-
-		//setTimeout(() => {
-		stream.Readable.fromWeb(response.body as streamWeb.ReadableStream<any>)
-			.pipe(outboundServerResponse)
-			.on('drain', () => {
-				console.log('drain piping body');
-			})
-			.on('error', (err) => {
-				console.log('error piping body', err);
-			})
-			.on('close', () => {
-				console.log('piping body close');
-			});
-
-		console.log('piping body end');
-		//}, 10000);
+		stream.Readable.fromWeb(response.body as streamWeb.ReadableStream<any>).pipe(outboundServerResponse);
 	};
 
 	return { originResponsePromise, sendResponse };

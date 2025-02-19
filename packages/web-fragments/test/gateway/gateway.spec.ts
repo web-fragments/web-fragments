@@ -39,21 +39,23 @@ for (const environment of environments) {
 			});
 
 			it('should serve an error response from the app shell as is', async () => {
-				mockShellAppResponse(new Response('<p>app shell no bueno 😢</p>', { status: 500, statusText: 'no bueno' }));
+				mockShellAppResponse(
+					new Response('<html><body>app shell no bueno 😢</body></html>', { status: 500, statusText: 'no bueno' }),
+				);
 
 				const response = await testRequest(new Request('http://localhost/'));
 
 				expect(response.status).toBe(500);
 				expect(response.statusText).toBe('no bueno');
-				expect(await response.text()).toBe('<p>app shell no bueno 😢</p>');
+				expect(await response.text()).toBe('<html><body>app shell no bueno 😢</body></html>');
 
 				// make one more request to a different non-fragment path
-				mockShellAppResponse(new Response('<p>does not exist here! 👻</p>', { status: 404 }));
+				mockShellAppResponse(new Response('<html><body>does not exist here! 👻</body></html>', { status: 404 }));
 
 				const response404 = await testRequest(new Request('http://localhost/not-here'));
 
 				expect(response404.status).toBe(404);
-				expect(await response404.text()).toBe('<p>does not exist here! 👻</p>');
+				expect(await response404.text()).toBe('<html><body>does not exist here! 👻</body></html>');
 			});
 		});
 
@@ -109,7 +111,54 @@ for (const environment of environments) {
 				expect(await response.text()).toBe('<p>foo fragment</p>');
 			});
 
-			it('should serve the pierced fragment even if the the app shell errors', async () => {});
+			// TODO: should this be configurable?
+			// We want the fragments to be resilient against app shell failures, but there might be times when
+			// failing completely when an app shell error occurs during piercing might be desirable
+			it('should serve the pierced fragment even if the the app shell errors', async () => {
+				mockShellAppResponse(
+					new Response('<html><body>app shell error 😢</body></html>', {
+						status: 500,
+						headers: { 'content-type': 'text/html' },
+					}),
+				);
+				mockFragmentFooResponse('/foo', new Response('<p>foo fragment</p>'));
+
+				const response = await testRequest(
+					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
+				);
+
+				expect(response.status).toBe(500);
+				expect(await response.text()).toBe(
+					`<html><body>app shell error 😢<fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></fragment-host></body></html>`,
+				);
+			});
+
+			it('should preserve all headers from the app shell response in the final combined response', async () => {
+				mockShellAppResponse(
+					new Response('<html><body>app shell</body></html>', {
+						status: 200,
+						// create a response with duplicate set-cookie headers
+						headers: new Headers([
+							['content-type', 'text/html'],
+							['x-custom-header', 'goat'],
+							['set-cookie', 'c1=val1; httpOnly'],
+							['set-cookie', 'c2=val2'],
+							['set-cookie', 'c3=val3'],
+						]),
+					}),
+				);
+				mockFragmentFooResponse('/foo', new Response('<p>foo fragment</p>'));
+
+				const response = await testRequest(
+					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe(
+					`<html><body>app shell<fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></fragment-host></body></html>`,
+				);
+				expect(response.headers.get('set-cookie')?.replace(/\s/g, '')).toBe('c1=val1;httpOnly,c2=val2,c3=val3');
+			});
 		});
 
 		describe(`fragment iframe requests`, () => {
@@ -304,14 +353,13 @@ for (const environment of environments) {
 							throw new Error('No app shell response provided, use mockShellAppResponse to set it');
 						}
 
-						// debugging notes:
-						// - this is usually synchronous, but we implemented it in an async way
-						// - which means we don't actually write the header before we start piping the body
-						resp.writeHead(
-							appShellResponse.status,
-							appShellResponse.statusText,
-							Object.fromEntries(Array.from(appShellResponse.headers.entries())),
-						);
+						appShellResponse.headers.forEach((value, name) => {
+							resp.appendHeader(name, value);
+						});
+						// resp.statusCode = appShellResponse.status;
+						// resp.statusMessage = appShellResponse.statusText;
+						// resp.flushHeaders();
+						resp.writeHead(appShellResponse.status, appShellResponse.statusText);
 
 						if (appShellResponse.body) {
 							stream.Readable.fromWeb(appShellResponse.body as streamWeb.ReadableStream<any>).pipe(resp);
@@ -324,7 +372,6 @@ for (const environment of environments) {
 					server = http.createServer(app);
 
 					let serverStarted = new Promise((resolve) => {
-						//server.listen(53947, () => {
 						server.listen(() => {
 							console.debug(`Server running at http://localhost:${server.address()!.port}`);
 							resolve(void 0);

@@ -103,7 +103,7 @@ export function getWebMiddleware(
 		}
 
 		// Forward the request to the fragment endpoint
-		const fragmentResponse = fetchFragment(req, matchedFragment, additionalHeaders, mode);
+		const fragmentResponsePromise = fetchFragment(req, matchedFragment, additionalHeaders, mode);
 
 		/**
 		 * Handle SSR request from a hard navigation
@@ -118,11 +118,11 @@ export function getWebMiddleware(
 			const isHTMLResponse = appShellResponse.headers.get('content-type')?.startsWith('text/html');
 
 			// If the app shell response is an error or not HTML, pass it through to the client
-			if (!(appShellResponse.ok && isHTMLResponse)) {
+			if (!isHTMLResponse) {
 				return appShellResponse;
 			}
 
-			return fragmentResponse
+			return fragmentResponsePromise
 				.then(rejectErrorResponses)
 				.catch(handleFetchErrors(req, matchedFragment))
 				.then(prepareFragmentForReframing)
@@ -142,16 +142,22 @@ export function getWebMiddleware(
 				.catch(renderErrorResponse);
 		}
 
+		const fragmentResponse = await fragmentResponsePromise;
+
 		/**
 		 * Handle SSR request from a soft navigation
 		 * ----------------------------
 		 *
 		 * Simply pass through the fragment response but append the vary header to prevent BFCache issues.
 		 */
-		if (req.headers.get('sec-fetch-dest') === 'empty') {
-			return fragmentResponse.then((response) => {
-				response.headers.append('vary', 'sec-fetch-dest');
-				return response;
+		if (requestSecFetchDest === 'empty') {
+			return new Response(fragmentResponse.body, {
+				status: fragmentResponse.status,
+				statusText: fragmentResponse.statusText,
+				headers: {
+					'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
+					vary: 'sec-fetch-dest',
+				},
 			});
 		}
 
@@ -161,13 +167,11 @@ export function getWebMiddleware(
 		 *
 		 * Simply pass through the fragment response.
 		 */
-		// TODO: do we need to strip or filter the headers?
-		// return new Response(fragmentResponse.body, {
-		// 	status: fragmentResponse.status,
-		// 	statusText: fragmentResponse.statusText,
-		// 	headers: { 'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain' },
-		// });
-		return fragmentResponse;
+		return new Response(fragmentResponse.body, {
+			status: fragmentResponse.status,
+			statusText: fragmentResponse.statusText,
+			headers: { 'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain' },
+		});
 	};
 
 	function rejectErrorResponses(response: Response) {
@@ -287,7 +291,7 @@ export function getWebMiddleware(
 		const { fragmentId, prePiercingClassNames } = fragmentConfig;
 		console.log('[[Debug Info]: Fragment Config]:', { fragmentId, prePiercingClassNames });
 		const fragmentContent = await fragmentResponse.text();
-		console.log('fragmentContent', fragmentContent);
+		console.log('fragmentContent to embed:', fragmentContent);
 
 		return new HTMLRewriter()
 			.on('head', {
