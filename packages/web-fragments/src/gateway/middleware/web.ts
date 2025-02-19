@@ -65,12 +65,18 @@ export function getWebMiddleware(
 	console.log('[Debug Info]: Web middleware');
 
 	return async (req: Request, next: () => Promise<Response>): Promise<Response> => {
-		console.log('[Debug Info]: Web middleware request:', new URL(req.url).pathname);
+		console.log('[Debug Info]: Web middleware request:', new URL(req.url).pathname, req.headers.get('sec-fetch-dest'));
+
 		const matchedFragment = gateway.matchRequestToFragment(new URL(req.url).pathname);
 		console.log('[Debug Info]: matched fragment:', matchedFragment);
 
+		/**
+		 * Handle app shell (legacy app) requests
+		 * --------------------------------------
+		 *
+		 * If this request doesn't match any fragment routes, then send it to the legacy app by calling the next() middleware function.
+		 */
 		if (!matchedFragment) {
-			console.log('[Debug Info]: No fragment match, calling next()');
 			try {
 				return await next();
 			} catch (error) {
@@ -79,87 +85,117 @@ export function getWebMiddleware(
 			}
 		}
 
-		// If this request was initiated by an iframe (via reframed),
-		// return a stub document.
-		//
-		// Reframed has to set the iframe's `src` to the fragment URL to have
-		// its `document.location` reflect the correct value
-		// (and also avoid same-origin policy restrictions).
-		// However, we don't want the iframe's document to actually contain the
-		// fragment's content; we're only using it as an isolated execution context.
-		// Returning a stub document here is our workaround to that problem.
-		if (req.headers.get('sec-fetch-dest') === 'iframe') {
-			console.log('[Debug Info]: Handling iframe request detected');
+		const requestSecFetchDest = req.headers.get('sec-fetch-dest');
+
+		/**
+		 * Handle IFrame request from reframed
+		 * ----------------------------
+		 *
+		 * If this request was initiated by an iframe (via reframed), return a stub document.
+		 *
+		 * Reframed has to set the iframe's `src` to the fragment URL to have its `document.location` reflect the correct value (and also avoid same-origin policy restrictions).
+		 *
+		 * However, we don't want the iframe's document to actually contain the fragment's content; we're only using it as an isolated execution context. Returning a stub document here is our workaround to that problem.
+		 */
+		if (requestSecFetchDest === 'iframe') {
 			return new Response('<!doctype html><title>', {
 				headers: { 'Content-Type': 'text/html', vary: 'sec-fetch-dest' },
 			});
 		}
 
-		const fragmentResponse = await fetchFragment(req, matchedFragment, additionalHeaders, mode);
+		// Forward the request to the fragment endpoint
+		const fragmentResponse = fetchFragment(req, matchedFragment, additionalHeaders, mode);
 
-		// If this is a document request, we need to fetch the host application
-		// and if we get a successful HTML response, we need to rewrite the HTML to embed the fragment inside it
-		if (req.headers.get('sec-fetch-dest') === 'document') {
-			console.log('sec-fetch-dest==="document" => fetching appShell');
+		/**
+		 * Handle SSR request from a hard navigation
+		 * ----------------------------
+		 *
+		 * For hard navigations we need to combine the appShell response with fragment response.
+		 */
+		if (requestSecFetchDest === 'document') {
 			const appShellResponse = await next();
 
 			// TODO: startsWith needed? should we use this elsewhere too?
 			const isHTMLResponse = appShellResponse.headers.get('content-type')?.startsWith('text/html');
 
-			if (appShellResponse.ok && isHTMLResponse) {
-				try {
-					// if (!fragmentResponse.ok) return fragmentResponse;
-					Promise.resolve(fragmentResponse)
-						.then(handleFetchError)
-						.then(prepareFragmentForReframing)
-						.then((preparedFragment) =>
-							embedFragmentIntoShellApp({
-								hostInput: appShellResponse,
-								fragmentResponse: preparedFragment,
-								fragmentConfig: matchedFragment,
-								gateway: gateway,
-							}),
-						)
-						.then((embeddedFragment) => {
-							// Append Vary header to prevent BFCache issues
-							embeddedFragment.headers.append('vary', 'sec-fetch-dest');
-							return attachForwardedHeaders(Promise.resolve(embeddedFragment), matchedFragment)(embeddedFragment);
-						})
-						.catch(handleFetchError);
-					// Append Vary header to prevent BFCache issues
-					// embeddedFragment.headers.append('vary', 'sec-fetch-dest');
-					// return await attachForwardedHeaders(Promise.resolve(embeddedFragment), matchedFragment)(embeddedFragment);
-				} catch (error) {
-					return renderErrorResponse(error);
-				}
+			// If the app shell response is an error or not HTML, pass it through to the client
+			if (!(appShellResponse.ok && isHTMLResponse)) {
+				return appShellResponse;
 			}
-			return appShellResponse;
+
+			return fragmentResponse
+				.then(rejectErrorResponses)
+				.catch(handleFetchErrors(req, matchedFragment))
+				.then(prepareFragmentForReframing)
+				.then((preparedFragment) =>
+					embedFragmentIntoShellApp({
+						appShellResponse,
+						fragmentResponse: preparedFragment,
+						fragmentConfig: matchedFragment,
+						gateway: gateway,
+					}),
+				)
+				.then((embeddedFragment) => {
+					// Append Vary header to prevent BFCache issues
+					embeddedFragment.headers.append('vary', 'sec-fetch-dest');
+					return attachForwardedHeaders(Promise.resolve(embeddedFragment), matchedFragment)(embeddedFragment);
+				})
+				.catch(renderErrorResponse);
 		}
 
-		// Append Vary header to prevent BFCache issues.
-		// We can't just append because the response is immutable
-		// see: https://github.com/whatwg/fetch/issues/608#issuecomment-332462271
-		// const fragmentResponseWithHeaders = new Response(fragmentResponse.body, fragmentResponse);
-		// fragmentResponseWithHeaders.headers.set('vary', 'sec-fetch-dest');
-		const finalHeaders = new Headers({
-			vary: 'sec-fetch-dest',
-			'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
-			//'transfer-encoding': '',
-		});
+		/**
+		 * Handle SSR request from a soft navigation
+		 * ----------------------------
+		 *
+		 * Simply pass through the fragment response but append the vary header to prevent BFCache issues.
+		 */
+		if (req.headers.get('sec-fetch-dest') === 'empty') {
+			return fragmentResponse.then((response) => {
+				response.headers.append('vary', 'sec-fetch-dest');
+				return response;
+			});
+		}
 
-		console.log('returning response');
-		return new Response(fragmentResponse.body, {
-			status: fragmentResponse.status,
-			statusText: fragmentResponse.statusText,
-			headers: finalHeaders,
-		});
-		//return fragmentResponseWithHeaders;
-		//return fragmentResponse;
+		/**
+		 * Handle Asset or Data request
+		 * ----------------------------
+		 *
+		 * Simply pass through the fragment response.
+		 */
+		// TODO: do we need to strip or filter the headers?
+		// return new Response(fragmentResponse.body, {
+		// 	status: fragmentResponse.status,
+		// 	statusText: fragmentResponse.statusText,
+		// 	headers: { 'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain' },
+		// });
+		return fragmentResponse;
 	};
 
-	function handleFetchError(fragmentResponse: Response): Response {
-		if (!fragmentResponse.ok) return fragmentResponse;
-		return new Response('No error detected', { status: 200 });
+	function rejectErrorResponses(response: Response) {
+		if (response.ok) return response;
+		throw response;
+	}
+
+	function handleFetchErrors(fragmentRequest: Request, fragmentConfig: FragmentConfig) {
+		return async (fragmentResponseOrError: unknown) => {
+			const {
+				endpoint,
+				onSsrFetchError = () => ({
+					response: new Response(
+						mode === 'development'
+							? `<p>Fetching fragment from upstream endpoint URL: ${endpoint}, failed.</p>`
+							: '<p>There was a problem fulfilling your request.</p>',
+						{ headers: [['content-type', 'text/html']] },
+					),
+					overrideResponse: false,
+				}),
+			} = fragmentConfig;
+
+			const { response, overrideResponse } = await onSsrFetchError(fragmentRequest, fragmentResponseOrError);
+
+			if (overrideResponse) throw response;
+			return response;
+		};
 	}
 
 	/**
@@ -239,25 +275,20 @@ export function getWebMiddleware(
 	 * @returns {Function} - A function that processes and integrates the fragment response.
 	 */
 	async function embedFragmentIntoShellApp({
-		hostInput,
+		appShellResponse,
 		fragmentResponse,
 		fragmentConfig,
 		gateway,
 	}: {
-		hostInput: Response;
+		appShellResponse: Response;
 		fragmentResponse: Response;
 		fragmentConfig: FragmentConfig;
 		gateway: FragmentGatewayConfig;
 	}) {
 		const { fragmentId, prePiercingClassNames } = fragmentConfig;
 		console.log('[[Debug Info]: Fragment Config]:', { fragmentId, prePiercingClassNames });
-		// @ts-ignore
-		const { prefix: fragmentHostPrefix, suffix: fragmentHostSuffix } = fragmentHostInitialization({
-			fragmentId,
-			classNames: prePiercingClassNames.join(' '),
-			content: '',
-		});
 		const fragmentContent = await fragmentResponse.text();
+		console.log('fragmentContent', fragmentContent);
 
 		return new HTMLRewriter()
 			.on('head', {
@@ -278,7 +309,7 @@ export function getWebMiddleware(
 					element.append(fragmentHost.suffix, { html: true });
 				},
 			})
-			.transform(hostInput);
+			.transform(appShellResponse);
 	}
 }
 

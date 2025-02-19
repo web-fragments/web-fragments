@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FragmentGateway } from '../../src/gateway/fragment-gateway';
-import { getNodeMiddleware, getNodeCompatMiddleware } from '../../src/gateway/middleware/node';
+import { getNodeMiddleware } from '../../src/gateway/middleware/node';
 import { getWebMiddleware } from '../../src/gateway/middleware/web';
 import connect from 'connect';
 import http from 'node:http';
@@ -134,7 +134,9 @@ for (const environment of environments) {
 					new Response('<p>hello foo world!</p>', { headers: { 'content-type': 'text/html' } }),
 				);
 
-				const softNavResponse = await testRequest(new Request('http://localhost/foo/some/path'));
+				const softNavResponse = await testRequest(
+					new Request('http://localhost/foo/some/path', { headers: { 'sec-fetch-dest': 'empty' } }),
+				);
 
 				expect(softNavResponse.status).toBe(200);
 				expect(await softNavResponse.text()).toBe(`<p>hello foo world!</p>`);
