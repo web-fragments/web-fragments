@@ -1,14 +1,14 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { FragmentGateway } from 'web-fragments/gateway';
 import { getNodeMiddleware } from 'web-fragments/gateway/node';
-import { IncomingMessage, ServerResponse } from 'http';
 
 const app = express();
 const PORT = process.env.PORT || 3005;
 
 const distPath = path.resolve('dist');
-app.use(express.static(distPath));
+
 
 // Initialize the FragmentGateway
 const gateway = new FragmentGateway({
@@ -57,26 +57,36 @@ gateway.registerFragment({
     }),
 });
 
-const middleware = getNodeMiddleware(gateway, {
-    mode: 'development',
-}) as unknown as (req: IncomingMessage, res: ServerResponse, next: express.NextFunction) => void;
+app.use(getNodeMiddleware(gateway, { mode: 'development' }));
 
-app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-    middleware(req as unknown as IncomingMessage, res as unknown as ServerResponse, next);
+app.use(express.static(distPath));
+console.log('Serving static files from:', distPath);
+
+app.use((req, res, next) => {
+  if (req.url === '/' || req.url === '/index.html') {
+	res.writeHead(200, { 'Content-Type': 'text/html' });
+	res.end(fs.readFileSync(path.join(distPath, 'index.html')));
+  } else {
+	next();
+  }
 });
 
-interface CustomRequest extends express.Request {}
-interface CustomResponse extends express.Response {
-    sendFile: (path: string) => void;
-}
-
-app.get('/:page', (req: CustomRequest, res: CustomResponse) => {
-    const page = req.params.page;
-    const filePath = path.join(distPath, `${page}.html`);
-    
-    console.log(`${page} Page Requested`);
-    res.sendFile(filePath);
+// Serve other pages manually
+app.use((req, res, next) => {
+  if (req.url === '/remix-page') {
+	res.writeHead(200, { 'Content-Type': 'text/html' });
+	res.end(fs.readFileSync(path.join(distPath, 'remix-page.html')));
+  } else if (req.url === '/qwik-page') {
+	res.writeHead(200, { 'Content-Type': 'text/html' });
+	res.end(fs.readFileSync(path.join(distPath, 'qwik-page.html')));
+  } else if (req.url === '/qwik-page/details') {
+	console.log('Serving details fragment');
+	next();
+  } else {
+	next();
+  }
 });
+
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
