@@ -15,9 +15,13 @@ import { manifest } from '@qwik-client-manifest';
 import Root from './root';
 
 export default function (opts: RenderToStreamOptions) {
-	const origin = (opts.serverData?.requestHeaders.referer) ? 
-		new URL(opts.serverData?.requestHeaders.referer).origin :
-		opts.serverData?.url;
+	const requestHeaders = opts.serverData?.requestHeaders ?? {}
+	const originUrl =
+		(requestHeaders['x-forwarded-host'] && requestHeaders['x-forwarded-proto']) ?
+			// try to read x-forwarded-* headers
+			`${requestHeaders['x-forwarded-proto']}://${requestHeaders['x-forwarded-host']}` :
+			// fall back on the original url of the qwik server
+			opts.serverData?.url;
 	
 	return renderToStream(<Root />, {
 		...opts,
@@ -31,7 +35,7 @@ export default function (opts: RenderToStreamOptions) {
 		containerTagName: 'qwik-fragment',
 		serverData: {
 			...opts.serverData,
-			url: origin
+			url: originUrl
 		},
 		prefetchStrategy: {
 			implementation: {

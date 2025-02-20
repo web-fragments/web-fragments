@@ -230,6 +230,13 @@ export function getWebMiddleware(
 
 		const fragmentReq = new Request(fragmentEndpoint, req);
 
+		// forward the original protocol and host info to the fragment endpoint
+		fragmentReq.headers.set(
+			'x-forwarded-proto',
+			req.headers.get('x-forwarded-proto') || requestUrl.protocol.slice(0, -1),
+		);
+		fragmentReq.headers.set('x-forwarded-host', req.headers.get('x-forwarded-host') || requestUrl.host);
+
 		// attach additionalHeaders to fragment request
 		Object.entries(additionalHeaders).forEach(([name, value]) => {
 			fragmentReq.headers.set(name, value);

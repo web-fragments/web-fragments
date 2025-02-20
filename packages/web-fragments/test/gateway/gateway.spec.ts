@@ -93,11 +93,31 @@ for (const environment of environments) {
 				);
 			});
 
-			it(`should append additional headers to the composed response`, async () => {
+			it(`should append additional headers to the SSR request for the fragment`, async () => {
 				fetchMock.doMockIf((request) => {
 					if (request.url.toString() === 'http://foo.test:1234/foo') {
 						expect(request.headers.get('accept-language')).toBe('sk-SK');
 						expect(request.headers.get('x-color-mode')).toBe('dark');
+						return true;
+					}
+					return false;
+				}, new Response('<p>foo fragment</p>'));
+
+				const response = await testRequest(
+					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'empty' } }),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe('<p>foo fragment</p>');
+			});
+
+			it(`should append x-forwarded-host and x-forwarded-proto headers to the SSR request for the fragment`, async () => {
+				fetchMock.doMockIf((request) => {
+					if (request.url.toString() === 'http://foo.test:1234/foo') {
+						expect(request.headers.get('x-forwarded-host')).toBe(
+							`localhost${server ? ':' + server.address()!.port : ''}`,
+						);
+						expect(request.headers.get('x-forwarded-proto')).toBe('http');
 						return true;
 					}
 					return false;
@@ -214,7 +234,7 @@ for (const environment of environments) {
 			});
 		});
 
-		describe(`fragment html and asset requests`, () => {
+		describe(`fragment html requests`, () => {
 			it(`should serve a fragment soft navigation request`, async () => {
 				mockFragmentFooResponse(
 					'/foo/some/path',
@@ -251,6 +271,30 @@ for (const environment of environments) {
 				expect(hardNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
 			});
 
+			it(`should append x-forwarded-host and x-forwarded-proto headers to the SSR request`, async () => {
+				fetchMock.doMockIf(
+					(request) => {
+						if (request.url.toString() === 'http://foo.test:1234/foo/some/path') {
+							expect(request.headers.get('x-forwarded-host')).toBe(
+								`localhost${server ? ':' + server.address()!.port : ''}`,
+							);
+							expect(request.headers.get('x-forwarded-proto')).toBe('http');
+							return true;
+						}
+						return false;
+					},
+					new Response('<p>hello foo world!</p>', { headers: { 'content-type': 'text/html' } }),
+				);
+
+				const softNavResponse = await testRequest(
+					new Request('http://localhost/foo/some/path', { headers: { 'sec-fetch-dest': 'empty' } }),
+				);
+
+				expect(softNavResponse.status).toBe(200);
+			});
+		});
+
+		describe(`fragment asset requests`, () => {
 			it(`should serve a fragment asset`, async () => {
 				// fetch an image from the fooFragment
 				mockFragmentFooResponse(
@@ -296,6 +340,26 @@ for (const environment of environments) {
 				expect(barImgResponse.status).toBe(200);
 				expect(await barImgResponse.text()).toBe(`bar cat img`);
 				expect(barImgResponse.headers.get('content-type')).toBe('image/jpeg');
+			});
+
+			it(`should append x-forwarded-host and x-forwarded-proto headers to the asset request`, async () => {
+				fetchMock.doMockIf(
+					(request) => {
+						if (request.url.toString() === 'http://foo.test:1234/_fragment/foo/image.jpg') {
+							expect(request.headers.get('x-forwarded-host')).toBe(
+								`localhost${server ? ':' + server.address()!.port : ''}`,
+							);
+							expect(request.headers.get('x-forwarded-proto')).toBe('http');
+							return true;
+						}
+						return false;
+					},
+					new Response('lol cat img', { headers: { 'content-type': 'image/jpeg' } }),
+				);
+
+				const imgResponse = await testRequest(new Request('http://localhost/_fragment/foo/image.jpg'));
+
+				expect(imgResponse.status).toBe(200);
 			});
 		});
 
