@@ -15,6 +15,10 @@ import { manifest } from '@qwik-client-manifest';
 import Root from './root';
 
 export default function (opts: RenderToStreamOptions) {
+	const origin = (opts.serverData?.requestHeaders.referer) ? 
+		new URL(opts.serverData?.requestHeaders.referer).origin :
+		opts.serverData?.url;
+	
 	return renderToStream(<Root />, {
 		...opts,
 		base: '/_fragment/qwik/assets/build',
@@ -27,7 +31,7 @@ export default function (opts: RenderToStreamOptions) {
 		containerTagName: 'qwik-fragment',
 		serverData: {
 			...opts.serverData,
-			url: 'http://localhost:8788/qwik-page',
+			url: origin
 		},
 		prefetchStrategy: {
 			implementation: {

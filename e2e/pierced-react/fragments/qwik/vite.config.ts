@@ -23,7 +23,7 @@ export default defineConfig(({ command, mode }): UserConfig => {
 	return {
 		// mode: "development",
 		build: {
-			// minify: false,
+			minify: false,
 			assetsDir: '_fragment/qwik/assets',
 		},
 		plugins: [

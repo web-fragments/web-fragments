@@ -111,28 +111,6 @@ for (const environment of environments) {
 				expect(await response.text()).toBe('<p>foo fragment</p>');
 			});
 
-			// TODO: should this be configurable?
-			// We want the fragments to be resilient against app shell failures, but there might be times when
-			// failing completely when an app shell error occurs during piercing might be desirable
-			it('should serve the pierced fragment even if the the app shell errors', async () => {
-				mockShellAppResponse(
-					new Response('<html><body>app shell error 😢</body></html>', {
-						status: 500,
-						headers: { 'content-type': 'text/html' },
-					}),
-				);
-				mockFragmentFooResponse('/foo', new Response('<p>foo fragment</p>'));
-
-				const response = await testRequest(
-					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
-				);
-
-				expect(response.status).toBe(500);
-				expect(await response.text()).toBe(
-					`<html><body>app shell error 😢<fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></fragment-host></body></html>`,
-				);
-			});
-
 			it('should preserve all headers from the app shell response in the final combined response', async () => {
 				mockShellAppResponse(
 					new Response('<html><body>app shell</body></html>', {
@@ -158,6 +136,48 @@ for (const environment of environments) {
 					`<html><body>app shell<fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></fragment-host></body></html>`,
 				);
 				expect(response.headers.get('set-cookie')?.replace(/\s/g, '')).toBe('c1=val1;httpOnly,c2=val2,c3=val3');
+			});
+
+			describe('error handling', () => {
+				// TODO: should this be configurable? By default we hard fail, but if we want the fragments to be resilient against app shell failures we should allow the shell to fail and fragment to still pierce.
+				it('should serve the app shell server error page without a fragment when server-side app shell error occurs', async () => {
+					mockShellAppResponse(
+						new Response('<html><body>app shell error 😢</body></html>', {
+							status: 500,
+							headers: { 'content-type': 'text/html' },
+						}),
+					);
+					mockFragmentFooResponse('/foo', new Response('<p>foo fragment</p>'));
+
+					const response = await testRequest(
+						new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
+					);
+
+					expect(response.status).toBe(500);
+					expect(await response.text()).toBe(`<html><body>app shell error 😢</body></html>`);
+				});
+
+				it('should serve the app shell with the default fragment SSR fetch error message when fragment endpoint errors', async () => {
+					mockShellAppResponse(
+						new Response('<html><body>app shell 🙂</body></html>', {
+							status: 200,
+							headers: { 'content-type': 'text/html' },
+						}),
+					);
+					mockFragmentFooResponse('/foo', new Response('fragment failed to render 🙈', { status: 500 }));
+
+					const response = await testRequest(
+						new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
+					);
+
+					expect(response.status).toBe(200);
+					expect(stripMultipleSpaces(await response.text())).toBe(
+						stripMultipleSpaces(`<html><body>app shell 🙂<fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>Failed to fetch fragment!<br>
+								Endpoint: http://foo.test:1234<br>
+								Request: GET http://localhost${server ? ':' + server.address()!.port : ''}/foo<br>
+								Response: HTTP 500 <br>fragment failed to render 🙈 </p></template></fragment-host></body></html>`),
+					);
+				});
 			});
 		});
 
@@ -289,11 +309,6 @@ for (const environment of environments) {
 				routePatterns: ['/foo/:_*', '/_fragment/foo/:_*'],
 				endpoint: 'http://foo.test:1234',
 				upstream: 'http://foo.test:1234',
-				onSsrFetchError: () => ({
-					response: new Response('<p>Foo fragment not found</p>', {
-						headers: { 'content-type': 'text/html' },
-					}),
-				}),
 			});
 			fragmentGateway.registerFragment({
 				fragmentId: 'fragmentBar',
@@ -302,7 +317,7 @@ for (const environment of environments) {
 				endpoint: 'http://bar.test:4321',
 				upstream: 'http://bar.test:4321',
 				onSsrFetchError: () => ({
-					response: new Response('<p>Bar fragment not found</p>', {
+					response: new Response('<p>Fetching Bar fragment failed!</p>', {
 						headers: { 'content-type': 'text/html' },
 					}),
 				}),
@@ -439,3 +454,7 @@ mockShellAppResponse.getResponse = function (): Response | null {
 	mockShellAppResponse.response = null;
 	return r;
 };
+
+function stripMultipleSpaces(str: string) {
+	return str.replace(/\s+/g, ' ');
+}

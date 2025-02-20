@@ -118,7 +118,7 @@ export function getWebMiddleware(
 			const isHTMLResponse = appShellResponse.headers.get('content-type')?.startsWith('text/html');
 
 			// If the app shell response is an error or not HTML, pass it through to the client
-			if (!isHTMLResponse) {
+			if (!(appShellResponse.ok && isHTMLResponse)) {
 				return appShellResponse;
 			}
 
@@ -183,10 +183,14 @@ export function getWebMiddleware(
 		return async (fragmentResponseOrError: unknown) => {
 			const {
 				endpoint,
-				onSsrFetchError = () => ({
+				onSsrFetchError = async (fragmentRequest: Request, fragmentResponseOrError) => ({
 					response: new Response(
 						mode === 'development'
-							? `<p>Fetching fragment from upstream endpoint URL: ${endpoint}, failed.</p>`
+							? `<p>Failed to fetch fragment!<br>
+										Endpoint: ${endpoint}<br>
+										Request: ${fragmentRequest.method} ${fragmentRequest.url}<br>
+										Response: HTTP ${fragmentResponseOrError instanceof Response ? `${fragmentResponseOrError.status} ${fragmentResponseOrError.statusText}<br>${await fragmentResponseOrError.text()}` : fragmentResponseOrError}
+								</p>`
 							: '<p>There was a problem fulfilling your request.</p>',
 						{ headers: [['content-type', 'text/html']] },
 					),
@@ -236,7 +240,7 @@ export function getWebMiddleware(
 		//       not set to 'document'
 		fragmentReq.headers.set('sec-fetch-dest', 'empty');
 
-		// Add a header for signalling embedded mode
+		// Add a header for signaling embedded mode
 		fragmentReq.headers.set('x-fragment-mode', 'embedded');
 
 		if (mode === 'development') {
@@ -246,14 +250,10 @@ export function getWebMiddleware(
 			fragmentReq.headers.set('Accept-Encoding', 'gzip');
 		}
 
-		try {
-			console.log('[Debug info | fetchFragment] fetching:', fragmentReq.url.toString());
-			const response = await fetch(fragmentReq, { signal });
-			clearTimeout(timeout);
-			return response;
-		} catch (error) {
-			return renderErrorResponse(error, fragmentReq);
-		}
+		console.log('[Debug info | fetchFragment] fetching:', fragmentReq.url.toString().slice(0, 100));
+		const responsePromise = fetch(fragmentReq, { signal });
+		responsePromise.finally(() => clearTimeout(timeout));
+		return responsePromise.catch((error) => renderErrorResponse(error, fragmentReq));
 	}
 
 	/**
@@ -291,7 +291,7 @@ export function getWebMiddleware(
 		const { fragmentId, prePiercingClassNames } = fragmentConfig;
 		console.log('[[Debug Info]: Fragment Config]:', { fragmentId, prePiercingClassNames });
 		const fragmentContent = await fragmentResponse.text();
-		console.log('fragmentContent to embed:', fragmentContent);
+		console.log('fragmentContent to embed:', fragmentContent.slice(0, 100));
 
 		return new HTMLRewriter()
 			.on('head', {

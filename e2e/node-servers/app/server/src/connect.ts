@@ -74,10 +74,10 @@ app.use((req, res, next) => {
 
 // Serve other pages manually
 app.use((req, res, next) => {
-  if (req.url === '/remix-page') {
+  if (req.url!.startsWith('/remix-page')) {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(fs.readFileSync(path.join(distPath, 'remix-page.html')));
-  } else if (req.url === '/qwik-page') {
+  } else if (req.url!.startsWith('/qwik-page')) {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(fs.readFileSync(path.join(distPath, 'qwik-page.html')));
   } else {
