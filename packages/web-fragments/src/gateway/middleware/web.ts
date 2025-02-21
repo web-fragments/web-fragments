@@ -225,9 +225,9 @@ export function getWebMiddleware(
 		const requestUrl = new URL(req.url);
 		const fragmentEndpoint = new URL(`${requestUrl.pathname}${requestUrl.search}`, endpoint);
 
-		const controller = new AbortController();
-		const signal = controller.signal;
-		const timeout = setTimeout(() => controller.abort(), 5000);
+		const abortController = new AbortController();
+		// TODO: add timeout handling
+		//const timeoutTimer = abortIfSlow && setTimeout(() => abortController.abort(), 1_500);
 
 		const fragmentReq = new Request(fragmentEndpoint, req);
 
@@ -259,9 +259,12 @@ export function getWebMiddleware(
 		}
 
 		console.log('[Debug info | fetchFragment] fetching:', fragmentReq.url.toString().slice(0, 100));
-		const responsePromise = fetch(fragmentReq, { signal });
-		responsePromise.finally(() => clearTimeout(timeout));
-		return responsePromise.catch((error) => renderErrorResponse(error, fragmentReq));
+		return fetch(fragmentReq);
+
+		// TODO: add timeout handling
+		// return fetch(fragmentReq, { signal: abortController.signal }).finally(
+		// 	() => timeoutTimer && clearTimeout(timeoutTimer),
+		// );
 	}
 
 	/**
@@ -334,34 +337,13 @@ function attachForwardedHeaders(fragmentResponse: Promise<Response>, fragmentCon
  * @param {unknown} err - The error to handle.
  * @returns {Response} - The error response.
  */
+// TODO: req is unused
 function renderErrorResponse(err: unknown, req?: Request): Response {
 	console.log('WF Gateway Internal Server Error\n', err, req);
 	if (err instanceof Response) return err;
+	// TODO: hide exception in production mode
 	return new Response('WF Gateway Internal Server Error\n' + err, {
 		status: 500,
 		headers: { 'Content-Type': 'text/html' },
 	});
 }
-
-// not sure if we need this anymore? I don't see it used
-// did you update?
-/**
- * Determines if a request is HTTPS.
- * @param {Request} req - The request object.
- * @returns {boolean} - Whether the request is HTTPS.
- * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto
- */
-
-export const isHttps = (req: Request): boolean => {
-	return req.headers.get('x-forwarded-proto') === 'https';
-};
-
-/**
- * Determines if a request is a Fetch API Request.
- * @param {IncomingMessage | Request} req - The request object.
- * @returns {boolean} - Whether the request is a Fetch API Request.
- */
-
-export const isFetchRequest = (req: any): req is Request => {
-	return typeof req.headers?.get === 'function';
-};
