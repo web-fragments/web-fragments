@@ -5,9 +5,9 @@ layout: "~/layouts/MarkdownLayout.astro"
 
 _Last updated_: December 8, 2024
 
-The `reframed` library is small program consisting of about a thousand lines of code and [TBD] kbs., responsible for fetching the `fragment` assets, creating and destroying the iframe context, [portaling](./glossary#portaling) the assets and handling all events, including navigation history events of the `Web Fragments` framework.
+The `reframed` library is small program consisting of ~800 lines of code, used by the `web-fragments`library to create and destroye the iframe context, [portaling](./glossary#portaling) the assets and handling all events, including navigation history events at runtime.
 
-The following diagram describes how the `reframed` mechanism works, at an architecture high level.
+The following diagram describes how the `reframed` works, at an architecture high level.
 
 ![web fragments middleware](../../assets/images/wf-middleware.drawio.png)
 
