@@ -114,7 +114,6 @@ export function getWebMiddleware(
 		if (requestSecFetchDest === 'document') {
 			const appShellResponse = await next();
 
-			// TODO: startsWith needed? should we use this elsewhere too?
 			const isHTMLResponse = appShellResponse.headers.get('content-type')?.startsWith('text/html');
 
 			// If the app shell response is an error or not HTML, pass it through to the client
@@ -192,13 +191,15 @@ export function getWebMiddleware(
 										Response: HTTP ${fragmentResponseOrError instanceof Response ? `${fragmentResponseOrError.status} ${fragmentResponseOrError.statusText}<br>${await fragmentResponseOrError.text()}` : fragmentResponseOrError}
 								</p>`
 							: '<p>There was a problem fulfilling your request.</p>',
-						{ headers: [['content-type', 'text/html']] },
+						{ status: 500, headers: [['content-type', 'text/html']] },
 					),
 					overrideResponse: false,
 				}),
 			} = fragmentConfig;
 
 			const { response, overrideResponse } = await onSsrFetchError(fragmentRequest, fragmentResponseOrError);
+
+			console.log('[[Debug Info]: onSsrFetchError]:', response, overrideResponse);
 
 			if (overrideResponse) throw response;
 			return response;
@@ -264,21 +265,6 @@ export function getWebMiddleware(
 	}
 
 	/**
-	 * Renders an error response with a status of 500.
-	 *
-	 * @param {unknown} err - The error to handle.
-	 * @returns {Response} - The error response.
-	 */
-	function renderErrorResponse(err: unknown, req?: Request): Response {
-		console.log('WF Gateway Internal Server Error\n', err, req);
-		if (err instanceof Response) return err;
-		return new Response('WF Gateway Internal Server Error\n' + err, {
-			status: 500,
-			headers: { 'Content-Type': 'text/html' },
-		});
-	}
-
-	/**
 	 * Embeds a fetched fragment into the host HTML document.
 	 * @param {Response} hostResponse - The response object of the host HTML.
 	 * @param {FragmentConfig} fragmentConfig - Configuration object for the fragment.
@@ -309,12 +295,12 @@ export function getWebMiddleware(
 			})
 			.on('body', {
 				element(element: any) {
+					console.log('[[Debug Info]: HTMLRewriter]: Rewriting HTML body');
 					const fragmentHost = fragmentHostInitialization({
 						fragmentId,
 						classNames: prePiercingClassNames.join(' '),
 						content: fragmentContent,
 					});
-					console.log('[[Debug Info]: Fragment Response]: Received HTML content', typeof fragmentContent);
 					element.append(fragmentHost.prefix, { html: true });
 					element.append(fragmentHost.suffix, { html: true });
 				},
@@ -340,6 +326,21 @@ function attachForwardedHeaders(fragmentResponse: Promise<Response>, fragmentCon
 
 		return response;
 	};
+}
+
+/**
+ * Renders an error response with a status of 500.
+ *
+ * @param {unknown} err - The error to handle.
+ * @returns {Response} - The error response.
+ */
+function renderErrorResponse(err: unknown, req?: Request): Response {
+	console.log('WF Gateway Internal Server Error\n', err, req);
+	if (err instanceof Response) return err;
+	return new Response('WF Gateway Internal Server Error\n' + err, {
+		status: 500,
+		headers: { 'Content-Type': 'text/html' },
+	});
 }
 
 // not sure if we need this anymore? I don't see it used

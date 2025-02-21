@@ -211,7 +211,6 @@ function nodeToWebResponse(
 		console.log('sendResponse', response);
 		response.headers.forEach((value, name) => {
 			nodeResponse.appendHeader(name, value);
-			console.log('setHeader', name, value);
 		});
 		outboundServerResponse.writeHead(response.status, response.statusText);
 

@@ -445,6 +445,7 @@ for (const environment of environments) {
 				upstream: 'http://bar.test:4321',
 				onSsrFetchError: () => ({
 					response: new Response('<p>Fetching Bar fragment failed!</p>', {
+						status: 500,
 						headers: { 'content-type': 'text/html' },
 					}),
 				}),
