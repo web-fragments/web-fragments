@@ -7,7 +7,7 @@ _Last updated_: December 8, 2024
 
 ## What is the Fragments Gateway
 
-The fragments gateway is responsible for the registration of fragments in the application and for intercepting all application requests to match the pathname with a fragment, using a regular expression pattern as defined in the `routePatterns` property.
+The fragments gateway is responsible for the registration of fragments in the application,  and for matching the requests intercepted by the middleware, using the `urlpathname` with a fragment, using a regular expression pattern as defined in the `routePatterns` property.
 
 ## Gateway usage
 
