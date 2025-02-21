@@ -45,17 +45,31 @@ In the context of Web Fragments, a `fragment outlet` is a custom element, repons
 
 ## Fragment Host Client-Side
 
-When the application runs and the `<fragment-outlet>` element `connectedCallback` is callled, it dispatches the 'fragment-outlet-ready' event and, when not already in place a `fragment host` custom element is mounted and nested inside of the `fragment-outlet`, taking its `fragment-id`.
+When the application runs and the `fragment-outlet` element `connectedCallback` is callled, it dispatches the 'fragment-outlet-ready' event and, when not already in place a `fragment host` custom element is mounted and nested inside of the `fragment-outlet`, taking its `fragment-id`.
 
-From that moment on, the following `reframed` operations take place:
+From that moment on, the following `fragment-host` lifecycle take place:
 
-- the [reframing](./glossary#reframing) mechanism is initialized
-- the first request for the `fragment` document is triggered by the `reframed` script
-- the [middleware](./middleware) will now route all requests intercepted by the server to the application origin upstream
-- the corresponding `fragment` document is embedded in the container tag, inside of the `fragment-host` shadowRoot
-- all scripts returned by the fragment upstream are neutralized with an `inert` property
-- a new iframe element and context are created and corresponding fragment scripts are portaled into it to be encapsulated
+1. the `fragment-outlet-ready` event is registered
+2. a the `fragment-host` is checked for the presence of a `shadow-root` that is created when not in place. it is the initial HTML of the fragment
+2. b otherwise, to bootstrap the fragment:
+	- the `location.href` is captured
+    - it is then used to make a fetch GET request to the gateway
+	- the returned server-side rendered HTML stream is used to populate the `shadow-root` of the `fragment-host`
+3. a new reframed container (iframe) is created, all script tags from the initial fragment HTML (that were neutralized with the inert property) are copied into the the reframed iframe and executed
+4. if `fragment-outlet-ready` event fires, portaling of the fragment takes place
+	 - DOM state (`activeElement`, `textSelection`, etc), of the fragment is captured
+	 - `fragment-host` element is appended as a child of the `fragment-outlet`
+	 - DOM state previously captured, is restored
 
+Steps 1 and 4 only apply when we're performing [server-side piercing](#server-side-piercing)
+
+## Server-side piercing
+
+Server-side piercing refers to he process through which the legacy app shell is combined with the server-side rendered HTML stream of a fragment.
+
+It allows the eager display and initialization of a fragment at the moment of bootstrapping the shell application.
+
+[pre-piercing-styles](./glossary#eager-rendering-piercing) configured during fragment registration, help positioning the fragment in the correct slot.
 
 ![web fragments middleware](../../assets/images/wf-middleware.drawio.png)
 
