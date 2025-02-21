@@ -61,6 +61,7 @@
 		"@vitejs/plugin-react": "^4.3.1",
 		"client": "link:@types/vite/client",
 		"connect": "^3.7.0",
+		"express": "^4.21.2",
 		"path-to-regexp": "^6.2.2",
 		"ts-node-dev": "^2.0.0",
 		"typescript": "^5.5.4",

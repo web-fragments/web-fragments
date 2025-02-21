@@ -3,6 +3,7 @@ import { FragmentGateway } from '../../src/gateway/fragment-gateway';
 import { getNodeMiddleware } from '../../src/gateway/middleware/node';
 import { getWebMiddleware } from '../../src/gateway/middleware/web';
 import connect from 'connect';
+import express from 'express';
 import http from 'node:http';
 import stream from 'node:stream';
 import streamWeb from 'node:stream/web';
@@ -11,6 +12,7 @@ import streamWeb from 'node:stream/web';
 const environments = [];
 environments.push('web');
 environments.push('connect');
+environments.push('express');
 
 for (const environment of environments) {
 	describe(`${environment} middleware`, () => {
@@ -471,9 +473,10 @@ for (const environment of environments) {
 
 					break;
 				}
-				case 'connect': {
+				case 'connect':
+				case 'express': {
 					// We use an actual connect server here with an ephemeral port
-					const app = connect();
+					const app = environment === 'connect' ? connect() : express();
 
 					// fragment gateway middleware
 					app.use(

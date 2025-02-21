@@ -541,6 +541,9 @@ importers:
       connect:
         specifier: ^3.7.0
         version: 3.7.0
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
       path-to-regexp:
         specifier: ^6.2.2
         version: 6.2.2
@@ -8512,7 +8515,7 @@ snapshots:
       '@babel/traverse': 7.24.7
       '@babel/types': 7.24.7
       convert-source-map: 2.0.0
-      debug: 4.3.5
+      debug: 4.4.0
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
