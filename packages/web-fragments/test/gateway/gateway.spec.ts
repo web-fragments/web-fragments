@@ -233,6 +233,29 @@ for (const environment of environments) {
 								Response: HTTP 500 <br>fragment failed to render 🙈 </p></template></fragment-host></body></html>`),
 					);
 				});
+
+				it('should serve the app shell with a fragment-specific fetch error message when fragment endpoint errors', async () => {
+					mockShellAppResponse(
+						new Response('<html><body>app shell 🙂</body></html>', {
+							status: 200,
+							headers: { 'content-type': 'text/html' },
+						}),
+					);
+					mockFragmentBarResponse('/bar', new Response('fragment failed to render 🙈', { status: 500 }));
+
+					const response = await testRequest(
+						new Request('http://localhost/bar', { headers: { 'sec-fetch-dest': 'document' } }),
+					);
+
+					// the overall response should be 200
+					expect(response.status).toBe(200);
+					// but the response should contain a custom error message from the fragment gateway
+					expect(stripMultipleSpaces(await response.text())).toBe(
+						stripMultipleSpaces(
+							`<html><body>app shell 🙂<fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><p>custom error: Fetching Bar fragment failed!</p></template></fragment-host></body></html>`,
+						),
+					);
+				});
 			});
 		});
 
@@ -444,7 +467,7 @@ for (const environment of environments) {
 				endpoint: 'http://bar.test:4321',
 				upstream: 'http://bar.test:4321',
 				onSsrFetchError: () => ({
-					response: new Response('<p>Fetching Bar fragment failed!</p>', {
+					response: new Response('<p>custom error: Fetching Bar fragment failed!</p>', {
 						status: 500,
 						headers: { 'content-type': 'text/html' },
 					}),
