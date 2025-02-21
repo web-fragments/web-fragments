@@ -158,6 +158,39 @@ for (const environment of environments) {
 				expect(response.headers.get('set-cookie')?.replace(/\s/g, '')).toBe('c1=val1;httpOnly,c2=val2,c3=val3');
 			});
 
+			it(`should make all script tags in pierced fragment's shadow root inert`, async () => {
+				mockShellAppResponse(
+					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
+				);
+				mockFragmentFooResponse(
+					'/foo',
+					new Response(
+						'<script>console.log("regular inline script")</script>' +
+							'<script async>console.log("async inline script")</script>' +
+							'<script deferred>console.log("deferred inline script")</script>' +
+							'<script type="module">console.log("regular inline module script")</script>' +
+							'<script src="_fragments/foo/test.js"></script>' +
+							'<script type="module" src="_fragments/foo/test.js"></script>',
+					),
+				);
+
+				const response = await testRequest(
+					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe(
+					`<html><body>legacy host content<fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open">${
+						'<script type="inert">console.log("regular inline script")</script>' +
+						'<script async type="inert">console.log("async inline script")</script>' +
+						'<script deferred type="inert">console.log("deferred inline script")</script>' +
+						'<script type="inert" data-script-type="module">console.log("regular inline module script")</script>' +
+						'<script src="_fragments/foo/test.js" type="inert"></script>' +
+						'<script type="inert" src="_fragments/foo/test.js" data-script-type="module"></script>'
+					}</template></fragment-host></body></html>`,
+				);
+			});
+
 			describe('error handling', () => {
 				// TODO: should this be configurable? By default we hard fail, but if we want the fragments to be resilient against app shell failures we should allow the shell to fail and fragment to still pierce.
 				it('should serve the app shell server error page without a fragment when server-side app shell error occurs', async () => {
@@ -234,7 +267,7 @@ for (const environment of environments) {
 			});
 		});
 
-		describe(`fragment html requests`, () => {
+		describe(`fragment soft navigation html requests`, () => {
 			it(`should serve a fragment soft navigation request`, async () => {
 				mockFragmentFooResponse(
 					'/foo/some/path',
@@ -291,6 +324,34 @@ for (const environment of environments) {
 				);
 
 				expect(softNavResponse.status).toBe(200);
+			});
+
+			it(`should not make script tags in the response inert - reframed makes them inert on the client-side`, async () => {
+				mockFragmentFooResponse(
+					'/foo',
+					new Response(
+						'<script>console.log("regular inline script")</script>' +
+							'<script async>console.log("async inline script")</script>' +
+							'<script deferred>console.log("deferred inline script")</script>' +
+							'<script type="module">console.log("regular inline module script")</script>' +
+							'<script src="_fragments/foo/test.js"></script>' +
+							'<script type="module" src="_fragments/foo/test.js"></script>',
+					),
+				);
+
+				const response = await testRequest(
+					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'empty' } }),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe(
+					'<script>console.log("regular inline script")</script>' +
+						'<script async>console.log("async inline script")</script>' +
+						'<script deferred>console.log("deferred inline script")</script>' +
+						'<script type="module">console.log("regular inline module script")</script>' +
+						'<script src="_fragments/foo/test.js"></script>' +
+						'<script type="module" src="_fragments/foo/test.js"></script>',
+				);
 			});
 		});
 
