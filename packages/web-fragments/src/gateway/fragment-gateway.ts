@@ -109,8 +109,8 @@ export interface FragmentConfig {
 	 * @returns the response to use for the document's ssr
 	 */
 	onSsrFetchError?: (
-		req: RequestInfo,
-		failedResOrError: Response | unknown,
+		req: Request,
+		failedResOrError: Response | Error,
 	) => SSRFetchErrorResponse | Promise<SSRFetchErrorResponse>;
 }
 

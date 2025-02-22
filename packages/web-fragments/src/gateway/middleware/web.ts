@@ -122,8 +122,11 @@ export function getWebMiddleware(
 			}
 
 			return fragmentResponsePromise
-				.then(rejectErrorResponses)
-				.catch(handleFetchErrors(req, matchedFragment))
+				.then(function rejectErrorResponses(response: Response) {
+					if (response.ok) return response;
+					throw response;
+				})
+				.catch(getFetchErrorHandler(req, matchedFragment))
 				.then(prepareFragmentForReframing)
 				.then((preparedFragment) =>
 					embedFragmentIntoShellApp({
@@ -173,37 +176,38 @@ export function getWebMiddleware(
 		});
 	};
 
-	function rejectErrorResponses(response: Response) {
-		if (response.ok) return response;
-		throw response;
-	}
+	function getFetchErrorHandler(fragmentRequest: Request, fragmentConfig: FragmentConfig) {
+		return async function handleFetchErrorsFn(fragmentResponseOrError: Response | Error) {
+			const { endpoint, onSsrFetchError = defaultOnSsrFetchError } = fragmentConfig;
 
-	function handleFetchErrors(fragmentRequest: Request, fragmentConfig: FragmentConfig) {
-		return async (fragmentResponseOrError: unknown) => {
-			const {
-				endpoint,
-				onSsrFetchError = async (fragmentRequest: Request, fragmentResponseOrError) => ({
-					response: new Response(
-						mode === 'development'
-							? `<p>Failed to fetch fragment!<br>
-										Endpoint: ${endpoint}<br>
-										Request: ${fragmentRequest.method} ${fragmentRequest.url}<br>
-										Response: HTTP ${fragmentResponseOrError instanceof Response ? `${fragmentResponseOrError.status} ${fragmentResponseOrError.statusText}<br>${await fragmentResponseOrError.text()}` : fragmentResponseOrError}
-								</p>`
-							: '<p>There was a problem fulfilling your request.</p>',
-						{ status: 500, headers: [['content-type', 'text/html']] },
-					),
-					overrideResponse: false,
-				}),
-			} = fragmentConfig;
-
-			const { response, overrideResponse } = await onSsrFetchError(fragmentRequest, fragmentResponseOrError);
-
-			console.log('[[Debug Info]: onSsrFetchError]:', response, overrideResponse);
+			let onSsrFetchErrorResponse;
+			try {
+				onSsrFetchErrorResponse = await onSsrFetchError(fragmentRequest, fragmentResponseOrError);
+			} catch (error) {
+				console.error('onSsrFetchError failed! Using defaultOnSssrFetchError handler instead', { cause: error });
+				onSsrFetchErrorResponse = await defaultOnSsrFetchError(fragmentRequest, fragmentResponseOrError);
+			}
+			const { response, overrideResponse } = onSsrFetchErrorResponse;
 
 			if (overrideResponse) throw response;
 			return response;
 		};
+
+		async function defaultOnSsrFetchError(fragmentRequest: Request, fragmentResponseOrError: Response | Error) {
+			return {
+				response: new Response(
+					mode === 'development'
+						? `<p>Failed to fetch fragment!<br>
+									Endpoint: ${fragmentConfig.endpoint}<br>
+									Request: ${fragmentRequest.method} ${fragmentRequest.url}<br>
+									Response: HTTP ${fragmentResponseOrError instanceof Response ? `${fragmentResponseOrError.status} ${fragmentResponseOrError.statusText}<br>${await fragmentResponseOrError.text()}` : fragmentResponseOrError}
+							</p>`
+						: '<p>There was a problem fulfilling your request.</p>',
+					{ status: 500, headers: [['content-type', 'text/html']] },
+				),
+				overrideResponse: false,
+			};
+		}
 	}
 
 	/**
@@ -334,15 +338,15 @@ function attachForwardedHeaders(fragmentResponse: Promise<Response>, fragmentCon
 /**
  * Renders an error response with a status of 500.
  *
- * @param {unknown} err - The error to handle.
+ * @param {Response | Error} err - The error to handle.
  * @returns {Response} - The error response.
  */
 // TODO: req is unused
-function renderErrorResponse(err: unknown, req?: Request): Response {
-	console.log('WF Gateway Internal Server Error\n', err, req);
+function renderErrorResponse(err: Response | Error): Response {
 	if (err instanceof Response) return err;
+	console.error('WF Gateway Internal Server Error\n', err);
 	// TODO: hide exception in production mode
-	return new Response('WF Gateway Internal Server Error\n' + err, {
+	return new Response('WF Gateway Internal Server Error\n' + err + err.stack, {
 		status: 500,
 		headers: { 'Content-Type': 'text/html' },
 	});

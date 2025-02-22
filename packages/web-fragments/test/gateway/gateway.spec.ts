@@ -21,6 +21,10 @@ for (const environment of environments) {
 		 * @param hostResponse A response that should be served as if it came from the legacy host
 		 */
 		let testRequest: (request: Request, hostResponse?: Response) => Promise<Response>;
+		let customFragmentBarOnSsrFetchError: (
+			req: Request,
+			responseOrError: Response | Error,
+		) => Promise<{ response: Response }>;
 
 		describe(`app shell requests`, () => {
 			it(`should serve requests from the app shell when there is no fragments match`, async () => {
@@ -243,6 +247,18 @@ for (const environment of environments) {
 					);
 					mockFragmentBarResponse('/bar', new Response('fragment failed to render 🙈', { status: 500 }));
 
+					customFragmentBarOnSsrFetchError = async (req, responseOrError) => {
+						return {
+							response: new Response(
+								`<p>custom error: Fetching Bar fragment failed!<br>url: ${req.url}<br>error: ${responseOrError instanceof Response ? await responseOrError.text() : responseOrError}</p>`,
+								{
+									status: 500,
+									headers: { 'content-type': 'text/html' },
+								},
+							),
+						};
+					};
+
 					const response = await testRequest(
 						new Request('http://localhost/bar', { headers: { 'sec-fetch-dest': 'document' } }),
 					);
@@ -252,18 +268,41 @@ for (const environment of environments) {
 					// but the response should contain a custom error message from the fragment gateway
 					expect(stripMultipleSpaces(await response.text())).toBe(
 						stripMultipleSpaces(
-							`<html><body>app shell 🙂<fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><p>custom error: Fetching Bar fragment failed!</p></template></fragment-host></body></html>`,
+							`<html><body>app shell 🙂<fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><p>custom error: Fetching Bar fragment failed!<br>url: http://localhost${server ? ':' + server.address()!.port : ''}/bar<br>error: fragment failed to render 🙈</p></template></fragment-host></body></html>`,
 						),
 					);
+				});
+
+				it('should support serving the fragment-specific fetch error directly when fragment endpoint errors', async () => {
+					mockShellAppResponse(
+						new Response('<html><body>app shell 🙂</body></html>', {
+							status: 200,
+							headers: { 'content-type': 'text/html' },
+						}),
+					);
+
+					mockFragmentBarResponse('/bar', new Response('session expired', { status: 401 }));
+
+					customFragmentBarOnSsrFetchError = async (req, responseOrError) => {
+						if (responseOrError instanceof Response && responseOrError.status === 401) {
+							return { response: Response.redirect('http://sso.test/login', 302), overrideResponse: true };
+						}
+						throw new Error('unexpected request');
+					};
+
+					const response = await testRequest(
+						new Request('http://localhost/bar', { headers: { 'sec-fetch-dest': 'document' }, redirect: 'manual' }),
+					);
+
+					expect(response.status).toBe(302);
+					expect(response.headers.get('location')).toBe('http://sso.test/login');
+					expect(await response.text()).toBe('');
 				});
 			});
 		});
 
 		describe(`fragment iframe requests`, () => {
 			it(`should serve a blank html document if a request is made by the iframe[src] element`, async () => {
-				mockShellAppResponse(
-					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
-				);
 				mockFragmentFooResponse('/foo', new Response('<p>foo fragment</p>'));
 
 				const response = await testRequest(
@@ -453,6 +492,7 @@ for (const environment of environments) {
 
 		beforeEach(async () => {
 			const fragmentGateway = new FragmentGateway();
+
 			fragmentGateway.registerFragment({
 				fragmentId: 'fragmentFoo',
 				prePiercingClassNames: ['foo'],
@@ -460,18 +500,24 @@ for (const environment of environments) {
 				endpoint: 'http://foo.test:1234',
 				upstream: 'http://foo.test:1234',
 			});
+
 			fragmentGateway.registerFragment({
 				fragmentId: 'fragmentBar',
 				prePiercingClassNames: ['bar'],
 				routePatterns: ['/bar/:_*', '/_fragment/bar/:_*'],
 				endpoint: 'http://bar.test:4321',
 				upstream: 'http://bar.test:4321',
-				onSsrFetchError: () => ({
-					response: new Response('<p>custom error: Fetching Bar fragment failed!</p>', {
-						status: 500,
-						headers: { 'content-type': 'text/html' },
-					}),
-				}),
+				onSsrFetchError: async (...args) => {
+					if (!customFragmentBarOnSsrFetchError) {
+						return {
+							response: new Response(
+								`customFragmentBarOnSsrFetchError not defined! Error url: ${args[0].url}\n${args[1] instanceof Response ? await args[1].text() : args[1]}`,
+								{ status: 500 },
+							),
+						};
+					}
+					return customFragmentBarOnSsrFetchError(...args);
+				},
 			});
 
 			switch (environment) {
@@ -490,6 +536,9 @@ for (const environment of environments) {
 							const appShellResponse = mockShellAppResponse.getResponse();
 							if (!appShellResponse) {
 								throw new Error('No app shell response provided, use mockShellAppResponse to set it');
+							}
+							if (appShellResponse.status === 302) {
+								return fetch(appShellResponse.url);
 							}
 							return Promise.resolve(appShellResponse);
 						});
@@ -585,6 +634,7 @@ for (const environment of environments) {
 			fetchMock.resetMocks();
 			vi.resetModules();
 			mockShellAppResponse.response = null;
+			customFragmentBarOnSsrFetchError = null;
 		});
 	});
 }

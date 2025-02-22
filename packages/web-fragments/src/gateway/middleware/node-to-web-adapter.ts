@@ -214,7 +214,11 @@ function nodeToWebResponse(
 		});
 		outboundServerResponse.writeHead(response.status, response.statusText);
 
-		stream.Readable.fromWeb(response.body as streamWeb.ReadableStream<any>).pipe(outboundServerResponse);
+		if (response.body) {
+			stream.Readable.fromWeb(response.body as streamWeb.ReadableStream<any>).pipe(outboundServerResponse);
+		} else {
+			outboundServerResponse.end();
+		}
 	};
 
 	return { originResponsePromise, sendResponse };
