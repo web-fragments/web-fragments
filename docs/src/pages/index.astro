@@ -10,7 +10,7 @@ import CallToAction from "~/components/widgets/CallToAction.astro";
 
 const metadata = {
 	title: "Web Fragments - A radically new way to do micro-frontends.",
-	ignoreTitleTemplate: true,
+	ignoreTitleTemplate: false,
 };
 ---
 
@@ -33,6 +33,7 @@ const metadata = {
 			alt: "AstroWind Hero Image",
 		}}
 	>
+
 		<Fragment slot="title"> Web Fragments are a radically new architecture for micro-frontends. </Fragment>
 
 		<Fragment slot="subtitle">
@@ -43,10 +44,11 @@ const metadata = {
 				> way.
 			</span>
 		</Fragment>
+	</Hero>
 
 		<!-- Note Widget ******************* -->
 
-		<Note />
+	<Note />
 
 		<!-- Features Widget *************** -->
 
@@ -171,5 +173,4 @@ const metadata = {
 				/>No coupling. No fate-sharing. No dependency.
 			</Fragment>
 		</CallToAction>
-	</Hero>
 </Layout>
