@@ -30,9 +30,9 @@ export function register() {
 that should be executed early in the application bootstrapping.
 
 ```javascript
-import { register } from 'web-fragments/elements';
+import { register } from "web-fragments/elements";
 
-register()
+register();
 ```
 
 ## Fragment Outlet
@@ -51,15 +51,15 @@ From that moment on, the following `fragment-host` lifecycle take place:
 
 1. the `fragment-outlet-ready` event is registered
 2. a the `fragment-host` is checked for the presence of a `shadow-root` that is created when not in place. it is the initial HTML of the fragment
-2. b otherwise, to bootstrap the fragment:
-	- the `location.href` is captured
-    - it is then used to make a fetch GET request to the gateway
-	- the returned server-side rendered HTML stream is used to populate the `shadow-root` of the `fragment-host`
-3. a new reframed container (iframe) is created, all script tags from the initial fragment HTML (that were neutralized with the inert property) are copied into the the reframed iframe and executed
-4. if `fragment-outlet-ready` event fires, portaling of the fragment takes place
-	 - DOM state (`activeElement`, `textSelection`, etc), of the fragment is captured
-	 - `fragment-host` element is appended as a child of the `fragment-outlet`
-	 - DOM state previously captured, is restored
+3. b otherwise, to bootstrap the fragment:
+   - the `location.href` is captured
+   - it is then used to make a fetch GET request to the gateway
+   - the returned server-side rendered HTML stream is used to populate the `shadow-root` of the `fragment-host`
+4. a new reframed container (iframe) is created, all script tags from the initial fragment HTML (that were neutralized with the inert property) are copied into the the reframed iframe and executed
+5. if `fragment-outlet-ready` event fires, portaling of the fragment takes place
+   - DOM state (`activeElement`, `textSelection`, etc), of the fragment is captured
+   - `fragment-host` element is appended as a child of the `fragment-outlet`
+   - DOM state previously captured, is restored
 
 Steps 1 and 4 only apply when we're performing [server-side piercing](#server-side-piercing)
 
@@ -72,7 +72,6 @@ It allows the eager display and initialization of a fragment at the moment of bo
 [pre-piercing-styles](./glossary#eager-rendering-piercing) configured during fragment registration, help positioning the fragment in the correct slot.
 
 ![web fragments middleware](../../assets/images/wf-middleware.drawio.png)
-
 
 ## Middleware
 

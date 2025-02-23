@@ -17,7 +17,6 @@ The base middleware supports the Web standard API (Fetch API) scenario. The midd
 
 It does so by identifying and classifying client-side requests using the `sec-fetch-dest` headers. This information is only important for debugging your application flow.
 
-
 ### Case 1: sec-fetch-dest identifies an iframe request
 
 When a request's `sec-fetch-dest` equals iframe, the server must respond with an empty HTML template, and set the `Content-Type` header to `text-html`
@@ -49,9 +48,7 @@ if (request.headers["sec-fetch-dest"] === "script") {
 }
 ```
 
-
 ## Existing middleware
-
 
 As explained above, the base middleware support [Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API/Using_Fetch) but we also provide an adapter for [Node.js](https://nodejs.org) native http requests and response and Connect framework.
 
@@ -95,7 +92,6 @@ If you're running your shell in an Express server, your wrapper will look like t
 ```
 
 ---
-
 
 ### Fetching a fragment
 

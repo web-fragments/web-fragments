@@ -31,8 +31,6 @@ This will act as a placeholder to identify where the `fragment` container should
 
 The `<fragment-outlet>` is required to have a `fragment-id` and `src` attributes that will be used by the corresponding [middleware](./middleware) to match a fragment and get its content and assets from its upstream endpoint, by rerouting the requests. For this, all fragments need to have been registered in the corresponding server or function that runs your application middleware, when the [Fragment Gateway](#fragment-gateway) has been initialized.
 
-
-
 ```html
 <!-- Fragment Outlet example -->
 <fragment-outlet fragment-id="qwik" src="/cart"></fragment-outlet>

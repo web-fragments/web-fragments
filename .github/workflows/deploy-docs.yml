@@ -13,28 +13,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Install Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '22'
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
 
-    - name: Install dependencies
-      run: |
-        cd docs
-        npm install
+      - name: Install dependencies
+        run: |
+          cd docs
+          npm install
 
-    - name: Build project
-      run: |
-        cd docs
-        npm run build # Adjust this if your project uses a different build command
+      - name: Build project
+        run: |
+          cd docs
+          npm run build # Adjust this if your project uses a different build command
 
-    - name: Deploy to Cloudflare Workers
-      env:
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      run: |
-        npx wrangler pages publish ./docs/dist \
-          --project-name=<PROJECT_NAME> \
-          --branch=main
+      - name: Deploy to Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          npx wrangler pages publish ./docs/dist \
+            --project-name=<PROJECT_NAME> \
+            --branch=main
