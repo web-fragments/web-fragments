@@ -12,8 +12,8 @@ export function registerWebFragmentElements() {
 // keep for retro compatibility
 // TODO: write test when suites are merged
 /*
-* @deprecated use registerWebFragmentElements instead
-*/
+ * @deprecated use registerWebFragmentElements instead
+ */
 export function register() {
 	registerWebFragmentElements();
 }
