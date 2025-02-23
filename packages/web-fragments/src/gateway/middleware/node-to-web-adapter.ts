@@ -24,7 +24,7 @@ export function nodeToWebMiddleware(webMiddleware: (req: Request, next: () => Pr
 
 		const { promise: callNodeNextPromise, resolve: callNodeNextResolve } = Promise.withResolvers<void>();
 		const { originResponsePromise, sendResponse } = nodeToWebResponse(nodeResponse, nodeNext, callNodeNextPromise);
-		const webNext = function webNodeCompatNext() {
+		const webNext = function webNodeCompatNext(): Promise<Response> {
 			// send a signal that we want the nodeNext fn to be called
 			callNodeNextResolve();
 			return originResponsePromise;
@@ -67,6 +67,20 @@ interface OriginResponse {
 	body: ReadableStream<Uint8Array>;
 }
 
+/**
+ * Intercepts the original node response object and splits it into two interfaces:
+ * - originResponse (the readable interface): a promise that resolves to the response head and a readable stream of the origin response (response written by node's next() middleware)
+ * - serverResponse (the writable interface): a new node-style response object that can be used to write into the underlying network socket
+ *
+ * This function is needed because node style middlewares share a single ServerResponse object and write to it directly, which makes it impossible to rewrite the response before sending it out to the client.
+ *
+ * Since the web-style middleware heavily utilizes the ability to rewrite responses, we need this function to intercept the node response and split it into the readable and writable interface.
+ *
+ * @param response
+ * @param next
+ * @param callNodeNextPromise
+ * @returns
+ */
 function interceptNodeResponse(
 	response: http.ServerResponse,
 	next: () => void,
@@ -171,7 +185,7 @@ function interceptNodeResponse(
 		return response;
 	} satisfies typeof http.ServerResponse.prototype.destroy;
 
-	// call the next node middleware if we receive a signal to do so
+	// call the next node middleware when/if we receive a signal to do so
 	callNodeNextPromise.then(() => {
 		next();
 	});
@@ -194,6 +208,14 @@ function interceptNodeResponse(
 	};
 }
 
+/**
+ * Converts an existing node response to a web response.
+ *
+ * @param nodeResponse the node response object that holds the socket to the original client
+ * @param nodeNext node middleware next() function
+ * @param callNodeNextPromise a promise that will resolve when/if the next middleware's nodeNext should be called
+ * @returns an object with the originResponse promise and a function that can be used to send a response to the original client
+ */
 function nodeToWebResponse(
 	nodeResponse: http.ServerResponse,
 	nodeNext: () => void,
@@ -211,7 +233,6 @@ function nodeToWebResponse(
 	let originResponsePromise = originResponse.head.then((head) => new Response(originResponse.body, head));
 
 	const sendResponse = async (response: Response) => {
-		console.log('sendResponse', response);
 		response.headers.forEach((value, name) => {
 			nodeResponse.appendHeader(name, value);
 		});
