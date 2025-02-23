@@ -3,9 +3,9 @@ import streamWeb from 'node:stream/web';
 import http from 'node:http';
 
 /**
- * Converts a Web-style middleware to a Node-style middleware.
+ * Converts a web-style middleware to a node-style middleware.
  *
- * This function enables Web-style middlewares to be used in Node.js HTTP servers like express, connect, etc.
+ * This function enables web-style middlewares to be used in Node.js HTTP servers like express, connect, etc.
  *
  * The implementation is lazy and stream-based to avoid unnecessary buffering of request/response bodies.
  *
@@ -25,7 +25,7 @@ export function nodeToWebMiddleware(webMiddleware: (req: Request, next: () => Pr
 		const { promise: callNodeNextPromise, resolve: callNodeNextResolve } = Promise.withResolvers<void>();
 		const { originResponsePromise, sendResponse } = nodeToWebResponse(nodeResponse, nodeNext, callNodeNextPromise);
 		const webNext = function webNodeCompatNext() {
-			// signal that we want nodeNext fn to be called
+			// send a signal that we want the nodeNext fn to be called
 			callNodeNextResolve();
 			return originResponsePromise;
 		};
@@ -86,6 +86,7 @@ function interceptNodeResponse(
 		writeHead: response.writeHead.bind(response),
 		writeHeadUnbound: response.writeHead,
 		end: response.end.bind(response),
+		destroy: response.destroy.bind(response),
 	};
 
 	let originHead: ResponseInit;
@@ -96,7 +97,6 @@ function interceptNodeResponse(
 		statusMessage?: string,
 		headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[],
 	) {
-		console.log('retrieveOrigHead', statusCode, statusMessage, headers);
 		if (originHead) {
 			console.log('warning: Response head has already been flushed!');
 			return;
@@ -105,10 +105,11 @@ function interceptNodeResponse(
 		originHead = {
 			status: statusCode ?? response.statusCode,
 			statusText: statusMessage ?? response.statusMessage,
-			// TODO: correctly merge array cookies and flatten them into an object
 			headers: { ...(response.getHeaders() as Record<string, string>), ...(headers as Record<string, string>) },
 		};
 
+		// Remove any already set headers, we'll write all headers when actually sending the response.
+		// This allows the middleware to remove headers that were set by the node code.
 		Object.keys(originHead.headers!).forEach((name) => {
 			response.removeHeader(name);
 		});
@@ -117,7 +118,6 @@ function interceptNodeResponse(
 	}
 
 	response.flushHeaders = function interceptingFlushHeaders() {
-		console.log('flushHeaders');
 		retrieveOrigHead();
 	} satisfies typeof http.ServerResponse.prototype.flushHeaders;
 
@@ -126,14 +126,12 @@ function interceptNodeResponse(
 		const headers: http.OutgoingHttpHeaders =
 			arguments[1] instanceof Object ? (arguments[1] as http.OutgoingHttpHeaders) : arguments[2];
 
-		console.log('writeHead (intercepted)', statusCode, statusMessage, headers);
 		retrieveOrigHead(statusCode, statusMessage, headers);
 
 		return response;
 	} satisfies typeof http.ServerResponse.prototype.writeHead;
 
 	response.write = function interceptingWrite(chunk: any) {
-		console.log('write (intercepted)', chunk);
 		const encoding =
 			chunk instanceof String
 				? arguments[1] instanceof String
@@ -149,7 +147,6 @@ function interceptNodeResponse(
 	} satisfies typeof http.ServerResponse.prototype.write;
 
 	response.end = function interceptingEnd() {
-		console.log('end (intercepted)', arguments);
 		const chunk = arguments[0] instanceof Function ? null : arguments[0];
 		const encoding =
 			chunk instanceof String
@@ -169,6 +166,11 @@ function interceptNodeResponse(
 		return response;
 	} satisfies typeof http.ServerResponse.prototype.end;
 
+	response.destroy = function interceptingDestroy(error?: Error) {
+		streamController.error(error);
+		return response;
+	} satisfies typeof http.ServerResponse.prototype.destroy;
+
 	// call the next node middleware if we receive a signal to do so
 	callNodeNextPromise.then(() => {
 		next();
@@ -184,6 +186,7 @@ function interceptNodeResponse(
 	restoredResponse.writeHead = orig.writeHead;
 	restoredResponse.write = orig.write;
 	restoredResponse.end = orig.end;
+	restoredResponse.destroy = orig.destroy;
 
 	return {
 		originResponse: { head: originHeadPromise, body: readableStream },
