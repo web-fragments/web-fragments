@@ -6,50 +6,6 @@ import { FragmentGateway, FragmentMiddlewareOptions, FragmentConfig, FragmentGat
 import { HTMLRewriter } from 'htmlrewriter';
 
 /**
- * Initializes a fragment host element with given attributes.
- *
- * @param {Object} params - The initialization parameters.
- * @param {string} params.fragmentId - The ID of the fragment.
- * @param {string} params.content - The content of the fragment.
- * @param {string} params.classNames - The class names to be applied to the host.
- * @returns {Object} - The prefix and suffix for embedding the fragment.
- */
-const fragmentHostInitialization = ({
-	fragmentId,
-	content,
-	classNames,
-}: {
-	fragmentId: string;
-	content: string;
-	classNames: string;
-}): { prefix: string; suffix: string } => {
-	return {
-		prefix: `<fragment-host class="${classNames}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${content}`,
-		suffix: `</template></fragment-host>`,
-	};
-};
-
-/**
- * Prepares a fragment response for reframing by modifying script elements.
- *
- * @param {Response} fragmentResponse - The response containing the fragment.
- * @returns {Response} - The transformed response with inert scripts.
- */
-export function prepareFragmentForReframing(fragmentResponse: Response): Response {
-	return new HTMLRewriter()
-		.on('script', {
-			element(element: any) {
-				const scriptType = element.getAttribute('type');
-				if (scriptType) {
-					element.setAttribute('data-script-type', scriptType);
-				}
-				element.setAttribute('type', 'inert');
-			},
-		})
-		.transform(new Response(fragmentResponse.body, fragmentResponse));
-}
-
-/**
  * Creates middleware for handling web-based fragment rendering.
  * @param {FragmentGateway} gateway - The fragment gateway instance.
  * @param {FragmentMiddlewareOptions} [options={}] - Optional middleware settings.
@@ -58,15 +14,19 @@ export function prepareFragmentForReframing(fragmentResponse: Response): Respons
 export function getWebMiddleware(
 	gateway: FragmentGateway,
 	options: FragmentMiddlewareOptions = {},
-): (req: Request, next: () => Promise<Response>) => Promise<Response> {
+): (request: Request, next: () => Promise<Response>) => Promise<Response> {
 	const { additionalHeaders = {}, mode = 'development' }: FragmentMiddlewareOptions = options;
 
 	console.log('[Debug Info]: Web middleware');
 
-	return async (req: Request, next: () => Promise<Response>): Promise<Response> => {
-		console.log('[Debug Info]: Web middleware request:', new URL(req.url).pathname, req.headers.get('sec-fetch-dest'));
+	return async (request: Request, next: () => Promise<Response>): Promise<Response> => {
+		console.log(
+			'[Debug Info]: Web middleware request:',
+			new URL(request.url).pathname,
+			request.headers.get('sec-fetch-dest'),
+		);
 
-		const matchedFragment = gateway.matchRequestToFragment(new URL(req.url).pathname);
+		const matchedFragment = gateway.matchRequestToFragment(new URL(request.url).pathname);
 		console.log('[Debug Info]: matched fragment:', matchedFragment);
 
 		/**
@@ -83,7 +43,7 @@ export function getWebMiddleware(
 			}
 		}
 
-		const requestSecFetchDest = req.headers.get('sec-fetch-dest');
+		const requestSecFetchDest = request.headers.get('sec-fetch-dest');
 
 		/**
 		 * Handle IFrame request from reframed
@@ -102,7 +62,7 @@ export function getWebMiddleware(
 		}
 
 		// Forward the request to the fragment endpoint
-		const fragmentResponsePromise = fetchFragment(req, matchedFragment, additionalHeaders, mode);
+		const fragmentResponsePromise = fetchFragment(request, matchedFragment, additionalHeaders, mode);
 
 		/**
 		 * Handle SSR request from a hard navigation
@@ -111,6 +71,7 @@ export function getWebMiddleware(
 		 * For hard navigations we need to combine the appShell response with fragment response.
 		 */
 		if (requestSecFetchDest === 'document') {
+			// Fetch the app shell response from the origin
 			const appShellResponse = await next();
 
 			const isHTMLResponse = appShellResponse.headers.get('content-type')?.startsWith('text/html');
@@ -120,25 +81,26 @@ export function getWebMiddleware(
 				return appShellResponse;
 			}
 
+			// Combine the html responses from the fragment and app shell
 			return fragmentResponsePromise
 				.then(function rejectErrorResponses(response: Response) {
 					if (response.ok) return response;
 					throw response;
 				})
-				.catch(getFetchErrorHandler(req, matchedFragment))
-				.then(prepareFragmentForReframing)
-				.then((preparedFragment) =>
+				.catch(handleFetchErrors)
+				.then(neutralizeScriptTags)
+				.then((fragmentResponse) =>
 					embedFragmentIntoShellApp({
 						appShellResponse,
-						fragmentResponse: preparedFragment,
+						fragmentResponse,
 						fragmentConfig: matchedFragment,
 						gateway: gateway,
 					}),
 				)
-				.then((embeddedFragment) => {
+				.then((combinedResponse) => {
 					// Append Vary header to prevent BFCache issues
-					embeddedFragment.headers.append('vary', 'sec-fetch-dest');
-					return attachForwardedHeaders(Promise.resolve(embeddedFragment), matchedFragment)(embeddedFragment);
+					combinedResponse.headers.append('vary', 'sec-fetch-dest');
+					return attachForwardedHeaders(Promise.resolve(combinedResponse), matchedFragment)(combinedResponse);
 				})
 				.catch(renderErrorResponse);
 		}
@@ -173,73 +135,71 @@ export function getWebMiddleware(
 			statusText: fragmentResponse.statusText,
 			headers: { 'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain' },
 		});
-	};
 
-	function getFetchErrorHandler(fragmentRequest: Request, fragmentConfig: FragmentConfig) {
-		return async function handleFetchErrorsFn(fragmentResponseOrError: Response | Error) {
-			const { endpoint, onSsrFetchError = defaultOnSsrFetchError } = fragmentConfig;
+		async function handleFetchErrors(fragmentResponseOrError: Response | Error) {
+			const { endpoint, onSsrFetchError = defaultOnSsrFetchError } = matchedFragment!;
 
 			let onSsrFetchErrorResponse;
 			try {
-				onSsrFetchErrorResponse = await onSsrFetchError(fragmentRequest, fragmentResponseOrError);
+				onSsrFetchErrorResponse = await onSsrFetchError(request, fragmentResponseOrError);
 			} catch (error) {
 				console.error('onSsrFetchError failed! Using defaultOnSssrFetchError handler instead', { cause: error });
-				onSsrFetchErrorResponse = await defaultOnSsrFetchError(fragmentRequest, fragmentResponseOrError);
+				onSsrFetchErrorResponse = await defaultOnSsrFetchError(request, fragmentResponseOrError);
 			}
 			const { response, overrideResponse } = onSsrFetchErrorResponse;
 
 			if (overrideResponse) throw response;
 			return response;
-		};
+		}
 
 		async function defaultOnSsrFetchError(fragmentRequest: Request, fragmentResponseOrError: Response | Error) {
 			return {
 				response: new Response(
 					mode === 'development'
 						? `<p>Failed to fetch fragment!<br>
-									Endpoint: ${fragmentConfig.endpoint}<br>
-									Request: ${fragmentRequest.method} ${fragmentRequest.url}<br>
-									Response: HTTP ${fragmentResponseOrError instanceof Response ? `${fragmentResponseOrError.status} ${fragmentResponseOrError.statusText}<br>${await fragmentResponseOrError.text()}` : fragmentResponseOrError}
-							</p>`
+										Endpoint: ${matchedFragment!.endpoint}<br>
+										Request: ${fragmentRequest.method} ${fragmentRequest.url}<br>
+										Response: HTTP ${fragmentResponseOrError instanceof Response ? `${fragmentResponseOrError.status} ${fragmentResponseOrError.statusText}<br>${await fragmentResponseOrError.text()}` : fragmentResponseOrError}
+								</p>`
 						: '<p>There was a problem fulfilling your request.</p>',
 					{ status: 500, headers: [['content-type', 'text/html']] },
 				),
 				overrideResponse: false,
 			};
 		}
-	}
+	};
 
 	/**
 	 * Fetches a fragment from a specified endpoint.
 	 *
-	 * @param {Request} req - The original request object.
+	 * @param {Request} originalRequest - The original request object.
 	 * @param {FragmentConfig} fragmentConfig - Configuration containing the fragment endpoint.
 	 * @param {Record<string, string>} additionalHeaders - Additional headers to include in the request.
 	 * @param {string} mode - The environment mode (e.g., 'development').
 	 * @returns {Promise<Response>} - The fetched fragment response.
 	 */
 	async function fetchFragment(
-		req: Request,
+		originalRequest: Request,
 		fragmentConfig: FragmentConfig,
 		additionalHeaders: HeadersInit = {},
 		mode: string = 'development',
 	): Promise<Response> {
 		const { endpoint } = fragmentConfig;
-		const requestUrl = new URL(req.url);
+		const requestUrl = new URL(originalRequest.url);
 		const fragmentEndpoint = new URL(`${requestUrl.pathname}${requestUrl.search}`, endpoint);
 
-		const abortController = new AbortController();
 		// TODO: add timeout handling
+		//const abortController = new AbortController();
 		//const timeoutTimer = abortIfSlow && setTimeout(() => abortController.abort(), 1_500);
 
-		const fragmentReq = new Request(fragmentEndpoint, req);
+		const fragmentReq = new Request(fragmentEndpoint, originalRequest);
 
 		// forward the original protocol and host info to the fragment endpoint
 		fragmentReq.headers.set(
 			'x-forwarded-proto',
-			req.headers.get('x-forwarded-proto') || requestUrl.protocol.slice(0, -1),
+			originalRequest.headers.get('x-forwarded-proto') || requestUrl.protocol.slice(0, -1),
 		);
-		fragmentReq.headers.set('x-forwarded-host', req.headers.get('x-forwarded-host') || requestUrl.host);
+		fragmentReq.headers.set('x-forwarded-host', originalRequest.headers.get('x-forwarded-host') || requestUrl.host);
 
 		// attach additionalHeaders to fragment request
 		Object.entries(additionalHeaders).forEach(([name, value]) => {
@@ -313,6 +273,50 @@ export function getWebMiddleware(
 			})
 			.transform(appShellResponse);
 	}
+}
+
+/**
+ * Initializes a fragment host element with given attributes.
+ *
+ * @param {Object} params - The initialization parameters.
+ * @param {string} params.fragmentId - The ID of the fragment.
+ * @param {string} params.content - The content of the fragment.
+ * @param {string} params.classNames - The class names to be applied to the host.
+ * @returns {Object} - The prefix and suffix for embedding the fragment.
+ */
+const fragmentHostInitialization = ({
+	fragmentId,
+	content,
+	classNames,
+}: {
+	fragmentId: string;
+	content: string;
+	classNames: string;
+}): { prefix: string; suffix: string } => {
+	return {
+		prefix: `<fragment-host class="${classNames}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${content}`,
+		suffix: `</template></fragment-host>`,
+	};
+};
+
+/**
+ * Rewrites html so that any script tags remain inert and don't execute.
+ *
+ * @param {Response} fragmentResponse response to rewrite
+ * @returns {Response} rewritten response
+ */
+export function neutralizeScriptTags(fragmentResponse: Response): Response {
+	return new HTMLRewriter()
+		.on('script', {
+			element(element: any) {
+				const scriptType = element.getAttribute('type');
+				if (scriptType) {
+					element.setAttribute('data-script-type', scriptType);
+				}
+				element.setAttribute('type', 'inert');
+			},
+		})
+		.transform(new Response(fragmentResponse.body, fragmentResponse));
 }
 
 /**
