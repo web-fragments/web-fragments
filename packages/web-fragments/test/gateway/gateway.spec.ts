@@ -21,10 +21,9 @@ for (const environment of environments) {
 		 * @param hostResponse A response that should be served as if it came from the legacy host
 		 */
 		let testRequest: (request: Request, hostResponse?: Response) => Promise<Response>;
-		let customFragmentBarOnSsrFetchError: (
-			req: Request,
-			responseOrError: Response | Error,
-		) => Promise<{ response: Response }>;
+		let customFragmentBarOnSsrFetchError:
+			| ((req: Request, responseOrError: Response | Error) => Promise<{ response: Response }>)
+			| null = null;
 
 		describe(`app shell requests`, () => {
 			it(`should serve requests from the app shell when there is no fragments match`, async () => {
@@ -614,12 +613,7 @@ for (const environment of environments) {
 						// TODO: why not working?
 						// fetchMock.dontMockOnce();
 						// fetch(newRequest);
-						try {
-							return fetch.unpatchedFetch(newRequest);
-						} catch (e) {
-							console.error('testRequest fetch error', e);
-							throw e;
-						}
+						return fetch.unpatchedFetch(newRequest);
 					};
 
 					break;

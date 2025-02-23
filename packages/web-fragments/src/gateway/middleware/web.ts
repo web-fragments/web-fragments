@@ -79,8 +79,7 @@ export function getWebMiddleware(
 			try {
 				return await next();
 			} catch (error) {
-				console.error('Error calling next():', error);
-				return renderErrorResponse(error);
+				return renderErrorResponse(error as any);
 			}
 		}
 

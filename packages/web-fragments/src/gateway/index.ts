@@ -1,2 +1,1 @@
-export { FragmentGateway } from './fragment-gateway';
-export type { FragmentConfig } from './middleware/types';
+export { FragmentGateway, type FragmentConfig } from './fragment-gateway';
