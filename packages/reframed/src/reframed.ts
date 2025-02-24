@@ -424,6 +424,8 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 	});
 
 	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
+	iframeWindow.MutationObserver = mainWindow.MutationObserver;
+	iframeWindow.ResizeObserver = mainWindow.ResizeObserver;
 
 	const windowSizeProperties: (keyof Pick<Window, 'innerHeight' | 'innerWidth' | 'outerHeight' | 'outerWidth'>)[] = [
 		'innerHeight',
