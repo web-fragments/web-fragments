@@ -201,7 +201,7 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 		return;
 	}
 
-	const mainDocument = shadowRoot.ownerDocument;
+	const mainDocument = shadowRoot.host.ownerDocument;
 	const mainWindow = mainDocument.defaultView!;
 
 	const globalConstructors: Function[] = Object.entries(Object.getOwnPropertyDescriptors(iframeWindow)).flatMap(
@@ -730,6 +730,22 @@ function monkeyPatchDOMInsertionMethods() {
 		}
 		return _Node__replaceChild.apply(this, arguments as any) as any;
 	};
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/Node/ownerDocument
+	const _Node__ownerDocument = Object.getOwnPropertyDescriptor(Node.prototype, 'ownerDocument')!.get!;
+	Object.defineProperty(Node.prototype, 'ownerDocument', {
+		configurable: true,
+		enumerable: true,
+		get() {
+			if (isWithinReframedDOM(this)) {
+				const rootNode = this.getRootNode();
+				const metadata = rootNode[reframedMetadataSymbol] as ReframedMetadata;
+				// return fragment's patched document
+				return metadata.iframe.contentDocument;
+			}
+			return _Node__ownerDocument.call(this);
+		},
+	});
 
 	const _Element__after = Element.prototype.after;
 	Element.prototype.after = function after(...nodes) {
