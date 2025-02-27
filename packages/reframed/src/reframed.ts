@@ -654,7 +654,7 @@ function monkeyPatchDOMInsertionMethods() {
 		// Script nodes that do not have text content are not evaluated.
 		// Add a reference of the script to the iframe. If text content is added later, the script is then evaluated.
 		// Clone the empty script to the main document.
-		if (!script.textContent) {
+		if (!script.src && !script.textContent) {
 			const clone = document.importNode(script, true);
 			getInternalReference(iframe.contentDocument, 'body').appendChild(script);
 			return clone;
