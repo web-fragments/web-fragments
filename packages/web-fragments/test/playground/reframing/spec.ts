@@ -7,7 +7,7 @@ beforeEach(failOnBrowserErrors);
 let fragment: Locator;
 let fragmentContext: Frame;
 
-beforeEach(async ({ page, browserName }) => {
+beforeEach(async ({ page }) => {
 	await page.goto('/reframing/');
 	// wait for the fragment to load
 	await page.waitForSelector('web-fragment h2');
