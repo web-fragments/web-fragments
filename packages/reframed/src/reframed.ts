@@ -426,12 +426,10 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 	iframeWindow.MutationObserver = mainWindow.MutationObserver;
 	iframeWindow.ResizeObserver = mainWindow.ResizeObserver;
 
-	const windowSizeProperties: (keyof Pick<Window, 'innerHeight' | 'innerWidth' | 'outerHeight' | 'outerWidth'>)[] = [
-		'innerHeight',
-		'innerWidth',
-		'outerHeight',
-		'outerWidth',
-	];
+	const windowSizeProperties: (keyof Pick<
+		Window,
+		'innerHeight' | 'innerWidth' | 'outerHeight' | 'outerWidth' | 'visualViewport'
+	>)[] = ['innerHeight', 'innerWidth', 'outerHeight', 'outerWidth', 'visualViewport'];
 	for (const windowSizeProperty of windowSizeProperties) {
 		Object.defineProperty(iframeWindow, windowSizeProperty, {
 			get: function reframedWindowSizeGetter() {
