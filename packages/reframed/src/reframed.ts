@@ -201,7 +201,7 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 		return;
 	}
 
-	const mainDocument = shadowRoot.ownerDocument;
+	const mainDocument = shadowRoot.host.ownerDocument;
 	const mainWindow = mainDocument.defaultView!;
 
 	const globalConstructors: Function[] = Object.entries(Object.getOwnPropertyDescriptors(iframeWindow)).flatMap(
@@ -680,12 +680,12 @@ function monkeyPatchDOMInsertionMethods() {
 	}
 
 	function isWithinReframedDOM(node: Node) {
-		const root = node.getRootNode();
+		const root = _Node_getRootNode.call(node);
 		return isReframedShadowRoot(root);
 	}
 
 	function getReframedMetadata(node: Node) {
-		const root = node.getRootNode();
+		const root = _Node_getRootNode.call(node);
 
 		if (!isReframedShadowRoot(root)) {
 			throw new Error('Missing reframed metadata!');
@@ -729,6 +729,34 @@ function monkeyPatchDOMInsertionMethods() {
 			}
 		}
 		return _Node__replaceChild.apply(this, arguments as any) as any;
+	};
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/Node/ownerDocument
+	const _Node__ownerDocument = Object.getOwnPropertyDescriptor(Node.prototype, 'ownerDocument')!.get!;
+	Object.defineProperty(Node.prototype, 'ownerDocument', {
+		configurable: true,
+		enumerable: true,
+		get() {
+			if (isWithinReframedDOM(this)) {
+				const rootNode = _Node_getRootNode.call(this) as Node & { [reframedMetadataSymbol]: ReframedMetadata };
+				const metadata = rootNode[reframedMetadataSymbol] as ReframedMetadata;
+				// return fragment's patched document
+				return metadata.iframe.contentDocument;
+			}
+			return _Node__ownerDocument.call(this);
+		},
+	});
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/Node/getRootNode
+	const _Node_getRootNode = Node.prototype.getRootNode;
+	Node.prototype.getRootNode = function getRootNode(options) {
+		const realRoot = _Node_getRootNode.call(this);
+		// if the real root node is our shadowroot then we should return the iframe's document instead
+		if (isReframedShadowRoot(realRoot)) {
+			const metadata = realRoot[reframedMetadataSymbol] as ReframedMetadata;
+			return metadata.iframe.contentDocument!;
+		}
+		return !options ? realRoot : _Node_getRootNode.call(this, options);
 	};
 
 	const _Element__after = Element.prototype.after;
