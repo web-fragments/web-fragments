@@ -13,6 +13,7 @@ export default defineConfig({
 					import.meta.url,
 				).pathname,
 				elements: new URL('src/elements/index.ts', import.meta.url).pathname,
+				state: new URL('src/state/index.ts', import.meta.url).pathname,
 			},
 			formats: ['es'],
 		},
