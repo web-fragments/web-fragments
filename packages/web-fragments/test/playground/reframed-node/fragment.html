@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>reframed-node fragment</title>
+	</head>
+	<body>
+		<h2>reframed-node fragment</h2>
+		<ul>
+			<li>
+				<code>element.getRootNode() === document</code>
+				<input id="element-getrootnode" type="checkbox" />
+			</li>
+			<li>
+				<code>element.ownerDocument === document</code>
+				<input id="element-ownerdocument" type="checkbox" />
+			</li>
+			<li>
+				<code>element.rootNode().ownerDocument === document</code>
+				<input id="rootnode-ownerdocument" type="checkbox" />
+			</li>
+			<li>
+				<code>document.ownerDocument === null</code>
+				<input id="fragment-document-ownerdocument" type="checkbox" />
+			</li>
+		</ul>
+		<script>
+			document.querySelector('#element-getrootnode').checked = document.querySelector('h2').getRootNode() === document;
+			document.querySelector('#element-ownerdocument').checked =
+				document.querySelector('h2').ownerDocument === document;
+			document.querySelector('#rootnode-ownerdocument').checked =
+				document.querySelector('h2').getRootNode().ownerDocument === null;
+			document.querySelector('#fragment-document-ownerdocument').checked = document.ownerDocument === null;
+		</script>
+	</body>
+</html>
