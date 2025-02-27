@@ -680,12 +680,12 @@ function monkeyPatchDOMInsertionMethods() {
 	}
 
 	function isWithinReframedDOM(node: Node) {
-		const root = node.getRootNode();
+		const root = _Node_getRootNode.call(node);
 		return isReframedShadowRoot(root);
 	}
 
 	function getReframedMetadata(node: Node) {
-		const root = node.getRootNode();
+		const root = _Node_getRootNode.call(node);
 
 		if (!isReframedShadowRoot(root)) {
 			throw new Error('Missing reframed metadata!');
@@ -738,7 +738,7 @@ function monkeyPatchDOMInsertionMethods() {
 		enumerable: true,
 		get() {
 			if (isWithinReframedDOM(this)) {
-				const rootNode = this.getRootNode();
+				const rootNode = _Node_getRootNode.call(this) as Node & { [reframedMetadataSymbol]: ReframedMetadata };
 				const metadata = rootNode[reframedMetadataSymbol] as ReframedMetadata;
 				// return fragment's patched document
 				return metadata.iframe.contentDocument;
@@ -746,6 +746,18 @@ function monkeyPatchDOMInsertionMethods() {
 			return _Node__ownerDocument.call(this);
 		},
 	});
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/Node/getRootNode
+	const _Node_getRootNode = Node.prototype.getRootNode;
+	Node.prototype.getRootNode = function getRootNode(options) {
+		const realRoot = _Node_getRootNode.call(this);
+		// if the real root node is our shadowroot then we should return the iframe's document instead
+		if (isReframedShadowRoot(realRoot)) {
+			const metadata = realRoot[reframedMetadataSymbol] as ReframedMetadata;
+			return metadata.iframe.contentDocument!;
+		}
+		return !options ? realRoot : _Node_getRootNode.call(this, options);
+	};
 
 	const _Element__after = Element.prototype.after;
 	Element.prototype.after = function after(...nodes) {
