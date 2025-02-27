@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF Playground: reframed-node</title>
+		<style>
+			fragment-host {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF Playground: reframed-node</h1>
+		<ul>
+			<li>
+				<code>webFragment.getRootNode() === document</code>
+				<input id="web-fragment-getrootnode" type="checkbox" />
+			</li>
+			<li>
+				<code>webFragment.ownerDocument === document</code>
+				<input id="web-fragment-ownerdocument" type="checkbox" />
+			</li>
+			<li>
+				<code>webFragment.shadowroot.ownerDocument === document</code>
+				<input id="web-fragment-shadowroot-ownerdocument" type="checkbox" />
+			</li>
+			<li>
+				<code>webFragmentHost.getRootNode() === webFragment.shadowRoot</code>
+				<input id="web-fragment-host-getrootnode" type="checkbox" />
+			</li>
+			<li>
+				<code>webFragmentHost.ownerDocument === document</code>
+				<input id="web-fragment-host-ownerdocument" type="checkbox" />
+			</li>
+			<li>
+				<code>webFragmentHost.shadowroot.ownerDocument === document</code>
+				<input id="web-fragment-host-shadowroot-ownerdocument" type="checkbox" />
+			</li>
+			<li>
+				<code>document.ownerDocument === null</code>
+				<input id="document-ownerdocument" type="checkbox" />
+			</li>
+		</ul>
+		<script>
+			document.addEventListener('DOMContentLoaded', () => {
+				const webFragment = document.querySelector('web-fragment');
+
+				document.querySelector('#web-fragment-getrootnode').checked = webFragment.getRootNode() === document;
+				document.querySelector('#web-fragment-ownerdocument').checked = webFragment.ownerDocument === document;
+				document.querySelector('#web-fragment-shadowroot-ownerdocument').checked =
+					webFragment.shadowRoot.ownerDocument === document;
+
+				const webFragmentHost = webFragment.shadowRoot.querySelector('web-fragment-host');
+				document.querySelector('#web-fragment-host-getrootnode').checked =
+					webFragmentHost.getRootNode() === webFragment.shadowRoot;
+				document.querySelector('#web-fragment-host-ownerdocument').checked = webFragmentHost.ownerDocument === document;
+				document.querySelector('#web-fragment-host-shadowroot-ownerdocument').checked =
+					webFragmentHost.shadowRoot.ownerDocument === document;
+				document.querySelector('#document-ownerdocument').checked = document.ownerDocument === null;
+			});
+		</script>
+
+		<script type="module">
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
+		</script>
+
+		<web-fragment fragment-id="reframed-node"></web-fragment>
+	</body>
+</html>

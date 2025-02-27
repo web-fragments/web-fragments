@@ -777,13 +777,6 @@ function monkeyPatchDOMInsertionMethods() {
 		return true;
 	}
 
-	// TODO: remove this and replace it with getIframeDocumentIfWithinReframedDom
-	// first however, land tests for ownerDocument and getRootNode
-	function isWithinReframedDOM(node: Node) {
-		const root = _Node_getRootNode.call(node);
-		return isReframedShadowRoot(root);
-	}
-
 	function getIframeDocumentIfWithinReframedDom(node: Node) {
 		const root = _Node_getRootNode.call(node) as ReframedShadowRoot;
 		return root?.[reframedMetadataSymbol]?.iframe.contentDocument ?? undefined;
@@ -876,11 +869,9 @@ function monkeyPatchDOMInsertionMethods() {
 		configurable: true,
 		enumerable: true,
 		get() {
-			if (isWithinReframedDOM(this)) {
-				const rootNode = _Node_getRootNode.call(this) as Node & { [reframedMetadataSymbol]: ReframedMetadata };
-				const metadata = rootNode[reframedMetadataSymbol] as ReframedMetadata;
-				// return fragment's patched document
-				return metadata.iframe.contentDocument;
+			const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+			if (iframeDocument) {
+				return iframeDocument;
 			}
 			return _Node__ownerDocument.call(this);
 		},
@@ -890,10 +881,9 @@ function monkeyPatchDOMInsertionMethods() {
 	const _Node_getRootNode = Node.prototype.getRootNode;
 	Node.prototype.getRootNode = function getRootNode(options) {
 		const realRoot = _Node_getRootNode.call(this);
-		// if the real root node is our shadowroot then we should return the iframe's document instead
-		if (isReframedShadowRoot(realRoot)) {
-			const metadata = realRoot[reframedMetadataSymbol] as ReframedMetadata;
-			return metadata.iframe.contentDocument!;
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(realRoot);
+		if (iframeDocument) {
+			return iframeDocument;
 		}
 		return !options ? realRoot : _Node_getRootNode.call(this, options);
 	};
