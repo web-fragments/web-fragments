@@ -1,5 +1,36 @@
 # reframed
 
+## 0.1.3
+
+### Patch Changes
+
+- [#129](https://github.com/web-fragments/web-fragments/pull/129) [`66cf24d`](https://github.com/web-fragments/web-fragments/commit/66cf24d769fa0000bc0e8c1b8672b3228a552af3) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(reframed): correctly execute external scripts (`<script src="...">`)
+
+  Previously we accidentally treated them as inline scripts that haven't been fully parsed and appended, which caused double execution of these scripts.
+
+  This issue prevented Analog from bootstrapping correctly in reframed context.
+
+- [#127](https://github.com/web-fragments/web-fragments/pull/127) [`2b53c14`](https://github.com/web-fragments/web-fragments/commit/2b53c14bc92e53427417cdf0c535ee12267458c2) Thanks [@IgorMinar](https://github.com/IgorMinar)! - Correctly support MutationObserver and ResizeObserver within fragments.
+
+  Previously we didn't patch these, and since they were asked to observe DOM from the main frame
+  the observers didn't work correctly.
+
+- [#128](https://github.com/web-fragments/web-fragments/pull/128) [`5f26b87`](https://github.com/web-fragments/web-fragments/commit/5f26b8700fff3dd5db0bbdd97628ec66904f8f43) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(reframed): document.activeElement should always point to shadowRoot.activeElement
+
+  Previously before we used shadowRoot in web fragments the active element in the fragment targeted main document's active element.
+  But now that we require the use of shadowRoot, we must use shadowRoot.activeElement instead because otherwise activeElement is set to the element that owns the fragment's shadowroot.
+  This issue caused the code in fragment to escape the shadowroot, which results in weird bugs.
+
+- [#130](https://github.com/web-fragments/web-fragments/pull/130) [`142b8ed`](https://github.com/web-fragments/web-fragments/commit/142b8edd8245511c7caea14043829a2f70b6ceb1) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(reframed): node.ownerDocument should return fragment Document
+
+  Any node within the fragment's shadowRoot should consider its ownerDocument to be the monkey patched Document from the reframed iframe.
+
+  If we don't patch this, it's too easy for code to escape the shadowRoot boundary when traversing the DOM.
+
+- [#130](https://github.com/web-fragments/web-fragments/pull/130) [`7654040`](https://github.com/web-fragments/web-fragments/commit/76540407fe88e3c1dab1d69b81626f79af1a1059) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(reframed): node.getRootNode() should return fragment's Document
+
+  This is to ensure consistent behavior with the real DOM.
+
 ## 0.1.2
 
 ### Patch Changes
