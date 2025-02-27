@@ -1,5 +1,13 @@
 # reframed
 
+## 0.1.4
+
+### Patch Changes
+
+- [#134](https://github.com/web-fragments/web-fragments/pull/134) [`fe32b14`](https://github.com/web-fragments/web-fragments/commit/fe32b1420fca443e968d6d9c46381193d5887ba2) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(reframed): correctly support window.visualViewport
+
+  We need to read it from the main window.
+
 ## 0.1.3
 
 ### Patch Changes
