@@ -230,6 +230,11 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 
 	setInternalReference(iframeDocument, 'body');
 
+	const getUnpatchedIframeDocumentCurrentScript = Object.getOwnPropertyDescriptor(
+		Object.getPrototypeOf(Object.getPrototypeOf(iframeDocument)),
+		'currentScript',
+	)!.get!.bind(iframeDocument);
+
 	Object.defineProperties(iframeDocument, {
 		title: {
 			get: function () {
@@ -253,6 +258,13 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 					);
 				}
 				return shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState;
+			},
+		},
+
+		currentScript: {
+			get() {
+				// grab the currently executing script in the iframe, and map it to its clone in the main document
+				return scriptElementMap.get(getUnpatchedIframeDocumentCurrentScript());
 			},
 		},
 
@@ -654,6 +666,27 @@ function monkeyPatchDOMInsertionMethods() {
 		// Clone the empty script to the main document.
 		if (!script.src && !script.textContent) {
 			const clone = document.importNode(script, true);
+			clone.textContent = '//inert';
+			scriptElementMap.set(script, clone);
+			getInternalReference(iframe.contentDocument, 'body').appendChild(script);
+			const origScriptAppendChild = script.appendChild;
+			script.appendChild = function (node) {
+				clone.firstChild?.remove();
+				clone.appendChild.call(clone, document.importNode(node, true));
+				return origScriptAppendChild.call(script, node) as typeof node;
+			};
+			return clone;
+		}
+
+		// if script has a textContent then it will be executed synchronously when attached to a document, so we need to
+		// handle it differently
+		if (script.textContent) {
+			// If the script has text content, we can execute it directly.
+			// Clone the script to the main document and execute it.
+			const clone = document.importNode(script, true);
+			clone.type = 'inert';
+			scriptElementMap.set(script, clone);
+			_Element__replaceWith.call(script, clone);
 			getInternalReference(iframe.contentDocument, 'body').appendChild(script);
 			return clone;
 		}
@@ -667,9 +700,17 @@ function monkeyPatchDOMInsertionMethods() {
 		// direct references they might be holding that point to the original script.
 		const scriptToExecute = iframe.contentDocument.importNode(script, true);
 		getInternalReference(iframe.contentDocument, 'body').appendChild(scriptToExecute);
-		const alreadyStartedScript = document.importNode(scriptToExecute, true);
-		_Element__replaceWith.call(script, alreadyStartedScript);
-		return alreadyStartedScript;
+		// The appendChild call above is will result in async script evaluation, so we can do some prep
+		// work before the script executes.
+		// The execution is asynchronous because:
+		// - external scripts (`<script src="...">`) needs to unwind the current event loop first
+		// - inline scripts are appended by WritableDOM in two steps:
+		//    1. script element first (which we appended above)
+		// 		2. and then textContent of the element, which then causes the script to execute
+		const inertScript = document.importNode(scriptToExecute, true);
+		scriptElementMap.set(scriptToExecute, inertScript);
+		_Element__replaceWith.call(script, inertScript);
+		return inertScript;
 	}
 
 	function executeAnyChildScripts(element: Node, reframedContext: ReframedMetadata) {
@@ -696,6 +737,16 @@ function monkeyPatchDOMInsertionMethods() {
 	Node.prototype.appendChild = function appendChild(node) {
 		if (isWithinReframedDOM(this)) {
 			const reframedContext = getReframedMetadata(this);
+			const iframeDocument = reframedContext.iframe.contentDocument;
+			assert(iframeDocument !== null, 'iframe.contentDocument is not defined');
+
+			// TODO: we call this too early, we need to:
+			// - make all scripts inert
+			// - attach the node
+			// - remove the inert flag
+			// - execute scripts in order
+			// - repeat all of this for insertBefore, replaceChild, and others below
+			// See spec for a disabled test.
 			executeAnyChildScripts(node, reframedContext);
 			if (node instanceof HTMLScriptElement) {
 				node = arguments[0] = executeScriptInReframedContext(node, reframedContext);
@@ -920,3 +971,8 @@ function getInternalReference<T extends object, K extends keyof T>(target: T, ke
 type ReframedContainer = HTMLElement & {
 	shadowRoot: ReframedShadowRoot;
 };
+
+/**
+ * Weak map of scripts running in the iframe to their inert clones in the reframed DOM.
+ */
+const scriptElementMap = new WeakMap<HTMLScriptElement, HTMLScriptElement>();
