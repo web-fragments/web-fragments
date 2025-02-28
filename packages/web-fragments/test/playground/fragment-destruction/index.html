@@ -40,6 +40,7 @@
 				const f = document.createElement('web-fragment');
 				fragmentCounter++;
 				f.src = '/fragment-destruction/fragment?counter=' + fragmentCounter;
+				f.setAttribute('fragment-id', `fragment-destruction${fragmentCounter}`);
 				document.body.appendChild(f);
 			});
 

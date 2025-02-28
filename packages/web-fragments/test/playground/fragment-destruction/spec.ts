@@ -53,11 +53,11 @@ describe('fragment destruction', () => {
 		await expect(fragments.getByRole('heading')).toHaveText('hello world!');
 
 		await page.evaluate(() => {
-			const garbage = document.querySelector('iframe[name=fragment-destruction]')?.contentWindow?.garbage;
+			const garbage = document.querySelector('iframe[name="wf:fragment-destruction"]')?.contentWindow?.garbage;
 			if (!garbage) throw new Error('garbage not found');
 
-			globalThis.garbageArrayWeakRef = new WeakRef(garbage.array);
-			globalThis.garbageH2WeakRef = new WeakRef(garbage.h2);
+			globalThis.garbageArrayWeakRef = new WeakRef(garbage.gArray);
+			globalThis.garbageH2WeakRef = new WeakRef(garbage.gh2);
 		});
 
 		await page.requestGC();
@@ -115,7 +115,3 @@ describe('fragment destruction', () => {
 		});
 	});
 });
-
-// setting src to * should be specially treated as bound fragment
-// setting src to anything else should be passed to fetch as is
-// location.reload() in a fragment should cause a reload in the main frame for bound fragments and in the iframe for standalone fragments

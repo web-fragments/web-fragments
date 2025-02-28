@@ -128,7 +128,7 @@ async function reframeWithFetch(
 	// It is important to set the src of the iframe AFTER we get the html stream response.
 	// Doing so after ensures that the "iframe" load event triggers properly after content is streamed.
 	iframe.src = reframedSrc;
-	iframe.name = options.name;
+	iframe.name = `wf:${options.name}`;
 
 	let alreadyLoaded = false;
 
@@ -183,12 +183,7 @@ async function reframeFromTarget(source: ParentNode, iframe: HTMLIFrameElement):
 
 	iframe.addEventListener('load', () => {
 		scripts.forEach((script) => {
-			const scriptType = script.getAttribute('data-script-type');
-			script.removeAttribute('data-script-type');
-			script.removeAttribute('type');
-			if (scriptType) {
-				script.setAttribute('type', scriptType);
-			}
+			restoreScriptType(script);
 
 			assert(iframe.contentDocument !== null, 'iframe.contentDocument is not defined');
 
@@ -263,6 +258,11 @@ function monkeyPatchIFrameEnvironment(
 
 	setInternalReference(iframeDocument, 'body');
 
+	const getUnpatchedIframeDocumentCurrentScript = Object.getOwnPropertyDescriptor(
+		Object.getPrototypeOf(Object.getPrototypeOf(iframeDocument)),
+		'currentScript',
+	)!.get!.bind(iframeDocument);
+
 	Object.defineProperties(iframeDocument, {
 		title: {
 			get: function () {
@@ -286,6 +286,13 @@ function monkeyPatchIFrameEnvironment(
 					);
 				}
 				return shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState;
+			},
+		},
+
+		currentScript: {
+			get() {
+				// grab the currently executing script in the iframe, and map it to its clone in the main document
+				return execToInertScriptMap.get(getUnpatchedIframeDocumentCurrentScript());
 			},
 		},
 
@@ -739,129 +746,129 @@ function monkeyPatchDOMInsertionMethods() {
 	const _Element__replaceWith = Element.prototype.replaceWith;
 
 	/**
-	 * Executes a script in a context.
-	 * @param script
-	 * @param reframedContext
-	 * @returns An inert clone of the script node which can be inserted into the reframed DOM.
+	 * Executes a script in a reframed JS context.
+	 * @param inertScript inert script already appended to a document within reframed DOM
+	 * @param reframedContext JS context in which the script should execute.
+	 * @returns true if the script executed, false if it was ignored
 	 */
-	function executeScriptInReframedContext<T extends Node>(
-		script: T & HTMLScriptElement,
-		reframedContext: ReframedMetadata,
-	) {
+	function executeInertScript(inertScript: HTMLScriptElement, iframeDocument: Document): boolean {
 		// If the script does not have a valid type attribute, treat the script node as a data block.
 		// We can add the data block directly to the main document instead of the iframe context.
 		const validScriptTypes = ['module', 'text/javascript', 'importmap', 'speculationrules', '', null];
-		if (!validScriptTypes.includes(script.getAttribute('type'))) {
-			return script;
+		if (!validScriptTypes.includes(inertScript.getAttribute('type'))) {
+			return false;
 		}
 
-		const iframe = reframedContext.iframe;
-		assert(iframe.contentDocument !== null, 'iframe.contentDocument is not defined');
+		assert(!!(inertScript.src || inertScript.textContent), `Can't execute script without src or textContent!`);
 
-		// Script nodes that do not have text content are not evaluated.
-		// Add a reference of the script to the iframe. If text content is added later, the script is then evaluated.
-		// Clone the empty script to the main document.
-		if (!script.src && !script.textContent) {
-			const clone = document.importNode(script, true);
-			getInternalReference(iframe.contentDocument, 'body').appendChild(script);
-			return clone;
+		// inline scripts (script with textContent) will be executed synchronously when attached to a document
+		if (inertScript.textContent) {
+			const execScript = iframeDocument.importNode(inertScript, true);
+			execToInertScriptMap.set(execScript, inertScript);
+			getInternalReference(iframeDocument, 'body').appendChild(execScript);
 		}
 
-		// This function relies on the fact that scripts follow exactly-once execution semantics.
-		// Scripts contain an internal `already started` flag to track whether they have already
-		// been executed, and this flag survives cloning operations. So, this function ensures
-		// that the exactly-once execution happens in the reframed context, then replaces the original
-		// script instance with its already-executed clone in whatever node tree it might be within.
-		// It also returns the already-executed clone so that the caller can update any
-		// direct references they might be holding that point to the original script.
-		const scriptToExecute = iframe.contentDocument.importNode(script, true);
-		getInternalReference(iframe.contentDocument, 'body').appendChild(scriptToExecute);
-		const alreadyStartedScript = document.importNode(scriptToExecute, true);
-		_Element__replaceWith.call(script, alreadyStartedScript);
-		return alreadyStartedScript;
+		// otherwise handle external scripts (with src attribute)
+		// this newly appended script will execute once the current turn of the event loop unwinds
+		const execScript = iframeDocument.importNode(inertScript, true);
+		execToInertScriptMap.set(execScript, inertScript);
+		getInternalReference(iframeDocument, 'body').appendChild(execScript);
+
+		return true;
 	}
 
-	function executeAnyChildScripts(element: Node, reframedContext: ReframedMetadata) {
-		const scripts = (element as Element).querySelectorAll?.('script') ?? [];
-		scripts.forEach((script) => executeScriptInReframedContext(script, reframedContext));
-	}
-
+	// TODO: remove this and replace it with getIframeDocumentIfWithinReframedDom
+	// first however, land tests for ownerDocument and getRootNode
 	function isWithinReframedDOM(node: Node) {
 		const root = _Node_getRootNode.call(node);
 		return isReframedShadowRoot(root);
 	}
 
-	function getReframedMetadata(node: Node) {
-		const root = _Node_getRootNode.call(node);
-
-		if (!isReframedShadowRoot(root)) {
-			throw new Error('Missing reframed metadata!');
-		}
-
-		return root[reframedMetadataSymbol];
+	function getIframeDocumentIfWithinReframedDom(node: Node) {
+		const root = _Node_getRootNode.call(node) as ReframedShadowRoot;
+		return root?.[reframedMetadataSymbol]?.iframe.contentDocument ?? undefined;
 	}
 
-	// Rewrite the tagname for special custom elements added by writable-dom.
-	// Remove the WF-* prefix, but only for those elements.
-	//
-	// TODO: optimize patch for tagname rewrite to short circuit earlier,
-	// otherwise we potentially need to run this check millions/billions of times
-	const WF_CUSTOM_ELEMENTS = new Set(['WF-HTML', 'WF-HEAD', 'WF-BODY']);
-	function rewriteTagName(node: Element) {
-		const originalTagName = node.tagName;
-		if (WF_CUSTOM_ELEMENTS.has(originalTagName)) {
-			Object.defineProperty(node, 'tagName', {
-				get() {
-					return originalTagName.replace(/^WF-/i, '');
-				},
+	const unpatchedNodeProto = {
+		appendChild: Node.prototype.appendChild,
+		insertBefore: Node.prototype.insertBefore,
+		replaceChild: Node.prototype.replaceChild,
+	};
+
+	Node.prototype.appendChild = function appendChild<T extends Node>(this: Node, childNode: T): T {
+		const doInsertTheNode = () => unpatchedNodeProto.appendChild.apply(this, arguments as any) as T;
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+		return reframedDomInsertion(childNode, doInsertTheNode, iframeDocument);
+	};
+
+	Node.prototype.insertBefore = function insertBefore<T extends Node>(this: Node, childNode: T): T {
+		const doInsertTheNode = () => unpatchedNodeProto.insertBefore.apply(this, arguments as any) as T;
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+		return reframedDomInsertion(childNode, doInsertTheNode, iframeDocument);
+	};
+
+	Node.prototype.replaceChild = function replaceChild<T extends Node>(this: Node, childNode: Node, oldChildNode: T): T {
+		const doInsertTheNode = () => unpatchedNodeProto.replaceChild.apply(this, arguments as any) as T;
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+		reframedDomInsertion(childNode, doInsertTheNode, iframeDocument);
+		return oldChildNode;
+	};
+
+	const unpatchedElementProto = {
+		after: Element.prototype.after,
+		append: Element.prototype.append,
+		prepend: Element.prototype.prepend,
+		replaceChildren: Element.prototype.replaceChildren,
+		replaceWith: Element.prototype.replaceWith,
+		insertAdjacentElement: Element.prototype.insertAdjacentElement,
+	};
+
+	(['append', 'prepend', 'replaceChildren', 'replaceWith'] as const).forEach((elementInsertionMethod) => {
+		Element.prototype[elementInsertionMethod] = function patchedElementInsertion(...nodes) {
+			const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+
+			if (!iframeDocument) {
+				return unpatchedElementProto[elementInsertionMethod].apply(this, arguments as any);
+			}
+
+			const scripts: HTMLScriptElement[] = [];
+
+			nodes.forEach((node) => {
+				if (node instanceof HTMLScriptElement) {
+					scripts.push(node);
+				} else if (node instanceof Element) {
+					scripts.push(...node.querySelectorAll?.('script'));
+				}
 			});
+
+			scripts.forEach((script) => setInertScriptType(script));
+			unpatchedElementProto[elementInsertionMethod].apply(this, arguments as any);
+			scripts.forEach((script) => restoreScriptType(script));
+			scripts.forEach((script) => executeInertScript(script, iframeDocument));
+		};
+	});
+
+	Element.prototype.insertAdjacentElement = function after(this: Element, where: InsertPosition, element: Element) {
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+
+		if (!iframeDocument) {
+			return unpatchedElementProto.insertAdjacentElement.apply(this, arguments as any);
 		}
-	}
 
-	const _Node__appendChild = Node.prototype.appendChild;
-	Node.prototype.appendChild = function appendChild(node) {
-		if (isWithinReframedDOM(this)) {
-			const reframedContext = getReframedMetadata(this);
-			executeAnyChildScripts(node, reframedContext);
-			if (node instanceof HTMLScriptElement) {
-				node = arguments[0] = executeScriptInReframedContext(node, reframedContext);
-			}
+		const scripts: HTMLScriptElement[] = [];
 
-			if (node instanceof HTMLElement) {
-				rewriteTagName(node);
-			}
+		if (element instanceof HTMLScriptElement) {
+			scripts.push(element);
+		} else {
+			scripts.push(...element.querySelectorAll?.('script'));
 		}
-		return _Node__appendChild.apply(this, arguments as any) as any;
-	};
 
-	const _Node__insertBefore = Node.prototype.insertBefore;
-	Node.prototype.insertBefore = function insertBefore(node, child) {
-		if (isWithinReframedDOM(this)) {
-			const reframedContext = getReframedMetadata(this);
-			executeAnyChildScripts(node, reframedContext);
-			if (node instanceof HTMLScriptElement) {
-				node = arguments[0] = executeScriptInReframedContext(node, reframedContext);
-			}
-
-			if (node instanceof HTMLElement) {
-				rewriteTagName(node);
-			}
-		}
-		return _Node__insertBefore.apply(this, arguments as any) as any;
-	};
-
-	const _Node__replaceChild = Node.prototype.replaceChild;
-	Node.prototype.replaceChild = function replaceChild(node, child) {
-		if (isWithinReframedDOM(this)) {
-			const reframedContext = getReframedMetadata(this);
-
-			executeAnyChildScripts(node, reframedContext);
-			if (node instanceof HTMLScriptElement && isWithinReframedDOM(node)) {
-				node = arguments[0] = executeScriptInReframedContext(node, reframedContext);
-			}
-		}
-		return _Node__replaceChild.apply(this, arguments as any) as any;
-	};
+		scripts.forEach((script) => setInertScriptType(script));
+		const returnVal = unpatchedElementProto.insertAdjacentElement.apply(this, arguments as any);
+		scripts.forEach((script) => restoreScriptType(script));
+		scripts.forEach((script) => executeInertScript(script, iframeDocument));
+		return returnVal;
+	} satisfies typeof Element.prototype.insertAdjacentElement;
 
 	// https://developer.mozilla.org/en-US/docs/Web/API/Node/ownerDocument
 	const _Node__ownerDocument = Object.getOwnPropertyDescriptor(Node.prototype, 'ownerDocument')!.get!;
@@ -889,98 +896,6 @@ function monkeyPatchDOMInsertionMethods() {
 			return metadata.iframe.contentDocument!;
 		}
 		return !options ? realRoot : _Node_getRootNode.call(this, options);
-	};
-
-	const _Element__after = Element.prototype.after;
-	Element.prototype.after = function after(...nodes) {
-		if (isWithinReframedDOM(this)) {
-			const reframedContext = getReframedMetadata(this);
-			nodes.forEach((node, index) => {
-				if (typeof node !== 'string') {
-					executeAnyChildScripts(node, reframedContext);
-					if (node instanceof HTMLScriptElement) {
-						node = arguments[index] = executeScriptInReframedContext(node, reframedContext);
-					}
-				}
-			});
-		}
-		return _Element__after.apply(this, arguments as any) as any;
-	};
-
-	const _Element__append = Element.prototype.append;
-	Element.prototype.append = function append(...nodes) {
-		if (isWithinReframedDOM(this)) {
-			const reframedContext = getReframedMetadata(this);
-			nodes.forEach((node, index) => {
-				if (typeof node !== 'string') {
-					executeAnyChildScripts(node, reframedContext);
-					if (node instanceof HTMLScriptElement) {
-						node = arguments[index] = executeScriptInReframedContext(node, reframedContext);
-					}
-				}
-			});
-		}
-		return _Element__append.apply(this, arguments as any) as any;
-	};
-
-	const _Element__insertAdjacentElement = Element.prototype.insertAdjacentElement;
-	Element.prototype.insertAdjacentElement = function insertAdjacentElement(where, element) {
-		if (isWithinReframedDOM(this)) {
-			const reframedContext = getReframedMetadata(this);
-
-			executeAnyChildScripts(element, reframedContext);
-			if (element instanceof HTMLScriptElement) {
-				element = arguments[1] = executeScriptInReframedContext(element, reframedContext);
-			}
-		}
-		return _Element__insertAdjacentElement.apply(this, arguments as any) as any;
-	};
-
-	const _Element__prepend = Element.prototype.prepend;
-	Element.prototype.prepend = function prepend(...nodes) {
-		if (isWithinReframedDOM(this)) {
-			const reframedContext = getReframedMetadata(this);
-			nodes.forEach((node, index) => {
-				if (typeof node !== 'string') {
-					executeAnyChildScripts(node, reframedContext);
-					if (node instanceof HTMLScriptElement) {
-						node = arguments[index] = executeScriptInReframedContext(node, reframedContext);
-					}
-				}
-			});
-		}
-		return _Element__prepend.apply(this, arguments as any) as any;
-	};
-
-	const _Element__replaceChildren = Element.prototype.replaceChildren;
-	Element.prototype.replaceChildren = function replaceChildren(...nodes) {
-		if (isWithinReframedDOM(this)) {
-			const reframedContext = getReframedMetadata(this);
-			nodes.forEach((node, index) => {
-				if (typeof node !== 'string') {
-					executeAnyChildScripts(node, reframedContext);
-					if (node instanceof HTMLScriptElement) {
-						node = arguments[index] = executeScriptInReframedContext(node, reframedContext);
-					}
-				}
-			});
-		}
-		return _Element__replaceChildren.apply(this, arguments as any) as any;
-	};
-
-	Element.prototype.replaceWith = function replaceWith(...nodes) {
-		if (isWithinReframedDOM(this)) {
-			const reframedContext = getReframedMetadata(this);
-			nodes.forEach((node, index) => {
-				if (typeof node !== 'string') {
-					executeAnyChildScripts(node, reframedContext);
-					if (node instanceof HTMLScriptElement) {
-						node = arguments[index] = executeScriptInReframedContext(node, reframedContext);
-					}
-				}
-			});
-		}
-		return _Element__replaceWith.apply(this, arguments as any) as any;
 	};
 }
 
@@ -1059,3 +974,168 @@ function getInternalReference<T extends object, K extends keyof T>(target: T, ke
 type ReframedContainer = HTMLElement & {
 	shadowRoot: ReframedShadowRoot;
 };
+
+/**
+ * Weak map of scripts running in the iframe to their inert clones in the reframed DOM.
+ */
+const execToInertScriptMap = new WeakMap<HTMLScriptElement, HTMLScriptElement>();
+
+/**
+ * Set the type attribute of a script element to "inert".
+ *
+ * This prevents the script from executing in the main JS context when the script is attached to the main document.
+ *
+ * @param script
+ */
+function setInertScriptType(script: HTMLScriptElement) {
+	const scriptType = script.type;
+	if (scriptType) {
+		script.setAttribute('data-script-type', scriptType);
+	}
+	script.setAttribute('type', 'inert');
+}
+
+/**
+ * Restore the original script type and erase any signs of us making the script inert.
+ *
+ * @param script
+ */
+function restoreScriptType(script: HTMLScriptElement) {
+	const scriptType = script.getAttribute('data-script-type');
+	script.removeAttribute('data-script-type');
+	script.removeAttribute('type');
+	if (scriptType) {
+		script.setAttribute('type', scriptType);
+	}
+}
+
+/**
+ * Inline scripts that do not have textContent set are not evaluated until the the first time textContent is set.
+ *
+ * We prepare these scripts for future execution by:
+ * - appending a non-neutralized clone of the script to the iframe document
+ * - neutralizing the original script so that it doesn't execute in the main JS context in the future
+ * - patching the script's appendChild method to also append to the clone which will execute the script in the reframed context
+ *
+ * If a text content is added later, the script then executes in the reframed context.
+ *
+ * @param script Script element to prepare
+ * @param iframeDocument Reframed iframe document
+ */
+function prepareUnattachedInlineScript(script: HTMLScriptElement, iframeDocument: Document) {
+	// We must clone the script before neutralizing it, otherwise the clone will also be neutralized
+	const execScript = iframeDocument.importNode(script, true);
+	const inertScript = script;
+
+	// neutralize the script so that it doesn't execute in the main JS context
+	inertScript.textContent = '//inert';
+	// TODO: should we use a different document?
+	document.body.appendChild(inertScript);
+
+	// now restore the inert script so the code using it doesn't see what we did
+	inertScript.remove();
+	inertScript.firstChild!.remove();
+
+	execToInertScriptMap.set(execScript, inertScript);
+	getInternalReference(iframeDocument, 'body').appendChild(execScript);
+
+	const origScriptAppendChild = inertScript.appendChild;
+	inertScript.appendChild = function (node) {
+		origScriptAppendChild.call(inertScript, node);
+		execScript.appendChild.call(execScript, iframeDocument.importNode(node, true));
+		// restore appendChild since only the first invocation should executes a script
+		inertScript.appendChild = origScriptAppendChild;
+		return node;
+	};
+}
+
+function reframedDomInsertion<T extends Node>(
+	nodeToInsert: T,
+	doInsertTheNode: Function,
+	iframeDocument?: Document,
+): T {
+	// if we are operating outside of a reframed DOM or the appended child is not an element, then just append
+	if (!iframeDocument || !(nodeToInsert instanceof HTMLElement)) {
+		return doInsertTheNode();
+	}
+
+	// if the child's prototype is directly HTMLElement, then check if this is a HTML/BODY/HEAD element and rewrite it
+	if (Object.getPrototypeOf(nodeToInsert) === HTMLElement.prototype) {
+		rewriteTagName(nodeToInsert);
+	}
+
+	// if the child is a script, then append and execute it in a reframed context
+	if (nodeToInsert instanceof HTMLScriptElement) {
+		// if the child is an unattached inline script that doesn't yet have text any content, then we need treat it in a special way
+		if (!nodeToInsert.src && !nodeToInsert.firstChild && !nodeToInsert.parentNode) {
+			prepareUnattachedInlineScript(nodeToInsert, iframeDocument!);
+			return doInsertTheNode();
+		}
+
+		setInertScriptType(nodeToInsert);
+		doInsertTheNode();
+		restoreScriptType(nodeToInsert);
+		executeInertScript(nodeToInsert, iframeDocument);
+		return nodeToInsert;
+	}
+
+	const nestedScripts = nodeToInsert.querySelectorAll('script') ?? [];
+
+	// if the child doesn't contains nested scripts, then just append it
+	if (!nestedScripts) {
+		return doInsertTheNode();
+	}
+
+	// otherwise, append the child and execute all nested scripts in a reframed context
+	nestedScripts.forEach((nestedScript) => setInertScriptType(nestedScript));
+	doInsertTheNode();
+	nestedScripts.forEach((nestedScript) => restoreScriptType(nestedScript));
+
+	nestedScripts.forEach((nestedScript) => executeInertScript(nestedScript, iframeDocument));
+
+	return nodeToInsert;
+}
+
+// Rewrite the tagname for special custom elements added by writable-dom.
+// Remove the WF-* prefix, but only for those elements.
+//
+// TODO: optimize patch for tagname rewrite to short circuit earlier,
+// otherwise we potentially need to run this check millions/billions of times
+const WF_CUSTOM_ELEMENTS = new Set(['WF-HTML', 'WF-HEAD', 'WF-BODY']);
+function rewriteTagName(node: Element) {
+	const originalTagName = node.tagName;
+	if (WF_CUSTOM_ELEMENTS.has(originalTagName)) {
+		Object.defineProperty(node, 'tagName', {
+			get() {
+				return originalTagName.replace(/^WF-/i, '');
+			},
+		});
+	}
+}
+
+/**
+ * Executes a script in a reframed JS context.
+ * @param inertScript inert script already appended to a document within reframed DOM
+ * @param reframedContext JS context in which the script should execute.
+ * @returns true if the script executed, false if it was ignored
+ */
+function executeInertScript(inertScript: HTMLScriptElement, iframeDocument: Document): boolean {
+	// If the script does not have a valid type attribute, treat the script node as a data block.
+	// We can add the data block directly to the main document instead of the iframe context.
+	const validScriptTypes = ['module', 'text/javascript', 'importmap', 'speculationrules', '', null];
+	if (!validScriptTypes.includes(inertScript.getAttribute('type'))) {
+		return false;
+	}
+
+	assert(!!(inertScript.src || inertScript.textContent), `Can't execute script without src or textContent!`);
+
+	const execScript = iframeDocument.importNode(inertScript, true);
+	execToInertScriptMap.set(execScript, inertScript);
+
+	// the following line will append the executable script to iframe
+	// - inline scripts (script with textContent) will be executed synchronously when attached
+	// - external scripts (with src attribute) will execute once the current turn of the event loop unwinds
+	getInternalReference(iframeDocument, 'body').appendChild(execScript);
+
+	return true;
+}
