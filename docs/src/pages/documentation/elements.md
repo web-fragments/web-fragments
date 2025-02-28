@@ -33,7 +33,7 @@ In the context of Web Fragments, a `fragment outlet` is a custom element, repons
 
 ## Fragment Host Client Side
 
-When the application runs and the <fragment-outlet> is parsed it dispatches the 'fragment-outlet-ready' event is trigeered and, when not in place a `fragment host` custom element is mounted and nested inside of the `fragment outlet`, taking its `fragment-id`.
+When the application runs and the <fragment-outlet> is parsed it dispatches the 'fragment-outlet-ready' event is triggered and, when not in place a `fragment host` custom element is mounted and nested inside of the `fragment outlet`, taking its `fragment-id`.
 
 From that moment on, the following `reframed` operations take place:
 
@@ -46,6 +46,11 @@ From that moment on, the following `reframed` operations take place:
 ![web fragments middleware](../../assets/images/wf-middleware.drawio.png)
 
 At the same time, an `iframe` will be created in the DOM, to encapsulate all scripts from the remotely fetched application as a fragment.
+
+## Error Handling
+
+The `fragment-outlet` element will dispatch an `fragment-outlet-error` event when the fragment fails to load.
+The `fragment-host` element will dispatch an `fragment-host-error` event will fire when there is any type of error during fetching the reframed source.
 
 ## Middleware
 

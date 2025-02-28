@@ -38,6 +38,23 @@ const getGatewayMiddleware: ((devMode: boolean) => PagesFunction) & {
 		},
 	});
 
+	// Only used to demonstrate the ability to trigger error event while fetching the fragment
+	gateway.registerFragment({
+		fragmentId: 'remix-error',
+		prePiercingClassNames: ['remix'],
+		routePatterns: ['/remix-error-page/:_*', '/_fragment/remix-error/:_*'],
+		// Note: This fragment doesn't exist, and will throw a network error while fetching
+		endpoint: 'http://localhost:3001',
+		onSsrFetchError: () => {
+			return {
+				response: new Response(
+					"<p id='remix-fragment-not-found'><style>#remix-fragment-not-found { color: red; font-size: 2rem; }</style>Remix fragment not found</p>",
+					{ headers: [['content-type', 'text/html']] },
+				),
+			};
+		},
+	});
+
 	gateway.registerFragment({
 		fragmentId: 'qwik',
 		prePiercingClassNames: ['qwik'],
