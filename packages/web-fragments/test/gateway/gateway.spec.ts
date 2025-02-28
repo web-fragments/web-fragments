@@ -98,6 +98,31 @@ for (const environment of environments) {
 				);
 			});
 
+			it(`should rewrite <html>, <head>, and <body> tags in fragment's html`, async () => {
+				// we want to rewrite the <html>, <head>, and <body> tags in the fragment's html because browser will otherwise strip them out
+
+				mockShellAppResponse(
+					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
+				);
+				mockFragmentFooResponse(
+					'/foo',
+					new Response(
+						'<html lang="en-US"><head data-foo="bar"><meta>some head content</head><body class="foo"><p>foo fragment</p></body></html>',
+					),
+				);
+
+				const response = await testRequest(
+					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe(
+					`<html><body>legacy host content<fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-html lang="en-US"><wf-head data-foo="bar"><meta>some head content</wf-head><wf-body class="foo"><p>foo fragment</p></wf-body></wf-html></template></fragment-host></body></html>`,
+				);
+				expect(response.headers.get('content-type')).toBe('text/html');
+				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
+			});
+
 			it(`should append additional headers to the SSR request for the fragment`, async () => {
 				fetchMock.doMockIf((request) => {
 					if (request.url.toString() === 'http://foo.test:1234/foo') {
@@ -343,6 +368,47 @@ for (const environment of environments) {
 
 				expect(softNavResponse.status).toBe(200);
 				expect(await softNavResponse.text()).toBe(`<p>hello foo world!</p>`);
+				expect(softNavResponse.headers.get('content-type')).toBe('text/html');
+				expect(softNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
+
+				// let's make one more request to the same path but this time with sec-fetch-dest=document to simulate hard navigation
+				mockFragmentFooResponse(
+					'/foo/some/path',
+					new Response('<p>hello foo world!</p>', { headers: { 'content-type': 'text/html' } }),
+				);
+				mockShellAppResponse(
+					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
+				);
+
+				const hardNavResponse = await testRequest(
+					new Request('http://localhost/foo/some/path', { headers: { 'sec-fetch-dest': 'document' } }),
+				);
+
+				expect(hardNavResponse.status).toBe(200);
+				expect(await hardNavResponse.text()).toBe(
+					`<html><body>legacy host content<fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>hello foo world!</p></template></fragment-host></body></html>`,
+				);
+				expect(hardNavResponse.headers.get('content-type')).toBe('text/html');
+				expect(hardNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
+			});
+
+			it(`should rewrite any <html>, <head>, or <body> tags in the served a fragment soft navigation response`, async () => {
+				mockFragmentFooResponse(
+					'/foo/some/path',
+					new Response(
+						'<html lang="en-US"><head data-foo="bar"><meta>some head content</meta></head><body class="foo"><p>hello foo world!</p></body></html>',
+						{ headers: { 'content-type': 'text/html' } },
+					),
+				);
+
+				const softNavResponse = await testRequest(
+					new Request('http://localhost/foo/some/path', { headers: { 'sec-fetch-dest': 'empty' } }),
+				);
+
+				expect(softNavResponse.status).toBe(200);
+				expect(await softNavResponse.text()).toBe(
+					'<wf-html lang="en-US"><wf-head data-foo="bar"><meta>some head content</meta></wf-head><wf-body class="foo"><p>hello foo world!</p></wf-body></wf-html>',
+				);
 				expect(softNavResponse.headers.get('content-type')).toBe('text/html');
 				expect(softNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
 
