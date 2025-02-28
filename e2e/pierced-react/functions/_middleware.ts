@@ -45,9 +45,5 @@ export const onRequest: PagesFunction = async (context) => {
 	console.log('Incoming request', request.url);
 
 	// run the standard middleware function
-	const response = (await middleware(
-		request as unknown as Request,
-		next as unknown as () => Promise<Response>,
-	)) as Response;
-	return response as unknown as import('@cloudflare/workers-types').Response;
+	return await middleware(request, next);
 };
