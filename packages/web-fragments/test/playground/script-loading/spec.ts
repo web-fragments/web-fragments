@@ -21,11 +21,13 @@ test('script loading in fragments', async ({ page }) => {
 	await step('ensure that inline sync scripts executed correctly', async () => {
 		await expect(fragment.locator('#inline-script-sync-running')).toBeChecked();
 		await expect(fragment.locator('#inline-script-sync-reframed')).toBeChecked();
+		await expect(fragment.locator('#inline-script-sync-currentScript')).toBeChecked();
 	});
 
 	await step('ensure that inline async scripts executed correctly', async () => {
 		await expect(fragment.locator('#inline-script-async-running')).toBeChecked();
 		await expect(fragment.locator('#inline-script-async-reframed')).toBeChecked();
+		await expect(fragment.locator('#inline-script-async-currentScript')).toBeChecked();
 	});
 
 	await step('ensure that inline module scripts executed correctly', async () => {
@@ -36,16 +38,19 @@ test('script loading in fragments', async ({ page }) => {
 	await step('ensure that external sync scripts executed correctly', async () => {
 		await expect(fragment.locator('#external-script-sync-running')).toBeChecked();
 		await expect(fragment.locator('#external-script-sync-reframed')).toBeChecked();
+		await expect(fragment.locator('#external-script-sync-currentScript')).toBeChecked();
 	});
 
 	await step('ensure that external async scripts executed correctly', async () => {
 		await expect(fragment.locator('#external-script-async-running')).toBeChecked();
 		await expect(fragment.locator('#external-script-async-reframed')).toBeChecked();
+		await expect(fragment.locator('#external-script-async-currentScript')).toBeChecked();
 	});
 
 	await step('ensure that external defer scripts executed correctly', async () => {
 		await expect(fragment.locator('#external-script-defer-running')).toBeChecked();
 		await expect(fragment.locator('#external-script-defer-reframed')).toBeChecked();
+		await expect(fragment.locator('#external-script-defer-currentScript')).toBeChecked();
 	});
 
 	await step('ensure that external module scripts executed correctly', async () => {
@@ -53,12 +58,23 @@ test('script loading in fragments', async ({ page }) => {
 		await expect(fragment.locator('#external-script-module-reframed')).toBeChecked();
 	});
 
-	await step('ensure all script loaded in a JS context different from the main context', async () => {
-		// TODO: replace with `frame({name: ...})` once we correctly set frame names.
-		const frame = await page.frames()[1];
+	await step('ensure that child inline scripts executed correctly', async () => {
+		await expect(fragment.locator('#inline-child-script-sync-running')).toBeChecked();
+		await expect(fragment.locator('#inline-child-script-sync-reframed')).toBeChecked();
+		await expect(fragment.locator('#inline-child-script-sync-currentScript')).toBeChecked();
+	});
+
+	await step('ensure that child external scripts executed correctly', async () => {
+		await expect(fragment.locator('#external-child-script-sync-running')).toBeChecked();
+		await expect(fragment.locator('#external-child-script-sync-reframed')).toBeChecked();
+		await expect(fragment.locator('#external-child-script-sync-currentScript')).toBeChecked();
+	});
+
+	await step(`ensure all script loaded in fragment's JS context and not in the main context`, async () => {
+		const frame = await page.frame({ name: 'wf:script-loading' });
 		expect(frame).not.toBe(null);
-		expect(await frame?.evaluate(() => window.SCRIPT_CONTEXT_MARKER)).toBe('🔥');
-		expect(await page.evaluate(() => window.SCRIPT_CONTEXT_MARKER)).toBe(undefined);
-		expect(await frame?.evaluate(() => window.SCRIPT_COUNTER)).toBe(7);
+		expect(await frame?.evaluate(() => window.name)).toBe('wf:script-loading');
+		expect(await frame?.evaluate(() => window.SCRIPT_COUNTER)).toBe(9); // 3 inline, 4 external, 2 child scripts
+		expect(await page?.evaluate(() => window.SCRIPT_COUNTER)).toBe(undefined);
 	});
 });

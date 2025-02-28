@@ -19,10 +19,10 @@
 			sendMessage();
 			setInterval(sendMessage, 100);
 
-			const garbageArray = new Array(1_000_000).fill('garbage');
+			const garbageArray = new Array(1_000_000).fill('g*rb*ge');
 			globalThis.garbage = {
-				array: new WeakRef(garbageArray),
-				h2: new WeakRef(document.querySelector('h2')),
+				gArray: new WeakRef(garbageArray),
+				gh2: new WeakRef(document.querySelector('h2')),
 			};
 		</script>
 	</body>
