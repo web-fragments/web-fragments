@@ -77,6 +77,7 @@ export function getWebMiddleware(
 					throw response;
 				})
 				.catch(handleFetchErrors)
+				.then(prefixHtmlHeadBody)
 				.then(neutralizeScriptTags)
 				.then((fragmentResponse) =>
 					embedFragmentIntoShellApp({
@@ -103,14 +104,16 @@ export function getWebMiddleware(
 		 * Simply pass through the fragment response but append the vary header to prevent BFCache issues.
 		 */
 		if (requestSecFetchDest === 'empty') {
-			return new Response(fragmentResponse.body, {
-				status: fragmentResponse.status,
-				statusText: fragmentResponse.statusText,
-				headers: {
-					'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
-					vary: 'sec-fetch-dest',
-				},
-			});
+			return prefixHtmlHeadBody(
+				new Response(fragmentResponse.body, {
+					status: fragmentResponse.status,
+					statusText: fragmentResponse.statusText,
+					headers: {
+						'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
+						vary: 'sec-fetch-dest',
+					},
+				}),
+			);
 		}
 
 		/**
@@ -281,6 +284,36 @@ export function getWebMiddleware(
 				.transform(appShellResponse);
 		}
 	}
+}
+
+/**
+ * Rewrites html so that any <html>, <head>, and <body> tags are replaced with <wf-html>, <wf-head>, and <wf-body> tags.
+ *
+ * DOM doesn't allow duplicates of these three elements in the document, and the main document already contains them.
+ *
+ * We need to replace these tags, to prevent the DOM from silently dropping them when the content is added to the main document.
+ *
+ * @param {Response} fragmentResponse response to rewrite
+ * @returns {Response} rewritten response
+ */
+export function prefixHtmlHeadBody(fragmentResponse: Response): Response {
+	return new HTMLRewriter()
+		.on('html', {
+			element(element: any) {
+				element.tagName = 'wf-html';
+			},
+		})
+		.on('head', {
+			element(element: any) {
+				element.tagName = 'wf-head';
+			},
+		})
+		.on('body', {
+			element(element: any) {
+				element.tagName = 'wf-body';
+			},
+		})
+		.transform(new Response(fragmentResponse.body, fragmentResponse));
 }
 
 /**
