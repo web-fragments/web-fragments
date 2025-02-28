@@ -1,5 +1,6 @@
 {
 	"name": "node-servers-client",
+	"private": true,
 	"version": "1.0.1",
 	"description": "",
 	"type": "module",
