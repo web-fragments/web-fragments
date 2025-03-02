@@ -21,5 +21,6 @@ export default async function globalSetup() {
 		formats: ['umd'],
 	});
 
+	viteConfig.build!.outDir = new URL('../dist/', import.meta.url).pathname;
 	await build(viteConfig);
 }

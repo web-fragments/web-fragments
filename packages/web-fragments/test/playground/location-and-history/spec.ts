@@ -240,15 +240,6 @@ test('bfcache should not cause bound fragment to be mistaken for the shell app e
 	await expect(page).toHaveURL(/http:\/\/localhost:\d+\/location-and-history\//);
 	await expect(page).toHaveTitle('WF TestBed: location-and-history');
 
-	if (browserName === 'firefox') {
-		// TODO: in FF we currently create an extra history record — this is a bug
-		// Fix for this needs to be cherry-picked from:
-		// https://github.com/web-fragments/web-fragments/pull/116/files#diff-5bd72dce661e784e4d04596ba00610b72b1cea81099c38f39b9d54bf1687a591R140-R202
-		expect(await main.historyLength()).toBe(3);
-		// This issue then triggers some odd playwright bugs that prevent it from going back to about:blank so we just bail
-		return;
-	}
-
 	expect(await main.historyLength()).toBe(2);
 
 	await page.goBack();
