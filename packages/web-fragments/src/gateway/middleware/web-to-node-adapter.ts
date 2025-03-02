@@ -107,13 +107,18 @@ function interceptNodeResponse(
 	let originHead: ResponseInit;
 
 	let { promise: originHeadPromise, resolve: originHeadResolve } = Promise.withResolvers<ResponseInit>();
-	function retrieveOrigHead(
+	/**
+	 * Retrieves the origin response head and writes it to the web response.
+	 *
+	 * Params enable overriding the status code, status message, and headers.
+	 */
+	function retrieveAndSendOriginHead(
 		statusCode?: number,
 		statusMessage?: string,
 		headers?: http.OutgoingHttpHeaders | http.OutgoingHttpHeader[],
 	) {
 		if (originHead) {
-			console.warn('warning: Response head has already been flushed!');
+			// the response head has already been flushed
 			return;
 		}
 
@@ -133,7 +138,7 @@ function interceptNodeResponse(
 	}
 
 	response.flushHeaders = function interceptingFlushHeaders() {
-		retrieveOrigHead();
+		retrieveAndSendOriginHead();
 	} satisfies typeof http.ServerResponse.prototype.flushHeaders;
 
 	response.writeHead = function interceptingWriteHead(statusCode: number): http.ServerResponse {
@@ -141,12 +146,13 @@ function interceptNodeResponse(
 		const headers: http.OutgoingHttpHeaders =
 			arguments[1] instanceof Object ? (arguments[1] as http.OutgoingHttpHeaders) : arguments[2];
 
-		retrieveOrigHead(statusCode, statusMessage, headers);
+		retrieveAndSendOriginHead(statusCode, statusMessage, headers);
 
 		return response;
 	} satisfies typeof http.ServerResponse.prototype.writeHead;
 
 	response.write = function interceptingWrite(chunk: any) {
+		retrieveAndSendOriginHead();
 		const encoding =
 			chunk instanceof String
 				? arguments[1] instanceof String
@@ -162,6 +168,7 @@ function interceptNodeResponse(
 	} satisfies typeof http.ServerResponse.prototype.write;
 
 	response.end = function interceptingEnd() {
+		retrieveAndSendOriginHead();
 		const chunk = arguments[0] instanceof Function ? null : arguments[0];
 		const encoding =
 			chunk instanceof String
