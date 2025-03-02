@@ -38,6 +38,9 @@ export class FragmentGateway {
 			);
 		}
 
+		// default to true
+		fragmentConfig.piercing ??= true;
+
 		this.fragmentConfigs.set(fragmentConfig.fragmentId, fragmentConfig);
 
 		// create a reverse mapping of route patterns to fragment configs
@@ -72,13 +75,21 @@ export interface FragmentConfig {
 	 * Unique Id for the fragment.
 	 */
 	fragmentId: string;
+
+	/**
+	 * Whether the fragment should be pierced into the app shell on the server-side by the fragment gateway.
+	 *
+	 * Defaults to true.
+	 */
+	piercing?: boolean;
+
 	/**
 	 * Styles to apply to the fragment before it gets pierced, their purpose
 	 * is to style the fragment in such a way to make it look as close as possible
 	 * to the final pierced view (so that the piercing operation can look seamless).
 	 *
 	 * For best results they should use the following selector:
-	 * :not(piercing-fragment-outlet) > piercing-fragment-host[fragment-id="fragmentId"]
+	 * :not(fragment-outlet) > fragment-host[fragment-id="fragmentId"]
 	 */
 	prePiercingClassNames: string[];
 	/**

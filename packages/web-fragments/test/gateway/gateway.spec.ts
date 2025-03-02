@@ -65,7 +65,7 @@ for (const environment of environments) {
 		});
 
 		describe(`pierced fragment requests`, () => {
-			it(`should match a fragment and return html that combines the host and fragment payloads`, async () => {
+			it(`should match a fragment and return html that combines the app shell and fragment payloads`, async () => {
 				mockShellAppResponse(
 					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
 				);
@@ -96,6 +96,21 @@ for (const environment of environments) {
 				expect(await response2.text()).toBe(
 					`<html><body>legacy host content<fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><p>bar fragment</p></template></fragment-host></body></html>`,
 				);
+			});
+
+			it(`should return the original app shell response but with vary header if the fragment's config disabled piercing`, async () => {
+				mockShellAppResponse(
+					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
+				);
+
+				const response = await testRequest(
+					new Request('http://localhost/unpierced', { headers: { 'sec-fetch-dest': 'document' } }),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe(`<html><body>legacy host content</body></html>`);
+				expect(response.headers.get('content-type')).toBe('text/html');
+				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
 			});
 
 			it(`should rewrite <html>, <head>, and <body> tags in fragment's html`, async () => {
@@ -583,6 +598,15 @@ for (const environment of environments) {
 					}
 					return customFragmentBarOnSsrFetchError(...args);
 				},
+			});
+
+			fragmentGateway.registerFragment({
+				fragmentId: 'unpiercedFragment',
+				piercing: false,
+				prePiercingClassNames: [],
+				routePatterns: ['/unpierced/:_*', '/_fragment/unpierced/:_*'],
+				endpoint: 'http://unpierced.test:1234',
+				upstream: 'http://unpierced.test:1234',
 			});
 
 			switch (environment) {
