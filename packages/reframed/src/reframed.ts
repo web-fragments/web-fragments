@@ -75,10 +75,6 @@ export function reframed(
 		reframeReady = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe);
 	}
 
-	// Note: this line needs to be here as it needs to be added before all the reframing logic
-	//       has added the various load event listeners
-	document.body.insertAdjacentElement('beforeend', iframe);
-
 	const ready = Promise.all([monkeyPatchReady, reframeReady]).then(() => {
 		reframedContainer.shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'interactive';
 		reframedContainer.shadowRoot!.dispatchEvent(new Event('readystatechange'));
@@ -144,6 +140,10 @@ async function reframeWithFetch(
 			});
 	});
 
+	// We can append the iframe to the main document only once the iframe[src] is set.
+	// This is especially the case in Firefox where an extra history record is created for iframes appended for at least one turn of the event loop (a task), which then have their src is set.
+	document.body.appendChild(iframe);
+
 	return promise;
 }
 
@@ -177,6 +177,10 @@ async function reframeFromTarget(source: ParentNode, iframe: HTMLIFrameElement):
 			});
 		resolve();
 	});
+
+	// We can append the iframe to the main document only once the iframe[src] is set.
+	// This is especially the case in Firefox where an extra history record is created for iframes appended for at least one turn of the event loop (a task), which then have their src is set.
+	document.body.appendChild(iframe);
 
 	return promise;
 }

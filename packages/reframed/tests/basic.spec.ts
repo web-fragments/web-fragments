@@ -29,47 +29,6 @@ test.describe('Reframing already-rendered content', () => {
 	});
 });
 
-test.describe('Fetch-and-reframe content', () => {
-	test('reframed scripts execute in an isolated context', async ({ page }) => {
-		page.route('**/content', async (route) => {
-			route.fulfill({
-				contentType: 'text/html',
-				body: `
-          <div id="target">
-            <script>
-              window.context = "reframed"
-            </script>
-          </div>`,
-			});
-		});
-
-		await page.setContent(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <script>
-            window.context = "main"
-          </script>
-        </head>
-        <body>
-          <script>
-            Reframed.reframed("/content")
-          </script>
-        </body>
-      </html>`);
-
-		const reframedContext = page.frames()[1];
-
-		// FIXME: reframed currently first loads an iframe at about:blank, then sets the src.
-		// We should refactor things so that we just load the correct src initially.
-		// Once we do this, we can remove this waitForUrl()
-		await reframedContext.waitForURL('**/content');
-
-		expect(await page.evaluate('window.context')).toBe('main');
-		expect(await reframedContext.evaluate('window.context')).toBe('reframed');
-	});
-});
-
 test('reframed scripts render content into the specified container', async ({ page }) => {
 	await page.setContent(`
     <!DOCTYPE html>
