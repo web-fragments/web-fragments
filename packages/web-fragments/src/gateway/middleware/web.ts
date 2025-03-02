@@ -51,7 +51,11 @@ export function getWebMiddleware(
 		}
 
 		// Forward the request to the fragment endpoint
-		const fragmentResponsePromise = fetchFragment(request, matchedFragment, additionalHeaders, mode);
+		const fragmentResponsePromise =
+			// but only if we are about to pierce, or are proxying the request to the fragment endpoint
+			matchedFragment.piercing || requestSecFetchDest !== 'document'
+				? fetchFragment(request, matchedFragment, additionalHeaders, mode)
+				: undefined; //Promise.reject('Unexpected fragment request');
 
 		/**
 		 * Handle SSR request from a hard navigation
@@ -65,13 +69,14 @@ export function getWebMiddleware(
 
 			const isHTMLResponse = appShellResponse.headers.get('content-type')?.startsWith('text/html');
 
-			// If the app shell response is an error or not HTML, pass it through to the client
-			if (!(appShellResponse.ok && isHTMLResponse)) {
+			// If the app shell response is an error or not HTML or we are not piercing, pass it through to the client
+			if (!appShellResponse.ok || !isHTMLResponse || !matchedFragment.piercing) {
+				appShellResponse.headers.append('vary', 'sec-fetch-dest');
 				return appShellResponse;
 			}
 
 			// Combine the html responses from the fragment and app shell
-			return fragmentResponsePromise
+			return fragmentResponsePromise!
 				.then(function rejectErrorResponses(response: Response) {
 					if (response.ok) return response;
 					throw response;
@@ -95,7 +100,7 @@ export function getWebMiddleware(
 				.catch(renderErrorResponse);
 		}
 
-		const fragmentResponse = await fragmentResponsePromise;
+		const fragmentResponse = await fragmentResponsePromise!;
 
 		/**
 		 * Handle SSR request from a soft navigation
