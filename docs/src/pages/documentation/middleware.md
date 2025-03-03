@@ -7,22 +7,15 @@ _Last updated_: December 8, 2024
 
 ## Web Fragments middleware
 
-The middleware is typically a server-side executed script that processes requests and responses intercepted in the communication between server to client and client to server.
+Middleware is typically a server-side executed script that processes requests and responses intercepted in the communication between server to client and client to server.
 
-## Existing middleware
+Middleware often introduces types and methods and other functionality, that connects the technology and infrastructure agnostic libraries, to required vendor code.
 
-Middleware examples available
+## Base middleware
 
-- [Cloudflare Pages](https://github.com/web-fragments/web-fragments/blob/main/packages/web-fragments/src/gateway/middlewares/cloudflare-pages/index.ts)
-- [Express Server](https://github.com/anfibiacreativa/web-fragments-migration-demo/blob/main/packages/polylithic-app/shell-prod-server/src/_middleware/fragment-express-middleware.ts) (suitable for containerization)
+The base middleware supports the Web standard API (Fetch API) scenario. The middleware uses the [fragment-gateway](./gateway.md) to match a request to a fragment and fetch the corresponding content and assets from the upstream endpoint.
 
-Coming up: Fastify, Azure Functions and Netlify
-
----
-
-Middleware typically introduces types and methods and other functionality, that connects the technology and infrastructure agnostic libraries, to required vendor code.
-
-In the case of `Web Fragments`, middleware will be responsible for identifying and classifying client-side requests by using the `sec-fetch-dest` headers.
+It does so by identifying and classifying client-side requests using the `sec-fetch-dest` headers. This information is only important for debugging your application flow.
 
 ### Case 1: sec-fetch-dest identifies an iframe request
 
@@ -55,23 +48,66 @@ if (request.headers["sec-fetch-dest"] === "script") {
 }
 ```
 
-### Fetching fragment
+## Existing middleware
+
+As explained above, the base middleware support [Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API/Using_Fetch) but we also provide an adapter for [Node.js](https://nodejs.org) native http requests and response and Connect framework.
+
+To use the middleware in your server or functions, you will need to instantiate it and wrap it. For example, if you're using [Cloudflare Workers](https://workers.cloudflare.com/):
+
+```javascript
+import { FragmentGateway } from 'web-fragments/gateway';
+import { getWebMiddleware } from 'web-fragments/gateway/web';
+import { PagesFunction } from '@cloudflare/workers-types';
+
+// Initialize the FragmentGateway
+const gateway = new FragmentGateway({
+	// code here
+});
+
+// Register fragments here ...
+
+// Use base web middleware
+const middleware = getWebMiddleware(gateway, { mode: MODE });
+
+// CF Pages specific handler
+export const onRequest: PagesFunction = async (context) => {
+	const { request, next } = context;
+	console.log('Incoming request', request.url);
+
+	// run the standard middleware function
+	const response = (await middleware(
+		request as unknown as Request,
+		next as unknown as () => Promise<Response>,
+	)) as Response;
+	return response as unknown as import('@cloudflare/workers-types').Response;
+};
+```
+
+## Node native http request/responses and Express wrapper
+
+If you're running your shell in an Express server, your wrapper will look like this
+
+```javascript
+// add code here
+```
+
+---
+
+### Fetching a fragment
 
 Once the requests are identified, and when there is a fragment match, the middlware uses the [gateway](./gateway) to fetch the corresponding fragment and the [reframing](./reframed) mechanism kicks in.
 
 ![web fragments middleware](../../assets/images/wf-middleware.drawio.png)
 
-## Processing assets
+## Processing responses
 
-### Scripts
-
-In the case of scripts, they will be loaded, reframed and encapsulated in the corresponding `iframe context`. This isolates the execution, preventing pollution and reducing security concerns.
+To understand the `web-fragment` lifecycle, please read the [fragment host lifecycle](./elements#fragment-host-client-side) documentation.
 
 #### Offloading scripts
 
-A key diffefrentiator of this approach, is that scripts are not only loaded but also offloaded when browsing away from a reframed view, with the consequent release of memory and mitigation of memory leaks.
+A key diffefrentiator of the web-fragments approach, is that the fragment (or micro-frontend) scripts are not only loaded but also offloaded when browsing away from a reframed view, with the consequent release of memory and mitigation of memory leaks.
 
-To understand how `reframed` works and what it does, go to the [reframed](./reframed) document.
+To learn more about it, go to the [reframed](./reframed) document.
 
 ## Eager-rendering or piercing
 
@@ -81,7 +117,7 @@ To do so, the middleware rewrites the HTML for the document in the response, emb
 
 ### Rewriting the HTML
 
-Our team uses [Worker Tools HTML rewriter](https://github.com/worker-tools/html-rewriter) to manipulate the streams and rewrite the resulting HTML, in our middlewares.
+Our team uses the [browser and Node.js version](https://github.com/remorses/htmlrewriter) of [HTML rewriter](https://developers.cloudflare.com/workers/runtime-apis/html-rewriter/) to manipulate the streams and rewrite the resulting HTML, in our middleware.
 
 This is an example of rewriting the HTML before reframing
 
@@ -90,40 +126,57 @@ This is an example of rewriting the HTML before reframing
 // other code
 ...
 // process the fragment response for embedding into the host document
-  function processFragmentForReframing(fragmentResponse: Response) {
-    console.log('[Debug Info | processFragmentForReframing]');
 
-    return new HTMLRewriter()
-      .on("script", {
-        element(element: any) {
-          const scriptType = element.getAttribute("type");
-          if (scriptType) {
-            element.setAttribute("data-script-type", scriptType);
-          }
-          element.setAttribute("type", "inert");
-        },
-      })
-      .transform(fragmentResponse);
-  }
+	/**
+	 * Embeds a fetched fragment into the host HTML document.
+	 * @param {Response} hostResponse - The response object of the host HTML.
+	 * @param {FragmentConfig} fragmentConfig - Configuration object for the fragment.
+	 * @returns {Function} - A function that processes and integrates the fragment response.
+	 */
+	async function embedFragmentIntoHost({
+		hostInput,
+		fragmentResponse,
+		fragmentConfig,
+		gateway,
+	}: {
+		hostInput: Response;
+		fragmentResponse: Response;
+		fragmentConfig: FragmentConfig;
+		gateway: FragmentGatewayConfig;
+	}) {
+		const { fragmentId, prePiercingClassNames } = fragmentConfig;
+			console.log('[[Debug Info]: Fragment Config]:', { fragmentId, prePiercingClassNames });
+			// @ts-ignore
+			const { prefix: fragmentHostPrefix, suffix: fragmentHostSuffix } = fragmentHostInitialization({
+					fragmentId,
+					classNames: prePiercingClassNames.join(' '),
+					content: '',
+				});
+			const fragmentContent = await fragmentResponse.text();
 
-  // render an error response if something goes wrong
-  function renderErrorResponse(err: unknown, response: ExpressResponse) {
-    if (err instanceof Error) {
-      response.status(500).send(`<p>Error: ${err.message}</p>`);
-    } else {
-      response.status(500).send('<p>Unknown error occurred.</p>');
-    }
-  }
+			return new HTMLRewriter()
+				.on('head', {
+					element(element: any) {
+						console.log('[[Debug Info]: HTMLRewriter]: Injecting styles into head');
+						element.append(gateway.prePiercingStyles, { html: true });
+					},
+				})
+				.on('body', {
+					element(element: any) {
+						const fragmentHost = fragmentHostInitialization({
+							fragmentId,
+							classNames: prePiercingClassNames.join(' '),
+							content: fragmentContent,
+						});
+						console.log('[[Debug Info]: Fragment Response]: Received HTML content', typeof fragmentContent);
+						element.append(fragmentHost.prefix, { html: true });
+						element.append(fragmentHost.suffix, { html: true });
+					},
+				})
+				.transform(hostInput);
+	}
 }
 
-function mergeStreams(...streams: NodeReadable[]) {
-  let combined = new NodePassThrough()
-  for (let stream of streams) {
-    const end = stream === streams.at(-1);
-    combined = stream.pipe(combined, { end })
-  }
-  return combined;
-}
 
 ```
 

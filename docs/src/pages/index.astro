@@ -6,15 +6,11 @@ import Note from "~/components/widgets/Note.astro";
 import Features from "~/components/widgets/Features.astro";
 import Features2 from "~/components/widgets/Features2.astro";
 import Steps from "~/components/widgets/Steps.astro";
-import Content from "~/components/widgets/Content.astro";
-import BlogLatestPosts from "~/components/widgets/BlogLatestPosts.astro";
-import FAQs from "~/components/widgets/FAQs.astro";
-import Stats from "~/components/widgets/Stats.astro";
 import CallToAction from "~/components/widgets/CallToAction.astro";
 
 const metadata = {
 	title: "Web Fragments - A radically new way to do micro-frontends.",
-	ignoreTitleTemplate: true,
+	ignoreTitleTemplate: false,
 };
 ---
 
@@ -47,133 +43,133 @@ const metadata = {
 				> way.
 			</span>
 		</Fragment>
-
-		<!-- Note Widget ******************* -->
-
-		<Note />
-
-		<!-- Features Widget *************** -->
-
-		<Features
-			id="features"
-			tagline="Features"
-			title="Why migrating with Web Fragments"
-			subtitle="Migrate incrementally and avoid pitfalls."
-			items={[
-				{
-					title: "Enable truly independent teams",
-					description:
-						"Micro-frontends are an organizational solution to enable teams to build and release independently. Web Fragments enable teams to achieve their goals in isolation.",
-					icon: "tabler:users-group",
-				},
-				{
-					title: "Prevent fate-sharing",
-					description:
-						"Micro-frontend implementations are typically subject to fate-sharing, or being impacted by other micro-frontend malfunctioning. With Web Fragments, deployments are truly encapsulated.",
-					icon: "tabler:components",
-				},
-				{
-					title: "Quickly iterate and integrate",
-					description:
-						"Independent deployments make it possible to integrate innovation and new technologies without compromising functionality and stability.",
-					icon: "tabler:bulb",
-				},
-				{
-					title: "Best Practices per stack and domain",
-					description:
-						"Web Fragments make it possible to build and integrate multiple stacks, with best-practices and standards in mind, to enhance performance and developer experiece.",
-					icon: "tabler:list-check",
-				},
-			]}
-		/>
-
-		<!-- Steps Widget ****************** -->
-
-		<Steps
-			title="Integrating horizontal micro-frontend splits has never been this easy."
-			items={[
-				{
-					title: 'Step 1: <span class="font-medium">Decouple</span>',
-					description:
-						"Identify and decouple your micro-frontend application. Migrate it to your favorite frontend stack, completely independent from the legacy application.",
-					icon: "tabler:cube",
-				},
-				{
-					title: 'Step 2: <span class="font-medium">Deploy independently</span>',
-					description:
-						"Release and deploy using completely independent schedules, development setup, and CI/CD pipelines. ",
-					icon: "tabler:arrow-loop-right",
-				},
-				{
-					title: 'Step 3: <span class="font-medium">Add your fragments</span>',
-					description:
-						"Install Web Fragments to your shell, register the custom Fragment Outlet and Fragment Host elements, and put them in the HTML.",
-					icon: "tabler:source-code",
-				},
-				{
-					title: "Ready to go!",
-					icon: "tabler:meteor",
-				},
-			]}
-			image={{
-				src: "~/assets/images/wf-fragments.png",
-				alt: "Web fragments micro-frontend",
-			}}
-		/>
-
-		<!-- Features2 Widget ************** -->
-
-		<Features2
-			title="Succeed at innovating"
-			subtitle="Modernizing with an incremental approach."
-			tagline="Web Fragments checks all the boxes for a successful migration to a more performant and modern stack"
-			items={[
-				{
-					title: "Incremental",
-					description:
-						"Progress and changes are non-linear. Migrate your apploication architecture in an incremental way.",
-					icon: "flat-color-icons:org-unit",
-				},
-				{
-					title: "Low risk",
-					description: "Migrate parts of your mission critical applications with low risks and avoiding fate-sharing.",
-					icon: "flat-color-icons:bearish",
-				},
-				{
-					title: "High ROI",
-					description:
-						"Go faster to market with a more modern version of the most important features of your application.",
-					icon: "flat-color-icons:approval",
-				},
-			]}
-		>
-			<Fragment slot="bg">
-				<div class="absolute inset-0 bg-blue-50 dark:bg-transparent"></div>
-			</Fragment>
-		</Features2>
-
-		<!-- CallToAction Widget *********** -->
-
-		<CallToAction
-			actions={[
-				{
-					variant: "primary",
-					text: "Start now!",
-					href: "https://github.com/web-fragments/web-fragments",
-					target: "_blank",
-					icon: "tabler:brand-github",
-				},
-			]}
-		>
-			<Fragment slot="title">
-				The technology, platform and provider agnostic way to build micro-frontends<br class="block sm:hidden" />
-			</Fragment>
-
-			<Fragment slot="subtitle">
-				A radically new way of building modern user interfaces, and incrementally migrating to a new stack. <br
-					class="hidden md:inline"
-				/>No coupling. No fate-sharing. No dependency.
-			</Fragment>
-		</CallToAction>
 	</Hero>
+
+	<!-- Note Widget ******************* -->
+
+	<Note />
+
+	<!-- Features Widget *************** -->
+
+	<Features
+		id="features"
+		tagline="Features"
+		title="Why migrating with Web Fragments"
+		subtitle="Migrate incrementally and avoid pitfalls."
+		items={[
+			{
+				title: "Enable truly independent teams",
+				description:
+					"Micro-frontends are an organizational solution to enable teams to build and release independently. Web Fragments enable teams to achieve their goals in isolation.",
+				icon: "tabler:users-group",
+			},
+			{
+				title: "Prevent fate-sharing",
+				description:
+					"Micro-frontend implementations are typically subject to fate-sharing, or being impacted by other micro-frontend malfunctioning. With Web Fragments, deployments are truly encapsulated.",
+				icon: "tabler:components",
+			},
+			{
+				title: "Quickly iterate and integrate",
+				description:
+					"Independent deployments make it possible to integrate innovation and new technologies without compromising functionality and stability.",
+				icon: "tabler:bulb",
+			},
+			{
+				title: "Best Practices per stack and domain",
+				description:
+					"Web Fragments make it possible to build and integrate multiple stacks, with best-practices and standards in mind, to enhance performance and developer experiece.",
+				icon: "tabler:list-check",
+			},
+		]}
+	/>
+
+	<!-- Steps Widget ****************** -->
+
+	<Steps
+		title="Integrating horizontal micro-frontend splits has never been this easy."
+		items={[
+			{
+				title: 'Step 1: <span class="font-medium">Decouple</span>',
+				description:
+					"Identify and decouple your micro-frontend application. Migrate it to your favorite frontend stack, completely independent from the legacy application.",
+				icon: "tabler:cube",
+			},
+			{
+				title: 'Step 2: <span class="font-medium">Deploy independently</span>',
+				description:
+					"Release and deploy using completely independent schedules, development setup, and CI/CD pipelines. ",
+				icon: "tabler:arrow-loop-right",
+			},
+			{
+				title: 'Step 3: <span class="font-medium">Add your fragments</span>',
+				description:
+					"Install Web Fragments to your shell, register the custom Fragment Outlet and Fragment Host elements, and put them in the HTML.",
+				icon: "tabler:source-code",
+			},
+			{
+				title: "Ready to go!",
+				icon: "tabler:meteor",
+			},
+		]}
+		image={{
+			src: "~/assets/images/wf-fragments.png",
+			alt: "Web fragments micro-frontend",
+		}}
+	/>
+
+	<!-- Features2 Widget ************** -->
+
+	<Features2
+		title="Succeed at innovating"
+		subtitle="Modernizing with an incremental approach."
+		tagline="Web Fragments checks all the boxes for a successful migration to a more performant and modern stack"
+		items={[
+			{
+				title: "Incremental",
+				description:
+					"Progress and changes are non-linear. Migrate your apploication architecture in an incremental way.",
+				icon: "flat-color-icons:org-unit",
+			},
+			{
+				title: "Low risk",
+				description: "Migrate parts of your mission critical applications with low risks and avoiding fate-sharing.",
+				icon: "flat-color-icons:bearish",
+			},
+			{
+				title: "High ROI",
+				description:
+					"Go faster to market with a more modern version of the most important features of your application.",
+				icon: "flat-color-icons:approval",
+			},
+		]}
+	>
+		<Fragment slot="bg">
+			<div class="absolute inset-0 bg-blue-50 dark:bg-transparent"></div>
+		</Fragment>
+	</Features2>
+
+	<!-- CallToAction Widget *********** -->
+
+	<CallToAction
+		actions={[
+			{
+				variant: "primary",
+				text: "Start now!",
+				href: "https://github.com/web-fragments/web-fragments",
+				target: "_blank",
+				icon: "tabler:brand-github",
+			},
+		]}
+	>
+		<Fragment slot="title">
+			The technology, platform and provider agnostic way to build micro-frontends<br class="block sm:hidden" />
+		</Fragment>
+
+		<Fragment slot="subtitle">
+			A radically new way of building modern user interfaces, and incrementally migrating to a new stack. <br
+				class="hidden md:inline"
+			/>No coupling. No fate-sharing. No dependency.
+		</Fragment>
+	</CallToAction>
 </Layout>
