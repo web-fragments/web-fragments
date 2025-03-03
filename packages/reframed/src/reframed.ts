@@ -48,6 +48,11 @@ export function reframed(
 		},
 	);
 
+	// Since fragments will most likely contain other block elements, they should be blocks themselves by default
+	const blockSheet = new CSSStyleSheet();
+	blockSheet.insertRule(':host { display: block; position: relative; }');
+	reframedContainer.shadowRoot?.adoptedStyleSheets.push(blockSheet);
+
 	/**
 	 * Initialize a promise and resolver for monkeyPatchIFrameDocument.
 	 * We need to know when monkeyPatchIFrameDocument resolves so we can return from reframe()
