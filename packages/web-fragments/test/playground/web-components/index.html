@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF Playground: web-components</title>
+		<style>
+			fragment-host {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF Playground: web-components</h1>
+
+		<test-component></test-component>
+		<fragment-host></fragment-host>
+		<fragment-host></fragment-host>
+
+		<script type="module">
+			import { register, FragmentHost } from 'web-fragments/elements';
+			register();
+		</script>
+		<script type="module">
+			window.customElements.define(
+				'test-component',
+				class extends HTMLElement {
+					connectedCallback() {
+						this.innerText = 'hello from main';
+					}
+				},
+			);
+		</script>
+	</body>
+</html>

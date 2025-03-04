@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF Playground: reframing</title>
+		<style>
+			fragment-host {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF Playground: reframing</h1>
+
+		<fragment-host></fragment-host>
+
+		<script type="module">
+			import { register, FragmentHost } from 'web-fragments/elements';
+			register();
+
+			window.fragmentContext = () => document.querySelector('iframe').contentWindow;
+		</script>
+	</body>
+</html>
