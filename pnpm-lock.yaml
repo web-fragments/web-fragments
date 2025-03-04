@@ -418,9 +418,6 @@ importers:
       prettier:
         specifier: ^3.2.5
         version: 3.3.2
-      reframed:
-        specifier: workspace:*
-        version: link:../../packages/reframed
       typescript:
         specifier: ^5.5.4
         version: 5.5.4
@@ -454,9 +451,6 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
-      reframed:
-        specifier: workspace:*
-        version: link:../../packages/reframed
     devDependencies:
       '@remix-run/dev':
         specifier: ^2.9.2
@@ -511,10 +505,6 @@ importers:
         version: 4.3.2(typescript@5.5.4)(vite@5.3.3(@types/node@22.13.0)(lightningcss@1.27.0)(terser@5.34.1))
 
   e2e/simple-spa:
-    dependencies:
-      reframed:
-        specifier: workspace:*
-        version: link:../../packages/reframed
     devDependencies:
       '@types/node':
         specifier: ^20.14.10
@@ -526,29 +516,14 @@ importers:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.10)(lightningcss@1.27.0)(terser@5.34.1)
 
-  packages/reframed:
-    devDependencies:
-      '@playwright/test':
-        specifier: 'catalog:'
-        version: 1.49.1
-      typescript:
-        specifier: 'catalog:'
-        version: 5.5.4
-      vite:
-        specifier: 'catalog:'
-        version: 6.0.7(@types/node@22.13.0)(jiti@1.21.6)(lightningcss@1.27.0)(terser@5.34.1)(yaml@2.6.1)
-      writable-dom:
-        specifier: github:web-fragments/writable-dom#build-improvements
-        version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6
-
   packages/web-fragments:
     dependencies:
       htmlrewriter:
         specifier: anfibiacreativa/htmlrewriter#fix-emoji-crash
         version: https://codeload.github.com/anfibiacreativa/htmlrewriter/tar.gz/e234d7a1c7b86e10ee1e8f271afca42058daef42
-      reframed:
-        specifier: workspace:*
-        version: link:../reframed
+      writable-dom:
+        specifier: github:web-fragments/writable-dom#build-improvements
+        version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6
     devDependencies:
       '@types/node':
         specifier: ^20.12.7

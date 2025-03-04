@@ -53,7 +53,7 @@
 	},
 	"dependencies": {
 		"htmlrewriter": "anfibiacreativa/htmlrewriter#fix-emoji-crash",
-		"reframed": "workspace:*"
+		"writable-dom": "github:web-fragments/writable-dom#build-improvements"
 	},
 	"devDependencies": {
 		"@types/node": "^20.12.7",
