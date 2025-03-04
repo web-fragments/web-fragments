@@ -1,5 +1,21 @@
 # reframed
 
+## 0.2.0
+
+### Minor Changes
+
+- [#142](https://github.com/web-fragments/web-fragments/pull/142) [`973a8d8`](https://github.com/web-fragments/web-fragments/commit/973a8d851bcfaebd784d0b8cbb98892233be84e7) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat(web-fragments): all fragments have css style display:block and position:relative set on the host
+
+  Since fragments usually contain other block elements they should be rendered as block rather than inline.
+
+### Patch Changes
+
+- [#142](https://github.com/web-fragments/web-fragments/pull/142) [`fed5c71`](https://github.com/web-fragments/web-fragments/commit/fed5c71141fbe64cab87c053d6f1969ae171a8d6) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(reframed): don't create an superfluous browser history record in firefox
+
+  In Firefox, an extra history record is created for iframes appended for at least one turn of the event loop (a task), which then have their `src` attribute set.
+
+  To prevent bogus history records creation in Firefox, we ensure that reframed iframes are appended only once we set their `src` attribute.
+
 ## 0.1.4
 
 ### Patch Changes

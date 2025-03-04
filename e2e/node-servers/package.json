@@ -1,7 +1,7 @@
 {
 	"name": "node-servers",
 	"private": true,
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"type": "module",
 	"scripts": {
 		"dev:express": "node --loader ts-node/esm app/server/src/express.ts",
