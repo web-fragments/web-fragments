@@ -1,4 +1,5 @@
 import WritableDOMStream from 'writable-dom';
+import { stripWFPrefix, rewriteQuerySelector } from '../utils/selector-helpers';
 
 type ReframedOptions = ({ container: HTMLElement } | { containerTagName: string }) & {
 	headers?: HeadersInit;
@@ -284,27 +285,9 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 			},
 		},
 
-		getElementsByTagName: {
-			value(name: string) {
-				return shadowRoot.firstElementChild?.getElementsByTagName(name);
-			},
-		},
-
 		getElementsByTagNameNS: {
 			value(namespaceURI: string | null, name: string) {
 				return shadowRoot.firstElementChild?.getElementsByTagNameNS(namespaceURI, name);
-			},
-		},
-
-		querySelector: {
-			value(selector: string) {
-				return shadowRoot.querySelector(selector);
-			},
-		},
-
-		querySelectorAll: {
-			value(selector: string) {
-				return shadowRoot.querySelectorAll(selector);
 			},
 		},
 
@@ -312,21 +295,6 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 		activeElement: {
 			get: () => {
 				return shadowRoot.activeElement;
-			},
-		},
-
-		// redirect to mainDocument
-		head: {
-			get: () => {
-				// TODO should we enforce that there is a HEAD-like element under reframedContainer?
-				return shadowRoot;
-			},
-		},
-
-		body: {
-			get: () => {
-				// TODO should we enforce that there is a BODY-like element under reframedContainer?
-				return shadowRoot.firstElementChild;
 			},
 		},
 
@@ -390,6 +358,64 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 			},
 		},
 	} satisfies Partial<Record<keyof Document, any>>);
+
+	/**
+	 * iframeDocument query methods must be patched for custom wf-html, wf-head, and wf-body elements.
+	 * Queries for simple tag selectors like 'html' | 'head' | 'body'
+	 * should reference these custom elements added by reframed.
+	 */
+	Object.defineProperties(iframeDocument, {
+		querySelector: {
+			value(selector: string) {
+				return shadowRoot.querySelector(rewriteQuerySelector(selector));
+			},
+		},
+		querySelectorAll: {
+			value(selector: string) {
+				return shadowRoot.querySelectorAll(rewriteQuerySelector(selector));
+			},
+		},
+		getElementsByTagName: {
+			value(tagName: string) {
+				// The shadowRoot node itself does not have a getElementsByTagName method.
+				// For html, head, and body, rely on the patched querySelectorAll method on iframeDocument.
+				// This will return a NodeList instead of an HTMLCollection, which will suffice for most use cases.
+				return shadowRoot.querySelectorAll(rewriteQuerySelector(tagName));
+			},
+		},
+	});
+
+	/**
+	 * These properties are references to special elements in a Document (html, head, body).
+	 * The browser does not allow multiple instances of these elements within a Document,
+	 * so we cannot render true <html>, <head>, <body> elements within the shadowroot of a fragment.
+	 *
+	 * Instead, render custom elements (wf-html, wf-head, wf-body) that act like the html, head, and body.
+	 * The tagName and nodeName properties of these custom elements are then
+	 * patched to return "HTML", "HEAD", and "BODY", respectively.
+	 *
+	 * Since these custom elements are not guaranteed to exist, query for these elements first
+	 * and add them to cache in order to more efficiently access their references later.
+	 */
+	const domNodeProperties: Record<keyof Pick<Document, 'documentElement' | 'head' | 'body'>, string> = {
+		documentElement: 'HTML',
+		head: 'HEAD',
+		body: 'BODY',
+	};
+
+	const elementCache = new Map();
+
+	Object.entries(domNodeProperties).forEach(([property, tagName]) => {
+		Object.defineProperty(iframeDocument, property, {
+			get() {
+				if (!elementCache.get(property)) {
+					// Rely on iframeDocument.querySelector already being patched to account for wf-* elements
+					elementCache.set(property, iframeDocument.querySelector(tagName));
+				}
+				return elementCache.get(property) || shadowRoot;
+			},
+		});
+	});
 
 	// iframe window patches
 	setInternalReference(iframeWindow, 'history');
@@ -765,6 +791,19 @@ function monkeyPatchDOMInsertionMethods() {
 		}
 		return !options ? realRoot : _Node_getRootNode.call(this, options);
 	};
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName
+	const WF_TAG_NAMES = new Set(['WF-HTML', 'WF-HEAD', 'WF-BODY']);
+	const _Element__tagName = Object.getOwnPropertyDescriptor(Element.prototype, 'tagName')!.get!;
+	Object.defineProperty(Element.prototype, 'tagName', {
+		get() {
+			const originalTagName = _Element__tagName.call(this);
+			if (isWithinReframedDOM(this) && WF_TAG_NAMES.has(originalTagName)) {
+				return stripWFPrefix(originalTagName);
+			}
+			return originalTagName;
+		},
+	});
 
 	const _Element__after = Element.prototype.after;
 	Element.prototype.after = function after(...nodes) {
