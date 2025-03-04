@@ -1,5 +1,60 @@
 # web-fragments
 
+## 0.4.0
+
+### Minor Changes
+
+- [#139](https://github.com/web-fragments/web-fragments/pull/139) [`816e88b`](https://github.com/web-fragments/web-fragments/commit/816e88b187d91e76032dc3c7d015a971810708d9) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): prefix <html>, <head>, and <body> tags in fragment response as <wf-html>, <wf-head>, and <wf-body>
+
+  The gateway now rewrites fragment html so that any <html>, <head>, and <body> tags are replaced with <wf-html>, <wf-head>, and <wf-body> tags.
+
+  DOM doesn't allow duplicates of these three elements in the document, and the main document already contains them.
+
+  We need to replace these tags, to prevent the DOM from silently dropping them when the content is added to the main document.
+
+- [#142](https://github.com/web-fragments/web-fragments/pull/142) [`973a8d8`](https://github.com/web-fragments/web-fragments/commit/973a8d851bcfaebd784d0b8cbb98892233be84e7) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat(web-fragments): all fragments have css style display:block and position:relative set on the host
+
+  Since fragments usually contain other block elements they should be rendered as block rather than inline.
+
+- [#142](https://github.com/web-fragments/web-fragments/pull/142) [`0cfd504`](https://github.com/web-fragments/web-fragments/commit/0cfd50415f33200e867955eedaed2c160074ee9b) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat(gateway): make it possible for fragments to opt out of piercing
+
+  Occasionally fragments might want to be initialized only from the client.
+
+  FragmentConfig now makes it possible to opt-out of piercing via `piercing: false`:
+
+  ```ts
+  fragmentGateway.registerFragment({
+    fragmentId: fragmentId,
+    piercing: false,
+    routePatterns: [`/.../:_*`],
+    endpoint: '...'
+    prePiercingClassNames: ['...'],
+  });
+  ```
+
+### Patch Changes
+
+- [#142](https://github.com/web-fragments/web-fragments/pull/142) [`7683f43`](https://github.com/web-fragments/web-fragments/commit/7683f43f6faf7822b4f6127de18a18f776ffa46e) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): Node middleware adapter handles resp.end() correctly
+
+  The Node middleware adapter now correctly handles the cases where the response
+  is flushed with resp.end() without prior calls to resp.writeHead().
+
+  This bug was impacting Vite which uses the following pattern:
+
+  ```js
+  res.statusCode = 200;
+  res.end(content);
+  ```
+
+- [#142](https://github.com/web-fragments/web-fragments/pull/142) [`fed5c71`](https://github.com/web-fragments/web-fragments/commit/fed5c71141fbe64cab87c053d6f1969ae171a8d6) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(reframed): don't create an superfluous browser history record in firefox
+
+  In Firefox, an extra history record is created for iframes appended for at least one turn of the event loop (a task), which then have their `src` attribute set.
+
+  To prevent bogus history records creation in Firefox, we ensure that reframed iframes are appended only once we set their `src` attribute.
+
+- Updated dependencies [[`fed5c71`](https://github.com/web-fragments/web-fragments/commit/fed5c71141fbe64cab87c053d6f1969ae171a8d6), [`973a8d8`](https://github.com/web-fragments/web-fragments/commit/973a8d851bcfaebd784d0b8cbb98892233be84e7)]:
+  - reframed@0.2.0
+
 ## 0.3.0
 
 ### Minor Changes
