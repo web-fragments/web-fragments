@@ -36,12 +36,16 @@ test('reframed scripts render content into the specified container', async ({ pa
       <body>
         <div id="target">
           <template shadowrootmode="open">
-            <div data-testid="container"></div>
-            <script type="inert">
-              const text = document.createElement('span')
-              text.innerText = "Hello world"
-              document.body.appendChild(text)
-            </script>
+            <wf-html>
+              <wf-head></wf-head>
+              <wf-body data-testid="container">
+                <script type="inert">
+                  const text = document.createElement('span')
+                  text.innerText = "Hello world"
+                  document.body.appendChild(text)
+                </script>
+              </wf-body>
+            </wf-html>
           </template>
         </div>
         <script>
@@ -101,24 +105,34 @@ test('custom elements registries are scoped to reframed contexts', async ({ page
       <body>
         <div id="frame1">
           <template shadowrootmode="open">
-            <div data-testid="container"></div>
-            <script type="inert">
-              window.customElements.define("custom-element", class extends HTMLElement {
-                connectedCallback() { this.innerText = "hello from frame1" }
-              });
-              document.body.appendChild(document.createElement('custom-element'));
-            </script>
+            <wf-html>
+              <wf-head></wf-head>
+              <wf-body>
+                <div data-testid="container"></div>
+                <script type="inert">
+                  window.customElements.define("custom-element", class extends HTMLElement {
+                    connectedCallback() { this.innerText = "hello from frame1" }
+                  });
+                  document.body.appendChild(document.createElement('custom-element'));
+                </script>
+              </wf-body>
+            </wf-html>
           </template>
         </div>
         <div id="frame2">
           <template shadowrootmode="open">
-            <div data-testid="container"></div>
-            <script type="inert">
-              window.customElements.define("custom-element", class extends HTMLElement {
-                connectedCallback() { this.innerText = "hello from frame2" }
-              });
-              document.body.appendChild(document.createElement('custom-element'));
-            </script>
+            <wf-html>
+              <wf-head></wf-head>
+              <wf-body>
+                <div data-testid="container"></div>
+                <script type="inert">
+                  window.customElements.define("custom-element", class extends HTMLElement {
+                    connectedCallback() { this.innerText = "hello from frame2" }
+                  });
+                  document.body.appendChild(document.createElement('custom-element'));
+                </script>
+              </wf-body>
+            </wf-html>
           </template>
         </div>
         <script>
@@ -145,7 +159,12 @@ test('instanceof checks in a reframed context work with objects constructed in t
       <body>
         <div id="target">
           <template shadowrootmode="open">
-            <div id="element"></div>
+            <wf-html>
+              <wf-head></wf-head>
+              <wf-body>
+                <div id="element"></div>
+              </wf-body>
+            </wf-html>
           </template>
         </div>
         <script>
