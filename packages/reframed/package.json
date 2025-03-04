@@ -13,9 +13,10 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@playwright/test": "catalog:",
-		"writable-dom": "github:web-fragments/writable-dom#build-improvements",
 		"typescript": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vitest": "^3.0.5",
+		"writable-dom": "github:web-fragments/writable-dom#build-improvements"
 	},
 	"scripts": {
 		"dev": "vite",
