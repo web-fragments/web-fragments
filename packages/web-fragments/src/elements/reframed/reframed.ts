@@ -1,4 +1,5 @@
 import WritableDOMStream from 'writable-dom';
+import { stripWFPrefix, rewriteQuerySelector } from '../utils/selector-helpers';
 
 type ReframedOptions = {
 	bound: boolean;
@@ -286,27 +287,9 @@ function monkeyPatchIFrameEnvironment(
 			},
 		},
 
-		getElementsByTagName: {
-			value(name: string) {
-				return shadowRoot.firstElementChild?.getElementsByTagName(name);
-			},
-		},
-
 		getElementsByTagNameNS: {
 			value(namespaceURI: string | null, name: string) {
 				return shadowRoot.firstElementChild?.getElementsByTagNameNS(namespaceURI, name);
-			},
-		},
-
-		querySelector: {
-			value(selector: string) {
-				return shadowRoot.querySelector(selector);
-			},
-		},
-
-		querySelectorAll: {
-			value(selector: string) {
-				return shadowRoot.querySelectorAll(selector);
 			},
 		},
 
@@ -314,21 +297,6 @@ function monkeyPatchIFrameEnvironment(
 		activeElement: {
 			get: () => {
 				return shadowRoot.activeElement;
-			},
-		},
-
-		// redirect to mainDocument
-		head: {
-			get: () => {
-				// TODO should we enforce that there is a HEAD-like element under reframedContainer?
-				return shadowRoot;
-			},
-		},
-
-		body: {
-			get: () => {
-				// TODO should we enforce that there is a BODY-like element under reframedContainer?
-				return shadowRoot.firstElementChild;
 			},
 		},
 
@@ -825,6 +793,19 @@ function monkeyPatchDOMInsertionMethods() {
 		}
 		return !options ? realRoot : _Node_getRootNode.call(this, options);
 	};
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName
+	const WF_TAG_NAMES = new Set(['WF-HTML', 'WF-HEAD', 'WF-BODY']);
+	const _Element__tagName = Object.getOwnPropertyDescriptor(Element.prototype, 'tagName')!.get!;
+	Object.defineProperty(Element.prototype, 'tagName', {
+		get() {
+			const originalTagName = _Element__tagName.call(this);
+			if (isWithinReframedDOM(this) && WF_TAG_NAMES.has(originalTagName)) {
+				return stripWFPrefix(originalTagName);
+			}
+			return originalTagName;
+		},
+	});
 
 	const _Element__after = Element.prototype.after;
 	Element.prototype.after = function after(...nodes) {

@@ -58,7 +58,8 @@
 		"path-to-regexp": "^6.2.2",
 		"ts-node-dev": "^2.0.0",
 		"typescript": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vitest": "^3.0.5"
 	},
 	"author": "Igor Minar<i@igor.dev>",
 	"contributors": [
