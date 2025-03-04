@@ -12,17 +12,23 @@
 	<body>
 		<h1>WF TestBed: location-and-history</h1>
 		<section>
-			<p>location.href: <span></span></p>
+			<p>location.href: <span id="mainHref"></span></p>
+			<p>popstate count: <span id="mainPopstate">0</span></p>
 
 			<button id="foo">go to /foo</button>
 			<button id="bar">go to /bar</button>
 		</section>
 		<script>
 			function rerenderLocationHref() {
-				document.querySelector('span').textContent = window.location.href;
+				document.getElementById('mainHref').textContent = window.location.href;
 			}
 
 			setInterval(rerenderLocationHref, 100);
+
+			let popstateCount = 0;
+			window.addEventListener('popstate', () => {
+				document.getElementById('mainPopstate').textContent = ++popstateCount;
+			});
 
 			document.querySelector('button#foo').addEventListener('click', () => {
 				history.pushState({}, '', '/foo');

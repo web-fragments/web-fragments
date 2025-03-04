@@ -12,6 +12,7 @@ let standaloneContext: Frame;
 let main: {
 	locationHref: Function;
 	historyLength: Function;
+	popstateCount: Function;
 	back: Function;
 	forward: Function;
 	goToFooButton: Locator;
@@ -20,6 +21,7 @@ let main: {
 let bound: {
 	locationHref: Function;
 	historyLength: Function;
+	popstateCount: Function;
 	back: Function;
 	forward: Function;
 	goToFooButton: Locator;
@@ -49,8 +51,9 @@ beforeEach(async ({ page, browserName }) => {
 
 	mainSection = page.locator('body > section');
 	main = {
-		locationHref: () => page.evaluate(() => location.href),
-		historyLength: () => page.evaluate(() => history.length),
+		locationHref: async () => await page.evaluate(() => location.href),
+		historyLength: async () => await page.evaluate(() => history.length),
+		popstateCount: async () => await page.locator('#mainPopstate').textContent(),
 		back: () => page.evaluate(() => history.back()),
 		forward: () => page.evaluate(() => history.forward()),
 		goToFooButton: mainSection.locator('button').getByText('go to /foo'),
@@ -66,6 +69,7 @@ beforeEach(async ({ page, browserName }) => {
 	bound = {
 		locationHref: async () => (await getFragmentContext(boundFragment)).evaluate(() => location.href),
 		historyLength: async () => (await getFragmentContext(boundFragment)).evaluate(() => history.length),
+		popstateCount: () => boundFragment.locator('#popstate').textContent(),
 		back: () => boundContext.evaluate(() => history.back()),
 		forward: () => boundContext.evaluate(() => history.forward()),
 		goToFooButton: boundFragment.locator('button').getByText('go to /foo'),
@@ -104,26 +108,36 @@ test('changing main location.href should only impact the main frame and bound fr
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
 	// expect(await standalone.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/standalone/);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
+	// the initiating context should not receive a popstate event, while non-initiating contexts should
+	expect(await main.popstateCount()).toBe('0');
+	expect(await bound.popstateCount()).toBe('1');
 
 	// go to /bar
 	await main.goToBarButton.click();
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
 	// expect(await standalone.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/standalone/);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
+	expect(await main.popstateCount()).toBe('0');
+	expect(await bound.popstateCount()).toBe('2');
 });
 
-test('changing location.href should only impact the main frame and bound fragment', async () => {
+test('changing location.href from a bound fragment should only impact the main frame and bound fragment', async () => {
 	// go to /foo
 	await bound.goToFooButton.click();
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
 	// expect(await standalone.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/standalone/);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
+	// the initiating context should not receive a popstate event, while non-initiating contexts should
+	expect(await main.popstateCount()).toBe('1');
+	expect(await bound.popstateCount()).toBe('0');
 
 	// go to /bar
 	await bound.goToBarButton.click();
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
 	// expect(await standalone.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/standalone/);
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
+	expect(await main.popstateCount()).toBe('2');
+	expect(await bound.popstateCount()).toBe('0');
 });
 
 // test('changing standalone location.href should only impact itself and not other fragments or main', async () => {

@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Fragment with WC</title>
+	</head>
+	<body>
+		<h2>Fragment with WC</h2>
+		<test-component></test-component>
+
+		<script type="module">
+			window.customElements.define(
+				'test-component',
+				class extends HTMLElement {
+					connectedCallback() {
+						this.innerText = 'hello from fragment ' + Math.random();
+					}
+				},
+			);
+			document.body.appendChild(document.createElement('test-component'));
+		</script>
+	</body>
+</html>
