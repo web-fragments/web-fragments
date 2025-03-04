@@ -104,7 +104,9 @@ async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 		delete req.headers['accept-encoding'];
 
 		// If the request is from the gateway middleware then bypass the gateway middleware and serve the request from Vite directly.
-		if (req.headers['x-fragment-mode']) {
+		// There isn't conclusive way to identify requests from the gateway, but this combo should do for now.
+
+		if (req.headers['x-fragment-mode'] && req.headers['x-forwarded-host']) {
 			if (req.url?.endsWith('/')) {
 				req.url = req.url + 'fragment.html';
 			}
