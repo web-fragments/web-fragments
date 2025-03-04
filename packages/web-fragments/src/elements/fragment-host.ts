@@ -1,4 +1,4 @@
-import { reframed } from 'reframed';
+import { reframed } from './reframed/reframed';
 
 export class FragmentHost extends HTMLElement {
 	iframe: HTMLIFrameElement | undefined;

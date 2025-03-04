@@ -8,9 +8,7 @@
 		"preview": "vite preview",
 		"types:check": "tsc --noEmit"
 	},
-	"dependencies": {
-		"reframed": "workspace:*"
-	},
+	"dependencies": {},
 	"devDependencies": {
 		"typescript": "^5.5.4",
 		"vite": "^5.3.3",
