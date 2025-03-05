@@ -389,133 +389,6 @@ importers:
         specifier: ^4.2.1
         version: 4.3.2(typescript@5.5.4)(vite@5.3.3(@types/node@22.13.0)(lightningcss@1.27.0)(terser@5.34.1))
 
-  e2e/qwik-app:
-    devDependencies:
-      '@builder.io/qwik':
-        specifier: ^1.5.7
-        version: 1.6.0(@types/node@20.14.9)(lightningcss@1.27.0)(terser@5.34.1)(undici@6.19.2)
-      '@builder.io/qwik-city':
-        specifier: ^1.5.7
-        version: 1.6.0(@types/node@20.14.9)(lightningcss@1.27.0)(rollup@4.34.6)(terser@5.34.1)
-      '@types/eslint':
-        specifier: ^8.56.10
-        version: 8.56.10
-      '@types/node':
-        specifier: ^20.12.7
-        version: 20.14.9
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^7.7.1
-        version: 7.15.0(@typescript-eslint/parser@7.15.0(eslint@8.57.0)(typescript@5.5.4))(eslint@8.57.0)(typescript@5.5.4)
-      '@typescript-eslint/parser':
-        specifier: ^7.7.1
-        version: 7.15.0(eslint@8.57.0)(typescript@5.5.4)
-      eslint:
-        specifier: ^8.57.0
-        version: 8.57.0
-      eslint-plugin-qwik:
-        specifier: ^1.5.7
-        version: 1.6.0(eslint@8.57.0)
-      prettier:
-        specifier: ^3.2.5
-        version: 3.3.2
-      typescript:
-        specifier: ^5.5.4
-        version: 5.5.4
-      undici:
-        specifier: '*'
-        version: 6.19.2
-      vite:
-        specifier: ^5.2.10
-        version: 5.3.3(@types/node@20.14.9)(lightningcss@1.27.0)(terser@5.34.1)
-      vite-tsconfig-paths:
-        specifier: ^4.2.1
-        version: 4.3.2(typescript@5.5.4)(vite@5.3.3(@types/node@20.14.9)(lightningcss@1.27.0)(terser@5.34.1))
-
-  e2e/remix-app:
-    dependencies:
-      '@remix-run/node':
-        specifier: ^2.9.2
-        version: 2.10.2(typescript@5.5.4)
-      '@remix-run/react':
-        specifier: ^2.9.2
-        version: 2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4)
-      '@remix-run/serve':
-        specifier: ^2.9.2
-        version: 2.10.2(typescript@5.5.4)
-      isbot:
-        specifier: ^4.1.0
-        version: 4.4.0
-      react:
-        specifier: ^18.2.0
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.3.1(react@18.3.1)
-    devDependencies:
-      '@remix-run/dev':
-        specifier: ^2.9.2
-        version: 2.10.2(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.2(typescript@5.5.4))(@types/node@22.13.0)(lightningcss@1.27.0)(terser@5.34.1)(ts-node@10.9.2(@types/node@22.13.0)(typescript@5.5.4))(typescript@5.5.4)(vite@5.3.3(@types/node@22.13.0)(lightningcss@1.27.0)(terser@5.34.1))(wrangler@3.109.3(@cloudflare/workers-types@4.20250224.0))
-      '@types/react':
-        specifier: ^18.2.20
-        version: 18.3.3
-      '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.3.0
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^6.7.4
-        version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint@8.57.0)(typescript@5.5.4)
-      '@typescript-eslint/parser':
-        specifier: ^6.7.4
-        version: 6.21.0(eslint@8.57.0)(typescript@5.5.4)
-      autoprefixer:
-        specifier: ^10.4.19
-        version: 10.4.19(postcss@8.4.39)
-      eslint:
-        specifier: ^8.38.0
-        version: 8.57.0
-      eslint-import-resolver-typescript:
-        specifier: ^3.6.1
-        version: 3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint-plugin-import@2.29.1)(eslint@8.57.0)
-      eslint-plugin-import:
-        specifier: ^2.28.1
-        version: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
-      eslint-plugin-jsx-a11y:
-        specifier: ^6.7.1
-        version: 6.9.0(eslint@8.57.0)
-      eslint-plugin-react:
-        specifier: ^7.33.2
-        version: 7.34.3(eslint@8.57.0)
-      eslint-plugin-react-hooks:
-        specifier: ^4.6.0
-        version: 4.6.2(eslint@8.57.0)
-      postcss:
-        specifier: ^8.4.38
-        version: 8.4.39
-      tailwindcss:
-        specifier: ^3.4.4
-        version: 3.4.4(ts-node@10.9.2(@types/node@22.13.0)(typescript@5.5.4))
-      typescript:
-        specifier: ^5.5.4
-        version: 5.5.4
-      vite:
-        specifier: ^5.1.0
-        version: 5.3.3(@types/node@22.13.0)(lightningcss@1.27.0)(terser@5.34.1)
-      vite-tsconfig-paths:
-        specifier: ^4.2.1
-        version: 4.3.2(typescript@5.5.4)(vite@5.3.3(@types/node@22.13.0)(lightningcss@1.27.0)(terser@5.34.1))
-
-  e2e/simple-spa:
-    devDependencies:
-      '@types/node':
-        specifier: ^20.14.10
-        version: 20.14.10
-      typescript:
-        specifier: ^5.5.4
-        version: 5.5.4
-      vite:
-        specifier: ^5.3.3
-        version: 5.3.3(@types/node@20.14.10)(lightningcss@1.27.0)(terser@5.34.1)
-
   packages/web-fragments:
     dependencies:
       htmlrewriter:
@@ -962,20 +835,9 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  '@builder.io/qwik-city@1.6.0':
-    resolution: {integrity: sha512-XulIdmrPkdIA8yatRolyWtyVsmKB/CsamOb3loOaLc4ptHt5NMJiGCiS9axlyaqpAuy2LjZqb7S0ATACkjeK5w==}
-    engines: {node: '>=16.8.0 <18.0.0 || >=18.11'}
-
   '@builder.io/qwik-city@1.7.1':
     resolution: {integrity: sha512-c+H4RqPr2l+js5INVf0C8B/8V4juTCFfcBGrpwhLD7cXe97V4DwOkDFZkBJcI9ThxWb9lHfQNTlQ8gRFcUlHbQ==}
     engines: {node: '>=16.8.0 <18.0.0 || >=18.11'}
-
-  '@builder.io/qwik@1.6.0':
-    resolution: {integrity: sha512-IaVLxK+hK2qzi1hMTl2M48f5I49OE//UQeNQo6Kil+Mu+/Ov2N5oMTwq8UFKpk9ZnurKQmWRc5CKwtM04js9tg==}
-    engines: {node: '>=16.8.0 <18.0.0 || >=18.11'}
-    hasBin: true
-    peerDependencies:
-      undici: '*'
 
   '@builder.io/qwik@1.7.1':
     resolution: {integrity: sha512-Ncf4amVMxCNWlf4lsi+KVuU4SoVXcqLAeZfceWLfptZldOWFscF0Hm+NOopSOO7lkpARlhi7PhlBaPOJZkR3rw==}
@@ -2682,9 +2544,6 @@ packages:
   '@types/node@20.14.10':
     resolution: {integrity: sha512-MdiXf+nDuMvY0gJKxyfZ7/6UFsETO7mGKF54MVD/ekJS6HdFtpZFBgrh6Pseu64XTb2MLyFPlbW6hj8HYRQNOQ==}
 
-  '@types/node@20.14.9':
-    resolution: {integrity: sha512-06OCtnTXtWOZBJlRApleWndH4JsRVs1pDCc8dLSQp+7PpUpX3ePdHyeNSFTeSe7FtKyQkrlPvHwJOW3SLd8Oyg==}
-
   '@types/node@22.13.0':
     resolution: {integrity: sha512-ClIbNe36lawluuvq3+YYhnIN2CELi+6q8NpnM7PYp4hBn/TatfboPgVSm2rwKRfnV2M+Ty9GWDFI64KEe+kysA==}
 
@@ -4234,12 +4093,6 @@ packages:
     engines: {node: '>=4.0'}
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8
-
-  eslint-plugin-qwik@1.6.0:
-    resolution: {integrity: sha512-bMR16PBdj0izI4GYHY8XRkhFrrClFOYMChs0L3rqSavupG9CJo0E0yQ4D5UDwsN2K+wB34dWKYYyfOmjhK0CpA==}
-    engines: {node: '>=16.8.0 <18.0.0 || >=18.11'}
-    peerDependencies:
-      eslint: ^8.57.0
 
   eslint-plugin-react-hooks@4.6.2:
     resolution: {integrity: sha512-QzliNJq4GinDBcD8gPB5v0wh6g8q3SUi6EFF0x8N/BL9PoVs0atuGc47ozMRyOWAKdwaZ5OnbOEa3WR+dSGKuQ==}
@@ -8736,29 +8589,6 @@ snapshots:
 
   '@builder.io/partytown@0.10.2': {}
 
-  '@builder.io/qwik-city@1.6.0(@types/node@20.14.9)(lightningcss@1.27.0)(rollup@4.34.6)(terser@5.34.1)':
-    dependencies:
-      '@mdx-js/mdx': 3.0.1
-      '@types/mdx': 2.0.13
-      source-map: 0.7.4
-      svgo: 3.3.2
-      undici: 6.19.2
-      vfile: 6.0.1
-      vite: 5.4.11(@types/node@20.14.9)(lightningcss@1.27.0)(terser@5.34.1)
-      vite-imagetools: 6.2.9(rollup@4.34.6)
-      zod: 3.23.8
-    transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - lightningcss
-      - rollup
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-
   '@builder.io/qwik-city@1.7.1(@types/node@20.14.10)(lightningcss@1.27.0)(rollup@4.34.6)(terser@5.34.1)':
     dependencies:
       '@mdx-js/mdx': 3.0.1
@@ -8780,21 +8610,6 @@ snapshots:
       - stylus
       - sugarss
       - supports-color
-      - terser
-
-  '@builder.io/qwik@1.6.0(@types/node@20.14.9)(lightningcss@1.27.0)(terser@5.34.1)(undici@6.19.2)':
-    dependencies:
-      csstype: 3.1.3
-      undici: 6.19.2
-      vite: 5.4.11(@types/node@20.14.9)(lightningcss@1.27.0)(terser@5.34.1)
-    transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
       - terser
 
   '@builder.io/qwik@1.7.1(@types/node@20.14.10)(lightningcss@1.27.0)(terser@5.34.1)(undici@6.19.2)':
@@ -10429,10 +10244,6 @@ snapshots:
       undici-types: 5.26.5
 
   '@types/node@20.14.10':
-    dependencies:
-      undici-types: 5.26.5
-
-  '@types/node@20.14.9':
     dependencies:
       undici-types: 5.26.5
 
@@ -12538,11 +12349,6 @@ snapshots:
       object.fromentries: 2.0.8
       safe-regex-test: 1.0.3
       string.prototype.includes: 2.0.0
-
-  eslint-plugin-qwik@1.6.0(eslint@8.57.0):
-    dependencies:
-      eslint: 8.57.0
-      jsx-ast-utils: 3.3.5
 
   eslint-plugin-react-hooks@4.6.2(eslint@8.57.0):
     dependencies:
@@ -17119,17 +16925,6 @@ snapshots:
       - supports-color
       - typescript
 
-  vite-tsconfig-paths@4.3.2(typescript@5.5.4)(vite@5.3.3(@types/node@20.14.9)(lightningcss@1.27.0)(terser@5.34.1)):
-    dependencies:
-      debug: 4.3.5
-      globrex: 0.1.2
-      tsconfck: 3.1.1(typescript@5.5.4)
-    optionalDependencies:
-      vite: 5.3.3(@types/node@20.14.9)(lightningcss@1.27.0)(terser@5.34.1)
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
-
   vite-tsconfig-paths@4.3.2(typescript@5.5.4)(vite@5.3.3(@types/node@22.13.0)(lightningcss@1.27.0)(terser@5.34.1)):
     dependencies:
       debug: 4.3.5
@@ -17152,17 +16947,6 @@ snapshots:
       lightningcss: 1.27.0
       terser: 5.34.1
 
-  vite@5.3.3(@types/node@20.14.9)(lightningcss@1.27.0)(terser@5.34.1):
-    dependencies:
-      esbuild: 0.21.5
-      postcss: 8.4.39
-      rollup: 4.18.0
-    optionalDependencies:
-      '@types/node': 20.14.9
-      fsevents: 2.3.3
-      lightningcss: 1.27.0
-      terser: 5.34.1
-
   vite@5.3.3(@types/node@22.13.0)(lightningcss@1.27.0)(terser@5.34.1):
     dependencies:
       esbuild: 0.21.5
@@ -17181,17 +16965,6 @@ snapshots:
       rollup: 4.28.1
     optionalDependencies:
       '@types/node': 20.14.10
-      fsevents: 2.3.3
-      lightningcss: 1.27.0
-      terser: 5.34.1
-
-  vite@5.4.11(@types/node@20.14.9)(lightningcss@1.27.0)(terser@5.34.1):
-    dependencies:
-      esbuild: 0.21.5
-      postcss: 8.4.49
-      rollup: 4.28.1
-    optionalDependencies:
-      '@types/node': 20.14.9
       fsevents: 2.3.3
       lightningcss: 1.27.0
       terser: 5.34.1
