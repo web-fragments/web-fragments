@@ -1,5 +1,4 @@
-name: Web Fragments Tests
-
+name: Web Fragments Playground Tests
 on:
   push:
     branches:

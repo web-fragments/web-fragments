@@ -18,6 +18,9 @@ catalogs:
     vite:
       specifier: 6.0.7
       version: 6.0.7
+    vitest:
+      specifier: ^3.0.5
+      version: 3.0.5
     wrangler:
       specifier: 3.109.3
       version: 3.109.3
@@ -414,7 +417,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.7(@types/node@20.14.10)(jiti@1.21.6)(lightningcss@1.27.0)(terser@5.34.1)(yaml@2.6.1)
       vitest:
-        specifier: ^3.0.5
+        specifier: 'catalog:'
         version: 3.0.5(@types/debug@4.1.12)(@types/node@20.14.10)(lightningcss@1.27.0)(terser@5.34.1)
 
   packages/web-fragments/test/gateway:
@@ -432,7 +435,7 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       vitest:
-        specifier: ^3.0.5
+        specifier: 'catalog:'
         version: 3.0.5(@types/debug@4.1.12)(@types/node@20.14.10)(lightningcss@1.27.0)(terser@5.34.1)
       vitest-fetch-mock:
         specifier: ^0.4.3

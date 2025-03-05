@@ -6,12 +6,8 @@
  * \b(body|head|html)\b - match body|head|html exactly, but only at word boundaries
  * (?=[\s>+~),:.#[\]]|$) - lookahead to only match when followed by start of string or combinators
  */
-export const rewriteQuerySelector = (selector: string, prefix: string = 'wf') =>
+export const rewriteQuerySelector = (selector: string) =>
 	selector.replace(
 		/(?<=^|[\s>+~,(])\b(body|head|html)\b(?=[\s>+~),:.#[\]]|$)/gi,
-		(match) => `${prefix}-${match.toLowerCase()}`,
+		(match) => `wf-${match.toLowerCase()}`,
 	);
-
-export const stripWFPrefix = (tagName: string) => {
-	return tagName.replace(/^wf-/i, '');
-};

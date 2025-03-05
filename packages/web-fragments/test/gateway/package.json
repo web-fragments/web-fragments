@@ -10,7 +10,7 @@
 		"@types/node": "^20.12.7",
 		"connect": "^3.7.0",
 		"express": "^4.21.2",
-		"vitest": "^3.0.5",
+		"vitest": "catalog:",
 		"vitest-fetch-mock": "^0.4.3"
 	}
 }

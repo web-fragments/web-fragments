@@ -11,7 +11,7 @@ describe('rewriteQuerySelector()', () => {
 		expect(rewriteQuerySelector('BODY')).toBe('wf-body');
 	});
 
-	test('Tag selectors with non-exact matches (bodybody) are ignored', () => {
+	test('Tag selectors with non-exact matches (bodybody) are preserved', () => {
 		expect(rewriteQuerySelector('bodybody')).toBe('bodybody');
 		expect(rewriteQuerySelector('htmlhead')).toBe('htmlhead');
 	});
@@ -42,21 +42,25 @@ describe('rewriteQuerySelector()', () => {
 		);
 	});
 
-	test('Class selectors (.body) are ignored', () => {
+	test('Class selectors (.body) are preserved', () => {
 		expect(rewriteQuerySelector('.body')).toBe('.body');
 		expect(rewriteQuerySelector('html body.body')).toBe('wf-html wf-body.body');
 	});
 
-	test('ID selectors (#body) are ignored', () => {
+	test('ID selectors (#body) are preserved', () => {
 		expect(rewriteQuerySelector('#body')).toBe('#body');
 		expect(rewriteQuerySelector('html body#body .body')).toBe('wf-html wf-body#body .body');
 	});
 
-	test('Attribute selectors ([data-attr="body"]) are ignored', () => {
+	test('Attribute selectors ([data-attr="body"]) are preserved', () => {
 		expect(rewriteQuerySelector('html > div [data-attr="body"]')).toBe('wf-html > div [data-attr="body"]');
 	});
 
-	test('Non-matched selectors (div, p, a) are ignored', () => {
+	test('Non-matched selectors (div, p, a) are preserved', () => {
 		expect(rewriteQuerySelector('div, p, a')).toBe('div, p, a');
+	});
+
+	test('Valid wf-(html|head|body) selectors are preserved', () => {
+		expect(rewriteQuerySelector('wf-html, wf-head + wf-body')).toBe('wf-html, wf-head + wf-body');
 	});
 });
