@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>dom-querying fragment</title>
+		<style>
+			wf-body {
+				display: block;
+				border: 1px dashed purple;
+				padding: 16px;
+				font-family:
+					system-ui,
+					-apple-system,
+					BlinkMacSystemFont,
+					'Segoe UI',
+					Roboto,
+					Oxygen,
+					Ubuntu,
+					Cantarell,
+					'Open Sans',
+					'Helvetica Neue',
+					sans-serif;
+				-webkit-font-smoothing: antialiased;
+				-webkit-text-size-adjust: none;
+			}
+
+			* {
+				margin: 0;
+			}
+
+			h2 {
+				margin-bottom: 16px;
+			}
+
+			h3 {
+				margin: 24px 0 8px;
+				font-weight: 600;
+			}
+
+			p {
+				font-size: 14px;
+			}
+
+			.assertion-container {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				margin: 8px 0;
+			}
+		</style>
+	</head>
+	<body>
+		<h2 id="fragment-heading">DOM-querying fragment</h2>
+		<section id="body" class="body">
+			<h3>document.documentElement assertions</h3>
+			<div class="assertion-container">
+				<p>document.documentElement.tagName === "HTML"</p>
+				<input id="document-element-tagname-checkbox" type="checkbox" />
+			</div>
+			<div class="assertion-container">
+				<p>document.querySelector('html') returns document.documentElement element</p>
+				<input id="document-element-query-html-checkbox" type="checkbox" />
+			</div>
+			<div class="assertion-container">
+				<p>document.querySelector('wf-html') returns document.documentElement element</p>
+				<input id="document-element-query-wfhtml-checkbox" type="checkbox" />
+			</div>
+
+			<h3>document.body assertions</h3>
+			<div class="assertion-container">
+				<p>document.body.tagName === "BODY"</p>
+				<input id="document-body-tagname-checkbox" type="checkbox" />
+			</div>
+			<div class="assertion-container">
+				<p>document.querySelector('body') returns document.body element</p>
+				<input id="document-body-query-body-checkbox" type="checkbox" />
+			</div>
+			<div class="assertion-container">
+				<p>document.querySelector('wf-body') returns document.body element</p>
+				<input id="document-body-query-wfbody-checkbox" type="checkbox" />
+			</div>
+
+			<h3>document.head assertions</h3>
+			<div class="assertion-container">
+				<p>document.head.tagName === "HEAD"</p>
+				<input id="document-head-tagname-checkbox" type="checkbox" />
+			</div>
+			<div class="assertion-container">
+				<p>document.querySelector('head') returns document.head element</p>
+				<input id="document-head-query-head-checkbox" type="checkbox" />
+			</div>
+			<div class="assertion-container">
+				<p>document.querySelector('wf-head') returns document.head element</p>
+				<input id="document-head-query-wfhead-checkbox" type="checkbox" />
+			</div>
+
+			<h3>Selectors</h3>
+			<div class="assertion-container">
+				<p>Child selector: document.querySelector('body > h2') returns h2 element</p>
+				<input id="child-selector-checkbox" type="checkbox" />
+			</div>
+
+			<div class="assertion-container">
+				<p>Descendant selector: document.querySelector('body h2') returns h2 element</p>
+				<input id="descendant-selector-checkbox" type="checkbox" />
+			</div>
+
+			<div class="assertion-container">
+				<p>Next sibling selector: document.querySelector('body > h2 + section') returns section</p>
+				<input id="next-sibling-selector-checkbox" type="checkbox" />
+			</div>
+
+			<div class="assertion-container">
+				<p>Class selector: document.querySelector('.body') returns body section (*not document.body)</p>
+				<input id="class-selector-checkbox" type="checkbox" />
+			</div>
+
+			<div class="assertion-container">
+				<p>ID selector: document.querySelector('#body') returns body section (*not document.body)</p>
+				<input id="id-selector-checkbox" type="checkbox" />
+			</div>
+		</section>
+
+		<script type="module">
+			// document.documentElement
+			let queryHtml = document.querySelector('html');
+			let queryWfHtml = document.querySelector('wf-html');
+			let documentElement = document.documentElement;
+			if (documentElement.tagName === 'HTML') {
+				document.getElementById('document-element-tagname-checkbox').checked = true;
+			}
+			if (documentElement === queryHtml) {
+				document.getElementById('document-element-query-html-checkbox').checked = true;
+			}
+			if (documentElement === queryWfHtml) {
+				document.getElementById('document-element-query-wfhtml-checkbox').checked = true;
+			}
+
+			// document.body
+			let queryBody = document.querySelector('body');
+			let queryWfBody = document.querySelector('wf-body');
+			let documentBody = document.body;
+			if (documentBody.tagName === 'BODY') {
+				document.getElementById('document-body-tagname-checkbox').checked = true;
+			}
+			if (documentBody === queryBody) {
+				document.getElementById('document-body-query-body-checkbox').checked = true;
+			}
+			if (documentBody === queryWfBody) {
+				document.getElementById('document-body-query-wfbody-checkbox').checked = true;
+			}
+
+			// document.body
+			let queryHead = document.querySelector('head');
+			let queryWfHead = document.querySelector('wf-head');
+			let documentHead = document.head;
+			if (documentHead.tagName === 'HEAD') {
+				document.getElementById('document-head-tagname-checkbox').checked = true;
+			}
+			if (documentHead === queryHead) {
+				document.getElementById('document-head-query-head-checkbox').checked = true;
+			}
+			if (documentHead === queryWfHead) {
+				document.getElementById('document-head-query-wfhead-checkbox').checked = true;
+			}
+
+			// querySelector()
+			const h2 = document.getElementById('fragment-heading');
+			const bodySection = document.getElementById('body');
+
+			if (document.querySelector('body > h2') === h2) {
+				document.getElementById('child-selector-checkbox').checked = true;
+			}
+
+			if (document.querySelector('body h2') === h2) {
+				document.getElementById('descendant-selector-checkbox').checked = true;
+			}
+
+			if (document.querySelector('body > h2 + section') === bodySection) {
+				document.getElementById('next-sibling-selector-checkbox').checked = true;
+			}
+
+			if (document.querySelector('.body') === bodySection) {
+				document.getElementById('class-selector-checkbox').checked = true;
+			}
+
+			if (document.querySelector('#body') === bodySection) {
+				document.getElementById('id-selector-checkbox').checked = true;
+			}
+		</script>
+	</body>
+</html>
