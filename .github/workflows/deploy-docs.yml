@@ -24,12 +24,12 @@ jobs:
       - name: Install dependencies
         run: |
           cd docs
-          npm install
+          pnpm install
 
       - name: Build project
         run: |
           cd docs
-          npm run build # Adjust this if your project uses a different build command
+          pnpm --filter web-fragments-docs build
 
       - name: Deploy to Cloudflare Workers
         env:
