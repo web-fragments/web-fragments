@@ -11,7 +11,3 @@ export const rewriteQuerySelector = (selector: string, prefix: string = 'wf') =>
 		/(?<=^|[\s>+~,(])\b(body|head|html)\b(?=[\s>+~),:.#[\]]|$)/gi,
 		(match) => `${prefix}-${match.toLowerCase()}`,
 	);
-
-export const stripWFPrefix = (tagName: string) => {
-	return tagName.replace(/^wf-/i, '');
-};
