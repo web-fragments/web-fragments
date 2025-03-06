@@ -27,12 +27,11 @@ test('fragment creation', async ({ page }) => {
 		await expect(fragment.getByRole('heading')).toHaveText('hello world!');
 	});
 
-	// TODO: enable when we support standalone fragments
-	// await step('fragment can be parameterized via query params in fragment[src]', async () => {
-	// 	const fragment = page.locator('web-fragment#fragment4');
-	// 	await expect(await fragment.getAttribute('src')).toBe('/fragment-creation/fragment?name=Natalia');
-	// 	await expect(fragment.getByRole('heading')).toHaveText('hello Natalia!');
-	// });
+	await step('fragment can be parameterized via query params in fragment[src]', async () => {
+		const fragment = page.locator('web-fragment#fragment4');
+		await expect(await fragment.getAttribute('src')).toBe('/fragment-creation/fragment?name=Natalia');
+		await expect(fragment.getByRole('heading')).toHaveText('hello Natalia!');
+	});
 });
 
 test('fragment initialization', async ({ page }) => {
@@ -43,21 +42,11 @@ test('fragment initialization', async ({ page }) => {
 		await expect(fragment).toHaveCSS('display', 'block');
 		await expect(fragment).toHaveCSS('position', 'relative');
 	});
+
+	await step('fragment should have a shadow root which contains fragment host', async () => {
+		const fragment = page.locator('web-fragment').first();
+		await expect(await fragment.evaluate((fragment) => fragment.shadowRoot!.firstElementChild!.tagName)).toBe(
+			'WEB-FRAGMENT-HOST',
+		);
+	});
 });
-
-// TODO none of this is supported yet
-// 	await step('fragment src should be set as both attribute and property', async () => {
-// 		const fragment = page.locator('web-fragment').first();
-// 		await expect(fragment).toHaveAttribute('src', '/fragment-creation/fragment');
-// 		await expect(fragment).toHaveJSProperty('src', '/fragment-creation/fragment');
-// 	});
-// });
-
-// test('fragment src immutability', async ({ page }) => {
-// 	await page.goto('/fragment-creation/');
-
-// 	await step('fragment src modification should throw', async () => {
-// 		const fragment = page.locator('web-fragment').first();
-// 		await expect(fragment.evaluate((el) => (el.src = 'foo'))).rejects.toThrow();
-// 	});
-// });

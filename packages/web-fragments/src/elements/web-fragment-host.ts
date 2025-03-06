@@ -81,7 +81,7 @@ export class WebFragmentHost extends HTMLElement {
 		// Move <web-fragment-host> into <web-fragment> and set a flag to return early in the disconnectedCallback
 		this.isPortaling = true;
 		const targetElement = event.target as HTMLElement;
-		targetElement.replaceChildren(this);
+		targetElement.shadowRoot!.replaceChildren(this);
 
 		// Restore focus to any element that was previously focused inside the shadow root
 		if (activeElement) {
