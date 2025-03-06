@@ -1,7 +1,7 @@
 import { reframed } from './reframed/reframed';
 
 export class WebFragmentHost extends HTMLElement {
-	iframe: HTMLIFrameElement | undefined;
+	#iframe: HTMLIFrameElement | undefined;
 	ready: Promise<void> | undefined;
 	isInitialized = false;
 	isPortaling = false;
@@ -19,17 +19,22 @@ export class WebFragmentHost extends HTMLElement {
 		if (!this.isInitialized) {
 			this.isInitialized = true;
 
+			const fragmentId = this.getAttribute('fragment-id');
 			const fragmentSrc = this.getAttribute('src') ? this.getAttribute('src') : null;
 			const locationSrc = location.pathname + location.search;
+
+			if (!fragmentId) {
+				throw new Error('The <web-fragment-host> is missing fragment-id attribute!');
+			}
 
 			const { iframe, ready } = reframed(this.shadowRoot ?? fragmentSrc ?? locationSrc, {
 				container: this,
 				headers: { 'x-fragment-mode': 'embedded' },
 				bound: !fragmentSrc,
+				name: fragmentId,
 			});
 
-			// TODO: is this the best way to expose the reframed iframe? review and discuss...
-			this.iframe = iframe;
+			this.#iframe = iframe;
 			this.ready = ready;
 
 			/**
@@ -46,9 +51,9 @@ export class WebFragmentHost extends HTMLElement {
 			return;
 		}
 
-		if (this.iframe && !this.isPortaling) {
-			this.iframe.remove();
-			this.iframe = undefined;
+		if (this.#iframe && !this.isPortaling) {
+			this.#iframe.remove();
+			this.#iframe = undefined;
 
 			document.removeEventListener('fragment-outlet-ready', this.handlePiercing);
 		}

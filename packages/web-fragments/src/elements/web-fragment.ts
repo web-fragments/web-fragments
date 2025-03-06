@@ -31,11 +31,5 @@ export class WebFragment extends HTMLElement {
 			}
 			this.shadowRoot?.appendChild(fragmentHost);
 		}
-
-		// TODO: is this the best way to expose the reframed iframe? This is a race condition trap.
-		// review and discuss...
-		Object.defineProperty(this, 'iframe', {
-			get: () => (this.shadowRoot?.firstElementChild as HTMLElement & { iframe: HTMLIFrameElement })?.iframe,
-		});
 	}
 }
