@@ -35,19 +35,18 @@ test('dom isolation of fragments', async ({ page }) => {
 	});
 
 	await step('the fragment should have an empty light dom', async () => {
-		// TODO: this is currently not true because the web-fragment-host is the only child. This will be fixed once web-fragment has its own shadow root.
-		//expect(await fragment.innerHTML()).toBe('');
+		expect(await fragment.innerHTML()).toBe('');
 		expect(await (await fragment.locator('web-fragment-host')).innerHTML()).toBe('');
 	});
 
 	await step('the fragment should have an open shadow root with content', async () => {
-		// TODO: we currently need to traverse through the fragment host
-		// Just like the note above, this will be fixed once web-fragment has its own shadow root.
-		expect(await fragment.evaluate((element) => element.firstElementChild.shadowRoot?.nodeName)).toBe(
+		expect(await fragment.evaluate((element) => element.shadowRoot?.firstElementChild?.shadowRoot?.nodeName)).toBe(
 			'#document-fragment',
 		);
 		expect(
-			await fragment.evaluate((element) => element.firstElementChild.shadowRoot?.querySelector('h2')?.innerText),
+			await fragment.evaluate(
+				(element) => element.shadowRoot?.firstElementChild?.shadowRoot?.querySelector('h2')?.innerText,
+			),
 		).toBe('dom-isolation fragment');
 	});
 });

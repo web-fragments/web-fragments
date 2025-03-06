@@ -35,15 +35,14 @@
 			document.body.appendChild(fragment3);
 		</script>
 
-		<!-- 		
-		TODO: enable when we support standalone fragments
 		<script type="module">
-			import { FragmentHost } from 'web-fragments';
+			import { WebFragment } from 'web-fragments';
 
-			const fragment4 = new FragmentHost();
+			const fragment4 = new WebFragment();
 			fragment4.id = 'fragment4';
-			fragment4.src = '/fragment-creation/fragment?name=Natalia';
+			fragment4.setAttribute('src', '/fragment-creation/fragment?name=Natalia');
+			fragment4.setAttribute('fragment-id', 'fragment-creation4');
 			document.body.appendChild(fragment4);
-		</script> -->
+		</script>
 	</body>
 </html>

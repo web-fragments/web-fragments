@@ -10,10 +10,12 @@ export class WebFragment extends HTMLElement {
 			throw new Error('The <web-fragment> is missing fragment-id attribute!');
 		}
 
+		this.attachShadow({ mode: 'open' });
+
 		// Since fragments will most likely contain other block elements, they should be blocks themselves by default
-		// TODO: move this into a shadow dom
-		this.style.display = 'block';
-		this.style.position = 'relative';
+		const blockSheet = new CSSStyleSheet();
+		blockSheet.insertRule(':host { display: block; position: relative; }');
+		this.shadowRoot?.adoptedStyleSheets.push(blockSheet);
 
 		const piercedHostNotFound = this.dispatchEvent(
 			new Event('fragment-outlet-ready', { bubbles: true, cancelable: true }),
@@ -27,13 +29,13 @@ export class WebFragment extends HTMLElement {
 			if (fragmentSrc) {
 				fragmentHost.setAttribute('src', fragmentSrc);
 			}
-			this.appendChild(fragmentHost);
+			this.shadowRoot?.appendChild(fragmentHost);
 		}
 
 		// TODO: is this the best way to expose the reframed iframe? This is a race condition trap.
 		// review and discuss...
 		Object.defineProperty(this, 'iframe', {
-			get: () => (this.firstElementChild as HTMLElement & { iframe: HTMLIFrameElement })?.iframe,
+			get: () => (this.shadowRoot?.firstElementChild as HTMLElement & { iframe: HTMLIFrameElement })?.iframe,
 		});
 	}
 }
