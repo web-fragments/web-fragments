@@ -41,8 +41,20 @@ jobs:
         shell: bash
         run: pnpm install --frozen-lockfile
 
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "PLAYWRIGHT_VERSION=$(cat ../../pnpm-workspace.yaml | grep playwright | cut -d' ' -f4)" >> $GITHUB_ENV
+
+      - name: Cache playwright binaries
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+
       - name: Install Playwright Browsers
         run: pnpm -C test/playground exec playwright install --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
 
       - name: Run Playwright tests
         run: pnpm test:playground
