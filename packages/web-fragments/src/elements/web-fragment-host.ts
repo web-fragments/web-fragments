@@ -20,8 +20,9 @@ export class WebFragmentHost extends HTMLElement {
 			this.isInitialized = true;
 
 			const fragmentSrc = this.getAttribute('src') ? this.getAttribute('src') : null;
+			const locationSrc = location.pathname + location.search;
 
-			const { iframe, ready } = reframed(this.shadowRoot ?? fragmentSrc ?? document.location.href, {
+			const { iframe, ready } = reframed(this.shadowRoot ?? fragmentSrc ?? locationSrc, {
 				container: this,
 				headers: { 'x-fragment-mode': 'embedded' },
 				bound: !fragmentSrc,
