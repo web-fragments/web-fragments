@@ -1,6 +1,8 @@
 import WritableDOMStream from 'writable-dom';
 
-type ReframedOptions = ({ container: HTMLElement } | { containerTagName: string }) & {
+type ReframedOptions = {
+	bound: boolean;
+	container: HTMLElement;
 	headers?: HeadersInit;
 };
 
@@ -13,15 +15,13 @@ type ReframedOptions = ({ container: HTMLElement } | { containerTagName: string 
  */
 export function reframed(
 	reframedSrcOrSourceShadowRoot: string | ShadowRoot,
-	options: ReframedOptions = {
-		containerTagName: 'article',
-	},
+	options: ReframedOptions,
 ): {
 	iframe: HTMLIFrameElement;
 	container: HTMLElement;
 	ready: Promise<void>;
 } {
-	initializeParentExecutionContext();
+	initializeParentExecutionContext(options.bound);
 
 	/**
 	 * Create the iframe that we'll use to load scripts into, but hide it from the viewport.
@@ -37,9 +37,7 @@ export function reframed(
 	};
 
 	// create the reframed container
-	const reframedContainer = (
-		'container' in options ? options.container : document.createElement(options.containerTagName)
-	) as ReframedContainer;
+	const reframedContainer = options.container as ReframedContainer;
 
 	const reframedContainerShadowRoot = Object.assign(
 		reframedContainer.shadowRoot ?? reframedContainer.attachShadow({ mode: 'open' }),
@@ -61,7 +59,7 @@ export function reframed(
 	let { promise: monkeyPatchReady, resolve: resolveMonkeyPatchReady } = Promise.withResolvers<void>();
 
 	iframe.addEventListener('load', () => {
-		monkeyPatchIFrameEnvironment(iframe, reframedContainerShadowRoot);
+		monkeyPatchIFrameEnvironment(iframe, reframedContainerShadowRoot, options.bound);
 		resolveMonkeyPatchReady();
 	});
 
@@ -194,7 +192,11 @@ async function reframeFromTarget(source: ParentNode, iframe: HTMLIFrameElement):
  * Apply monkey-patches to the source iframe so that we trick code running in it to behave as if it
  * was running in the main frame.
  */
-function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: ReframedShadowRoot) {
+function monkeyPatchIFrameEnvironment(
+	iframe: HTMLIFrameElement,
+	shadowRoot: ReframedShadowRoot,
+	boundNavigation: boolean,
+) {
 	assert(
 		iframe.contentWindow !== null && iframe.contentDocument !== null,
 		'attempted to patch iframe before it was ready',
@@ -391,45 +393,95 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 		},
 	} satisfies Partial<Record<keyof Document, any>>);
 
-	// iframe window patches
-	setInternalReference(iframeWindow, 'history');
-
 	// WARNING: Be sure this class stays declared inside of this function!
 	// We rely on each reframed context having its own instance of this constructor
 	// so we can use an instanceof check to avoid double-handling the event inside
 	// the same context it was dispatched from.
 	class SyntheticPopStateEvent extends PopStateEvent {}
 
-	const historyProxy = new Proxy(mainWindow.history, {
-		get(target, property, receiver) {
-			if (typeof Object.getOwnPropertyDescriptor(History.prototype, property)?.value === 'function') {
-				return function (this: unknown, ...args: unknown[]) {
-					const result = Reflect.apply(
-						History.prototype[property as keyof History],
-						this === receiver ? target : this,
-						args,
-					);
+	if (boundNavigation) {
+		// iframe window patches
+		setInternalReference(iframeWindow, 'history');
 
-					// dispatch a popstate event on the main window to inform listeners of a location change
-					mainWindow.dispatchEvent(new SyntheticPopStateEvent('popstate'));
-					return result;
-				};
-			}
+		const historyProxy = new Proxy(mainWindow.history, {
+			get(target, property, receiver) {
+				if (typeof Object.getOwnPropertyDescriptor(History.prototype, property)?.value === 'function') {
+					return function (this: unknown, ...args: unknown[]) {
+						const result = Reflect.apply(
+							History.prototype[property as keyof History],
+							this === receiver ? target : this,
+							args,
+						);
 
-			return Reflect.get(target, property, target);
-		},
-		set(target, property, receiver) {
-			return Reflect.set(target, property, receiver);
-		},
-	});
+						// dispatch a popstate event on the main window to inform listeners of a location change
+						mainWindow.dispatchEvent(new SyntheticPopStateEvent('popstate'));
+						return result;
+					};
+				}
 
-	Object.defineProperties(iframeWindow, {
-		history: {
-			get() {
-				return historyProxy;
+				return Reflect.get(target, property, target);
 			},
-		},
-	});
+			set(target, property, receiver) {
+				return Reflect.set(target, property, receiver);
+			},
+		});
+
+		Object.defineProperties(iframeWindow, {
+			history: {
+				get() {
+					return historyProxy;
+				},
+			},
+		});
+	} else {
+		const standaloneHistoryStack: Array<{ state: any; title: string; url: string | null }> = [
+			{ state: iframeWindow.history.state, title: iframeDocument.title, url: iframeWindow.location.href },
+		];
+		let standaloneHistoryCursor = 0;
+
+		// for standalone fragments we should always use replaceState instead of pushState so that we don't create unexpected history entries
+		// in order for back() and forward() to work correctly, we need to implement our own history stack with the behavior similar to window.history
+		Object.defineProperties(iframeWindow.history, {
+			pushState: {
+				value: function reframedStandalonePushState(state: any, title: string, url?: string | null) {
+					if (standaloneHistoryCursor !== standaloneHistoryStack.length - 1) {
+						standaloneHistoryStack.splice(standaloneHistoryCursor + 1);
+					}
+					standaloneHistoryStack.push({ state, title, url: url ?? null });
+					standaloneHistoryCursor++;
+					iframeWindow.history.replaceState(state, title, url);
+				},
+			},
+
+			back: {
+				value: function reframedStandaloneBack() {
+					if (standaloneHistoryCursor === 0) return;
+
+					standaloneHistoryCursor--;
+
+					let { state, title, url } = standaloneHistoryStack[standaloneHistoryCursor];
+					iframeWindow.history.replaceState(state, title, url);
+				},
+			},
+
+			forward: {
+				value: function reframedStandaloneForward() {
+					if (standaloneHistoryCursor === standaloneHistoryStack.length - 1) return;
+
+					standaloneHistoryCursor++;
+
+					let { state, title, url } = standaloneHistoryStack[standaloneHistoryCursor];
+					iframeWindow.history.replaceState(state, title, url);
+				},
+			},
+
+			length: {
+				get() {
+					return standaloneHistoryStack.length;
+				},
+			},
+		});
+	}
 
 	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
 	iframeWindow.MutationObserver = mainWindow.MutationObserver;
@@ -565,29 +617,31 @@ function monkeyPatchIFrameEnvironment(iframe: HTMLIFrameElement, shadowRoot: Ref
 		},
 	);
 
-	// When a navigation event occurs on the main window, either programmatically through the History API or by the back/forward button,
-	// we need to reflect those changes onto the iframe's location via history.replaceState().
-	// Finally, dispatch a PopStateEvent so that fragments that are listening to popstate event are
-	// made aware of a location change and retrigger their render updates.
-	const handleNavigate = (e: Event) => {
-		getInternalReference(iframeWindow, 'history').replaceState(window.history.state, '', window.location.href);
+	if (boundNavigation) {
+		// When a navigation event occurs on the main window, either programmatically through the History API or by the back/forward button,
+		// we need to reflect those changes onto the iframe's location via history.replaceState().
+		// Finally, dispatch a PopStateEvent so that fragments that are listening to popstate event are
+		// made aware of a location change and retrigger their render updates.
+		const handleNavigate = (e: Event) => {
+			getInternalReference(iframeWindow, 'history').replaceState(window.history.state, '', window.location.href);
 
-		if (e instanceof SyntheticPopStateEvent) {
-			return;
-		}
+			if (e instanceof SyntheticPopStateEvent) {
+				return;
+			}
 
-		iframeWindow.dispatchEvent(new PopStateEvent('popstate', e instanceof PopStateEvent ? e : undefined));
-	};
+			iframeWindow.dispatchEvent(new PopStateEvent('popstate', e instanceof PopStateEvent ? e : undefined));
+		};
 
-	// reframed:navigate event is triggered by the patched main window.history methods
-	window.addEventListener('reframed:navigate', handleNavigate, {
-		signal: controller.signal,
-	});
+		// reframed:navigate event is triggered by the patched main window.history methods
+		window.addEventListener('reframed:navigate', handleNavigate, {
+			signal: controller.signal,
+		});
 
-	// Forward the popstate event triggered on the main window to every registered iframe window
-	window.addEventListener('popstate', handleNavigate, {
-		signal: controller.signal,
-	});
+		// Forward the popstate event triggered on the main window to every registered iframe window
+		window.addEventListener('popstate', handleNavigate, {
+			signal: controller.signal,
+		});
+	}
 
 	// cleanup event listeners attached to the window when the iframe gets destroyed.
 	// TODO: using the "pagehide" event would be preferred over the discouraged "unload" event,
@@ -644,6 +698,12 @@ function monkeyPatchDOMInsertionMethods() {
 	// so they do not need to be patched.
 	const _Element__replaceWith = Element.prototype.replaceWith;
 
+	/**
+	 * Executes a script in a context.
+	 * @param script
+	 * @param reframedContext
+	 * @returns An inert clone of the script node which can be inserted into the reframed DOM.
+	 */
 	function executeScriptInReframedContext<T extends Node>(
 		script: T & HTMLScriptElement,
 		reframedContext: ReframedMetadata,
@@ -859,10 +919,14 @@ function monkeyPatchDOMInsertionMethods() {
 	};
 }
 
-function initializeParentExecutionContext() {
+function initializeParentExecutionContext(patchHistory: boolean) {
 	if (!(reframedInitializedSymbol in window)) {
 		Object.assign(window, { [reframedInitializedSymbol]: true });
 		monkeyPatchDOMInsertionMethods();
+	}
+
+	if (!(reframedInitializedHistoryPatchSymbol in window)) {
+		Object.assign(window, { [reframedInitializedHistoryPatchSymbol]: true });
 		monkeyPatchHistoryAPI();
 	}
 }
@@ -901,6 +965,7 @@ type ReframedMetadata = {
 };
 
 const reframedInitializedSymbol = Symbol('reframed:initialized');
+const reframedInitializedHistoryPatchSymbol = Symbol('reframed:initializedHistoryPatch');
 const reframedMetadataSymbol = Symbol('reframed:metadata');
 const reframedReferencesSymbol = Symbol('reframed:references');
 
