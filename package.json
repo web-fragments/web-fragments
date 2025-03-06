@@ -17,7 +17,8 @@
 		"@changesets/cli": "^2.27.7"
 	},
 	"engines": {
-		"pnpm": ">=9"
+		"pnpm": ">=9",
+		"node": ">=22"
 	},
 	"engineStrict": true,
 	"license": "MIT",
