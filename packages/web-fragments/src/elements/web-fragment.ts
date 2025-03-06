@@ -4,6 +4,7 @@
 export class WebFragment extends HTMLElement {
 	async connectedCallback() {
 		const fragmentId = this.getAttribute('fragment-id');
+		const fragmentSrc = this.getAttribute('src');
 
 		if (!fragmentId) {
 			throw new Error('The <web-fragment> is missing fragment-id attribute!');
@@ -14,13 +15,18 @@ export class WebFragment extends HTMLElement {
 		this.style.display = 'block';
 		this.style.position = 'relative';
 
-		const didNotPierce = this.dispatchEvent(new Event('fragment-outlet-ready', { bubbles: true, cancelable: true }));
+		const piercedHostNotFound = this.dispatchEvent(
+			new Event('fragment-outlet-ready', { bubbles: true, cancelable: true }),
+		);
 
-		// There is no <web-fragment-host> element mounted that needs to pierce into <fragment-outlet>.
-		// Instantiate a <web-fragment-host> element that can fetch the fragment via reframed
-		if (didNotPierce) {
+		// There is no <web-fragment-host> element in the document that could be adopted into this <web-fragment>.
+		// Instantiate a new <web-fragment-host> element to fetch the fragment
+		if (piercedHostNotFound) {
 			const fragmentHost = document.createElement('web-fragment-host');
 			fragmentHost.setAttribute('fragment-id', fragmentId);
+			if (fragmentSrc) {
+				fragmentHost.setAttribute('src', fragmentSrc);
+			}
 			this.appendChild(fragmentHost);
 		}
 

@@ -19,9 +19,12 @@ export class WebFragmentHost extends HTMLElement {
 		if (!this.isInitialized) {
 			this.isInitialized = true;
 
-			const { iframe, ready } = reframed(this.shadowRoot ?? document.location.href, {
+			const fragmentSrc = this.getAttribute('src') ? this.getAttribute('src') : null;
+
+			const { iframe, ready } = reframed(this.shadowRoot ?? fragmentSrc ?? document.location.href, {
 				container: this,
 				headers: { 'x-fragment-mode': 'embedded' },
+				bound: !fragmentSrc,
 			});
 
 			// TODO: is this the best way to expose the reframed iframe? review and discuss...
