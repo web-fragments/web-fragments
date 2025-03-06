@@ -46,7 +46,8 @@
 		"test:gateway": "pnpm -C test/gateway test",
 		"test:playground": "pnpm -C test/playground test",
 		"test-debug:gateway": "vitest test/gateway --test-timeout=0 --no-file-parallelism",
-		"changeset": "pnpm -C ../../ exec changeset"
+		"changeset": "pnpm -C ../../ exec changeset",
+		"prepare": "pnpm build"
 	},
 	"dependencies": {
 		"htmlrewriter": "anfibiacreativa/htmlrewriter#fix-emoji-crash",
