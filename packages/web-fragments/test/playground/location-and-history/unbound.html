@@ -2,11 +2,12 @@
 <html>
 	<head>
 		<meta charset="UTF-8" />
-		<title>standalone fragment</title>
+		<title>unbound fragment</title>
 	</head>
 	<body>
-		<h2>standalone fragment</h2>
+		<h2>unbound fragment</h2>
 		<p>location.href: <span></span></p>
+		<p>popstate count: <span id="popstate">0</span></p>
 		<button id="foo">go to /foo</button>
 		<button id="bar">go to /bar</button>
 		<script>
@@ -15,6 +16,11 @@
 			}
 
 			setInterval(rerenderLocationHref, 100);
+
+			let popstateCount = 0;
+			window.addEventListener('popstate', () => {
+				document.getElementById('popstate').textContent = ++popstateCount;
+			});
 
 			document.querySelector('button#foo').addEventListener('click', () => {
 				history.pushState({}, '', '/foo');
