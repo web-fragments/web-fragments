@@ -1,11 +1,21 @@
 name: Gateway Tests
+
 on:
   push:
-    branches: [main]
-    paths: ['packages/web-fragments/src/gateway/**', 'packages/web-fragments/test/gateway/**']
+    branches:
+      - main
+    paths:
+      - 'packages/web-fragments/src/gateway/**'
+      - 'packages/web-fragments/test/gateway/**'
+      - '.github/workflows/gateway-tests.yml'
   pull_request:
-    branches: [main]
-    paths: ['packages/web-fragments/src/gateway/**', 'packages/web-fragments/test/gateway/**']
+    branches:
+      - main
+    paths:
+      - 'packages/web-fragments/src/gateway/**'
+      - 'packages/web-fragments/test/gateway/**'
+      - '.github/workflows/gateway-tests.yml'
+
 jobs:
   test:
     timeout-minutes: 60
@@ -14,11 +24,28 @@ jobs:
       run:
         working-directory: 'packages/web-fragments'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.5.0
+
+      # We are intentionally using Node 20 here, which is one version behind the other jobs.
+      # This is to ensure that the gateway is compatible with older versions of Node.
+      - name: Install Node.js 20
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install dependencies
-        run: npm install -g pnpm && pnpm install
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm Dependencies
+        shell: bash
+        # Strict engine is disabled to allow the tests to run on older versions of Node.
+        # We ignore scripts so that we don't run the "prepare" script in web-fragments package, which needs node 22.
+        run: pnpm install --frozen-lockfile --engine-strict=false --ignore-scripts
+
       - name: Run Gateway tests
         run: pnpm run test:gateway

@@ -1,11 +1,19 @@
 name: Web Fragments Tests
+
 on:
   push:
-    branches: [main]
-    paths: ['packages/**']
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - '.github/workflows/playwright-web-fragments.yml'
   pull_request:
-    branches: [main]
-    paths: ['packages/**']
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - '.github/workflows/playwright-web-fragments.yml'
+
 jobs:
   test:
     timeout-minutes: 60
@@ -14,16 +22,31 @@ jobs:
       run:
         working-directory: 'packages/web-fragments'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          node-version: lts/*
-      - name: Install dependencies
-        run: npm install -g pnpm && pnpm install
+          version: 9.5.0
+
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm Dependencies
+        shell: bash
+        run: pnpm install --frozen-lockfile
+
       - name: Install Playwright Browsers
         run: pnpm -C test/playground exec playwright install --with-deps
+
       - name: Run Playwright tests
         run: pnpm test:playground
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:

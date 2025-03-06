@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'docs/**'
+      - '.github/workflows/deploy-docs.yml'
     branches:
       - main
 
@@ -11,25 +12,32 @@ jobs:
   deploy:
     name: Deploy to Cloudflare Workers
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 'docs/'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Repo
+        uses: actions/checkout@v4
 
-      - name: Install Node.js
-        uses: actions/setup-node@v3
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          node-version: '22'
+          version: 9.5.0
 
-      - name: Install dependencies
-        run: |
-          cd docs
-          npm install
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm Dependencies
+        shell: bash
+        run: pnpm install --frozen-lockfile
 
       - name: Build project
-        run: |
-          cd docs
-          npm run build # Adjust this if your project uses a different build command
+        run: pnpm build
 
       - name: Deploy to Cloudflare Workers
         env:
