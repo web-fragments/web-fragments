@@ -23,7 +23,11 @@ export function webToNodeMiddleware(webMiddleware: (req: Request, next: () => Pr
 	) {
 		const webRequest = nodeRequestToWebRequest(nodeRequest);
 
-		const { promise: callNodeNextPromise, resolve: callNodeNextResolve } = Promise.withResolvers<void>();
+		let callNodeNextResolve: () => void;
+		const callNodeNextPromise = new Promise<void>((res) => {
+			callNodeNextResolve = res;
+		});
+
 		const { originResponsePromise, sendResponse } = nodeToWebResponse(nodeResponse, nodeNext, callNodeNextPromise);
 		const webNext = function webNodeCompatNext(): Promise<Response> {
 			// send a signal that we want the nodeNext fn to be called
@@ -106,7 +110,11 @@ function interceptNodeResponse(
 
 	let originHead: ResponseInit;
 
-	let { promise: originHeadPromise, resolve: originHeadResolve } = Promise.withResolvers<ResponseInit>();
+	let originHeadResolve: (response: ResponseInit) => void;
+	const originHeadPromise = new Promise<ResponseInit>((res) => {
+		originHeadResolve = res;
+	});
+
 	/**
 	 * Retrieves the origin response head and writes it to the web response.
 	 *
