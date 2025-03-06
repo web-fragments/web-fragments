@@ -53,7 +53,7 @@ describe('fragment destruction', () => {
 		await expect(fragments.getByRole('heading')).toHaveText('hello world!');
 
 		await page.evaluate(() => {
-			const garbage = document.querySelector('web-fragment')?.iframe?.contentWindow?.garbage;
+			const garbage = document.querySelector('iframe[name=fragment-destruction]')?.contentWindow?.garbage;
 			if (!garbage) throw new Error('garbage not found');
 
 			globalThis.garbageArrayWeakRef = new WeakRef(garbage.array);

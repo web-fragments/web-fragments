@@ -5,6 +5,7 @@ type ReframedOptions = {
 	bound: boolean;
 	container: HTMLElement;
 	headers?: HeadersInit;
+	name: string;
 };
 
 /**
@@ -127,7 +128,7 @@ async function reframeWithFetch(
 	// It is important to set the src of the iframe AFTER we get the html stream response.
 	// Doing so after ensures that the "iframe" load event triggers properly after content is streamed.
 	iframe.src = reframedSrc;
-	iframe.name = reframedSrc;
+	iframe.name = options.name;
 
 	iframe.addEventListener('load', () => {
 		reframedHtmlStream
