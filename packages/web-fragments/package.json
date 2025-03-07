@@ -25,7 +25,7 @@
 			},
 			"./gateway/node": {
 				"import": "./dist/gateway/node.js",
-				"types": "./dist/gateway/node.d.ts"
+				"types": "./dist/gateway/middleware/node.d.ts"
 			}
 		}
 	},
