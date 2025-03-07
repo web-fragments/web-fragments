@@ -15,8 +15,10 @@
 			<p>location.href: <span id="mainHref"></span></p>
 			<p>popstate count: <span id="mainPopstate">0</span></p>
 
-			<button id="foo">go to /foo</button>
-			<button id="bar">go to /bar</button>
+			<button id="softNavToFoo">soft nav to /foo</button>
+			<button id="softNavToBar">soft nav to /bar</button>
+			<button id="hardNavToBaz">hard nav to /bar</button>
+			<button id="reload">location.reload()</button>
 		</section>
 		<script>
 			function rerenderLocationHref() {
@@ -30,11 +32,17 @@
 				document.getElementById('mainPopstate').textContent = ++popstateCount;
 			});
 
-			document.querySelector('button#foo').addEventListener('click', () => {
+			document.querySelector('button#softNavToFoo').addEventListener('click', () => {
 				history.pushState({}, '', '/foo');
 			});
-			document.querySelector('button#bar').addEventListener('click', () => {
+			document.querySelector('button#softNavToBar').addEventListener('click', () => {
 				history.pushState({}, '', '/bar');
+			});
+			document.querySelector('button#hardNavToBaz').addEventListener('click', () => {
+				location.href = '/baz';
+			});
+			document.querySelector('button#reload').addEventListener('click', () => {
+				location.reload();
 			});
 		</script>
 

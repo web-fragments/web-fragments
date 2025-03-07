@@ -15,8 +15,10 @@ let main: {
 	popstateCount: Function;
 	back: Function;
 	forward: Function;
-	goToFooButton: Locator;
-	goToBarButton: Locator;
+	softNavToFooButton: Locator;
+	softNavToBarButton: Locator;
+	hardNavToBazButton: Locator;
+	reloadButton: Locator;
 };
 let bound: {
 	locationHref: Function;
@@ -24,8 +26,10 @@ let bound: {
 	popstateCount: Function;
 	back: Function;
 	forward: Function;
-	goToFooButton: Locator;
-	goToBarButton: Locator;
+	softNavToFooButton: Locator;
+	softNavToBarButton: Locator;
+	hardNavToBazButton: Locator;
+	reloadButton: Locator;
 };
 
 let unbound: {
@@ -34,8 +38,10 @@ let unbound: {
 	popstateCount: Function;
 	back: Function;
 	forward: Function;
-	goToFooButton: Locator;
-	goToBarButton: Locator;
+	softNavToFooButton: Locator;
+	softNavToBarButton: Locator;
+	hardNavToBazButton: Locator;
+	reloadButton: Locator;
 };
 
 beforeEach(async ({ page, browserName }) => {
@@ -56,8 +62,10 @@ beforeEach(async ({ page, browserName }) => {
 		popstateCount: async () => await page.locator('#mainPopstate').textContent(),
 		back: () => page.evaluate(() => history.back()),
 		forward: () => page.evaluate(() => history.forward()),
-		goToFooButton: mainSection.locator('button').getByText('go to /foo'),
-		goToBarButton: mainSection.locator('button').getByText('go to /bar'),
+		softNavToFooButton: mainSection.locator('button#softNavToFoo'),
+		softNavToBarButton: mainSection.locator('button#softNavToBar'),
+		hardNavToBazButton: mainSection.locator('button#hardNavToBaz'),
+		reloadButton: mainSection.locator('button#reload'),
 	};
 
 	boundFragment = page.locator('web-fragment[fragment-id="location-and-history"]');
@@ -72,8 +80,10 @@ beforeEach(async ({ page, browserName }) => {
 		popstateCount: () => boundFragment.locator('#popstate').textContent(),
 		back: () => boundContext.evaluate(() => history.back()),
 		forward: () => boundContext.evaluate(() => history.forward()),
-		goToFooButton: boundFragment.locator('button').getByText('go to /foo'),
-		goToBarButton: boundFragment.locator('button').getByText('go to /bar'),
+		softNavToFooButton: boundFragment.locator('button#softNavToFoo'),
+		softNavToBarButton: boundFragment.locator('button#softNavToBar'),
+		hardNavToBazButton: boundFragment.locator('button#hardNavToBaz'),
+		reloadButton: boundFragment.locator('button#reload'),
 	};
 
 	unbound = {
@@ -82,8 +92,10 @@ beforeEach(async ({ page, browserName }) => {
 		popstateCount: () => unboundFragment.locator('#popstate').textContent(),
 		back: () => unboundContext.evaluate(() => history.back()),
 		forward: () => unboundContext.evaluate(() => history.forward()),
-		goToFooButton: unboundFragment.locator('button').getByText('go to /foo'),
-		goToBarButton: unboundFragment.locator('button').getByText('go to /bar'),
+		softNavToFooButton: unboundFragment.locator('button#softNavToFoo'),
+		softNavToBarButton: unboundFragment.locator('button#softNavToBar'),
+		hardNavToBazButton: unboundFragment.locator('button#hardNavToBaz'),
+		reloadButton: unboundFragment.locator('button#reload'),
 	};
 });
 
@@ -104,8 +116,8 @@ test('location.href initialization', async ({ page }) => {
 });
 
 test('changing main location.href should only impact the main frame and bound fragment', async () => {
-	// go to /foo
-	await main.goToFooButton.click();
+	// soft nav to /foo
+	await main.softNavToFooButton.click();
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
 	expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/unbound/);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
@@ -114,8 +126,8 @@ test('changing main location.href should only impact the main frame and bound fr
 	expect(await bound.popstateCount()).toBe('1');
 	expect(await unbound.popstateCount()).toBe('0');
 
-	// go to /bar
-	await main.goToBarButton.click();
+	// soft nav to /bar
+	await main.softNavToBarButton.click();
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
 	expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/unbound/);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
@@ -125,8 +137,8 @@ test('changing main location.href should only impact the main frame and bound fr
 });
 
 test('changing location.href from a bound fragment should only impact the main frame and bound fragment', async () => {
-	// go to /foo
-	await bound.goToFooButton.click();
+	// soft nav to /foo
+	await bound.softNavToFooButton.click();
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
 	expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/unbound/);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
@@ -135,8 +147,8 @@ test('changing location.href from a bound fragment should only impact the main f
 	expect(await bound.popstateCount()).toBe('0');
 	expect(await unbound.popstateCount()).toBe('0');
 
-	// go to /bar
-	await bound.goToBarButton.click();
+	// soft nav to /bar
+	await bound.softNavToBarButton.click();
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
 	expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/unbound/);
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
@@ -146,14 +158,14 @@ test('changing location.href from a bound fragment should only impact the main f
 });
 
 test('changing unbound location.href should only impact itself and not other fragments or main', async () => {
-	// go to /foo
-	await unbound.goToFooButton.click();
+	// soft nav to /foo
+	await unbound.softNavToFooButton.click();
 	expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
 
-	// go to /bar
-	await unbound.goToBarButton.click();
+	// soft nav to /bar
+	await unbound.softNavToBarButton.click();
 	expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
@@ -162,8 +174,8 @@ test('changing unbound location.href should only impact itself and not other fra
 test('back and forward via browser buttons or history.forward()/.back() should work correctly after navigation in the main context', async ({
 	page,
 }) => {
-	await main.goToFooButton.click();
-	await main.goToBarButton.click();
+	await main.softNavToFooButton.click();
+	await main.softNavToBarButton.click();
 
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
@@ -193,8 +205,8 @@ test('back and forward via browser buttons or history.forward()/.back() should w
 test('back and forward via browser buttons or history.forward()/.back() should work correctly after navigation in a bound fragment', async ({
 	page,
 }) => {
-	await bound.goToFooButton.click();
-	await bound.goToBarButton.click();
+	await bound.softNavToFooButton.click();
+	await bound.softNavToBarButton.click();
 
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
@@ -234,8 +246,8 @@ test('back and forward via browser buttons or history.forward()/.back() should w
 test('history.forward()/.back() in a unbound fragment should update location and history within the fragment only', async ({
 	page,
 }) => {
-	await unbound.goToFooButton.click();
-	await unbound.goToBarButton.click();
+	await unbound.softNavToFooButton.click();
+	await unbound.softNavToBarButton.click();
 
 	expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
 	expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
@@ -282,7 +294,7 @@ test('unbound fragment should not participate in history management', async ({ p
 	expect(await unbound.historyLength()).toBe(1);
 
 	await step('unbound fragment can still pushState and replaceState to enable internal routing', async () => {
-		await unbound.goToFooButton.click();
+		await unbound.softNavToFooButton.click();
 
 		// should not add history records to the main history
 		expect(await main.historyLength()).toBe(2);
@@ -292,7 +304,7 @@ test('unbound fragment should not participate in history management', async ({ p
 		expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
 		expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
 
-		await unbound.goToBarButton.click();
+		await unbound.softNavToBarButton.click();
 		expect(await main.historyLength()).toBe(2);
 		expect(await unbound.historyLength()).toBe(3);
 		expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
@@ -307,7 +319,7 @@ test('unbound fragment should not participate in history management', async ({ p
 		expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
 		expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/unbound/);
 
-		await unbound.goToBarButton.click();
+		await unbound.softNavToBarButton.click();
 		expect(await main.historyLength()).toBe(2);
 		// we dropped one history record because the history has been forked and rewritten by the last navigation to /bar
 		expect(await unbound.historyLength()).toBe(2);
@@ -317,14 +329,14 @@ test('unbound fragment should not participate in history management', async ({ p
 	});
 
 	await step('browser back and forward buttons should not affect unbound fragments', async () => {
-		await bound.goToFooButton.click();
+		await bound.softNavToFooButton.click();
 		expect(await main.historyLength()).toBe(3);
 		expect(await bound.historyLength()).toBe(3);
 		expect(await unbound.historyLength()).toBe(2);
 		expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
 		expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/foo/);
 		expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
-		await unbound.goToBarButton.click();
+		await unbound.softNavToBarButton.click();
 		expect(await main.historyLength()).toBe(3);
 		expect(await bound.historyLength()).toBe(3);
 		expect(await unbound.historyLength()).toBe(3);
@@ -337,5 +349,43 @@ test('unbound fragment should not participate in history management', async ({ p
 		expect(await main.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
 		expect(await bound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\//);
 		expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/bar/);
+	});
+});
+
+test('hard nav and reload behavior in a bound fragment', async ({ page }) => {
+	// cause some navigations so that we update state and can verify that we actually reloaded
+	await bound.softNavToFooButton.click();
+	await main.back();
+	expect(await main.popstateCount()).toBe('2');
+
+	bound.reloadButton.click();
+	await page.waitForEvent('load', {
+		predicate: (page) => {
+			expect(page.url()).toMatch(/location-and-history\/$/);
+			return true;
+		},
+	});
+
+	// popstateCount is now 0 because we reloaded
+	expect(await main.popstateCount()).toBe('0');
+
+	page.context().route('/baz', (route) => {
+		return route.fulfill({ body: 'baz' });
+	});
+
+	bound.hardNavToBazButton.click();
+	await page.waitForEvent('load', {
+		predicate: (page) => {
+			expect(page.url()).toMatch(/baz$/);
+			return true;
+		},
+	});
+
+	page.goBack();
+	await page.waitForEvent('load', {
+		predicate: (page) => {
+			expect(page.url()).toMatch(/location-and-history\/$/);
+			return true;
+		},
 	});
 });
