@@ -1,7 +1,5 @@
 ---
 'web-fragments': patch
-'reframed': patch
-'@onwidget/astrowind': patch
 ---
 
 Because the main document can only have one html, head, and body element on the page, the browser will omit extra instances of those elements within the shadowRoot.
