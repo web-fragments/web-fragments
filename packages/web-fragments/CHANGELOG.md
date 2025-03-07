@@ -1,5 +1,147 @@
 # web-fragments
 
+## 0.4.0
+
+### Minor Changes
+
+- [#148](https://github.com/web-fragments/web-fragments/pull/148) [`f68f01d`](https://github.com/web-fragments/web-fragments/commit/f68f01d5e3b119f17e422374e29d24c3fc64c365) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat: clean up the web-fragments API surface
+
+  BREAKING CHANGES: there are several breaking changes in this change that reshape the API surface of the package. All of them are syntactic and should be easy to absorb.
+
+  Notably:
+
+  - the `web-fragments/elements` entry point was now simplified to just `web-fragments`
+  - the `FragmentOutlet` class and `<fragment-outlet>` custom element were renamed to `WebFragment` and `<web-fragment>` respectively
+  - the `FragmentHost` class and `<fragment-host>` custom element were renamed to `WebFragmentHost` and `<web-fragment-host>` respectively, and more importantly are now considered an implementation detail which app developers shouldn't interact with
+  - the `register` function was renamed to `initializeWebFragments`
+
+  These changes result in the current code that looks like:
+
+  ```js
+  import { register, FragmentOutlet } from 'web-fragments/elements';
+
+  register();
+
+  // imperative use:
+  const fragment = new FragmentOutlet();
+  fragment.setAttribute('fragment-id', 'someId');
+  document.body.appendChild(fragment);
+
+  // declarative use:
+  <fragment-outlet fragment-id="someId"></fragment-outlet>;
+  ```
+
+  to now turn into a more easy to follow version:
+
+  ```js
+  import { initializeWebFragments, WebFragment } from 'web-fragments';
+
+  initializeWebFragments();
+
+  // imperative use:
+  const fragment = new WebFragment();
+  fragment.setAttribute('fragment-id', 'someId');
+  document.body.appendChild(fragment);
+
+  // declarative use:
+  <web-fragment fragment-id="someId"></web-fragment>;
+  ```
+
+- [#139](https://github.com/web-fragments/web-fragments/pull/139) [`816e88b`](https://github.com/web-fragments/web-fragments/commit/816e88b187d91e76032dc3c7d015a971810708d9) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): prefix <html>, <head>, and <body> tags in fragment response as <wf-html>, <wf-head>, and <wf-body>
+
+  The gateway now rewrites fragment html so that any <html>, <head>, and <body> tags are replaced with <wf-html>, <wf-head>, and <wf-body> tags.
+
+  DOM doesn't allow duplicates of these three elements in the document, and the main document already contains them.
+
+  We need to replace these tags, to prevent the DOM from silently dropping them when the content is added to the main document.
+
+- [#142](https://github.com/web-fragments/web-fragments/pull/142) [`973a8d8`](https://github.com/web-fragments/web-fragments/commit/973a8d851bcfaebd784d0b8cbb98892233be84e7) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat(web-fragments): all fragments have css style display:block and position:relative set on the host
+
+  Since fragments usually contain other block elements they should be rendered as block rather than inline.
+
+- [#145](https://github.com/web-fragments/web-fragments/pull/145) [`75b1714`](https://github.com/web-fragments/web-fragments/commit/75b1714d68b4374129c89dc0544876b800cea49c) Thanks [@IgorMinar](https://github.com/IgorMinar)! - dev: merge the reframed library into the web-fragments package
+
+  The standalone reframed package is now deprecated.
+  Since it's unlikely that anyone used it directly it's unlikely that anyone will be impacted by this change.
+
+  Over the course of the development we realized that reframed as a standalone library doesn't make sense.
+  Reframing and the reframed library requires shadowdom and the gateway and without the rest of web-fragments it provides very little utility.
+  On the other hand, keeping the library as a separate package creates unnecessary overhead and friction.
+
+  For these reasons we decided to keep the library just as an implementation detail of web-fragments.
+
+- [#142](https://github.com/web-fragments/web-fragments/pull/142) [`0cfd504`](https://github.com/web-fragments/web-fragments/commit/0cfd50415f33200e867955eedaed2c160074ee9b) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat(gateway): make it possible for fragments to opt out of piercing
+
+  Occasionally fragments might want to be initialized only from the client.
+
+  FragmentConfig now makes it possible to opt-out of piercing via `piercing: false`:
+
+  ```ts
+  fragmentGateway.registerFragment({
+    fragmentId: fragmentId,
+    piercing: false,
+    routePatterns: [`/.../:_*`],
+    endpoint: '...'
+    prePiercingClassNames: ['...'],
+  });
+  ```
+
+### Patch Changes
+
+- [#142](https://github.com/web-fragments/web-fragments/pull/142) [`7683f43`](https://github.com/web-fragments/web-fragments/commit/7683f43f6faf7822b4f6127de18a18f776ffa46e) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): Node middleware adapter handles resp.end() correctly
+
+  The Node middleware adapter now correctly handles the cases where the response
+  is flushed with resp.end() without prior calls to resp.writeHead().
+
+  This bug was impacting Vite which uses the following pattern:
+
+  ```js
+  res.statusCode = 200;
+  res.end(content);
+  ```
+
+- [#154](https://github.com/web-fragments/web-fragments/pull/154) [`fc3a287`](https://github.com/web-fragments/web-fragments/commit/fc3a2878439a507e924cbc5c81dc002a1658a603) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: web-fragment element now uses shadowRoot to contain web-fragment-host
+
+  This is mainly to create a better abstraction and remove some noise from the DOM tree.
+
+  This does mean having two nested shadowRoots per fragment, but the overhead of these is insignificant.
+
+- [#151](https://github.com/web-fragments/web-fragments/pull/151) [`08ba8db`](https://github.com/web-fragments/web-fragments/commit/08ba8dbd4d478adac036602a9f0cc3eda52a48e3) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): make gateway compatible with node 20
+
+  This is mainly to make it easier to use the gateway in wider range of environments.
+
+- [#142](https://github.com/web-fragments/web-fragments/pull/142) [`fed5c71`](https://github.com/web-fragments/web-fragments/commit/fed5c71141fbe64cab87c053d6f1969ae171a8d6) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(reframed): don't create an superfluous browser history record in firefox
+
+  In Firefox, an extra history record is created for iframes appended for at least one turn of the event loop (a task), which then have their `src` attribute set.
+
+  To prevent bogus history records creation in Firefox, we ensure that reframed iframes are appended only once we set their `src` attribute.
+
+- [#150](https://github.com/web-fragments/web-fragments/pull/150) [`b4b99bb`](https://github.com/web-fragments/web-fragments/commit/b4b99bb3b8aea446e7da5bd48fc5783d10b54069) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat: add support for unbound fragments
+
+  Unbound fragments are fragments that don't have their location, history, navigation, and routing bound to the shell application.
+
+  This means that unbound fragments have independent history and navigation that is not represented in browsers address bar, and is not navigable via back and forward buttons/gestures.
+
+  This kind of fragments are useful for auxiliary UI fragments that might have a complex inner state and routing but this state is ephemeral and doesn't need to be preserved during hard reloads.
+
+  Good examples of these use-cases are chat bots, various side panels, assistants, etc.
+
+- [#146](https://github.com/web-fragments/web-fragments/pull/146) [`3dc6469`](https://github.com/web-fragments/web-fragments/commit/3dc6469b388e44b4f18f064d9f1e51030f232efa) Thanks [@rnguyen17](https://github.com/rnguyen17)! - Because the main document can only have one html, head, and body element on the page, the browser will omit extra instances of those elements within the shadowRoot.
+
+  Instead, a valid Document structure within the shadowRoot is provided via "fake" custom container elements injected by the gateway: wf-html, wf-head, and wf-body
+
+  Application code that targets document.documentElement, document.body, and document.head should reference these custom container elements.
+
+  Any CSS selectors used in document.querySelector and document.querySelectorAll are rewritten to selectively target these custom container elements as well.
+
+  For example, `document.querySelector('html body.head')` will be rewritten to `document.querySelector('wf-html wf-body.head)`.
+
+- [#154](https://github.com/web-fragments/web-fragments/pull/154) [`5999948`](https://github.com/web-fragments/web-fragments/commit/5999948ad98cd601213545646bee3609e3471b4a) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: fragment's iframe now use fragment-id as its name
+
+  This makes it easy to identify which fragment belongs to which web-fragment.
+
+  Additionally, this also makes it easier to identify the JS context in chrome devtools.
+
 ## 0.3.0
 
 ### Minor Changes
