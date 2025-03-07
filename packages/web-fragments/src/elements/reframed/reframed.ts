@@ -782,9 +782,13 @@ function monkeyPatchDOMInsertionMethods() {
 
 	// Rewrite the tagname for special custom elements added by writable-dom.
 	// Remove the WF-* prefix, but only for those elements.
+	//
+	// TODO: optimize patch for tagname rewrite to short circuit earlier,
+	// otherwise we potentially need to run this check millions/billions of times
+	const WF_CUSTOM_ELEMENTS = new Set(['WF-HTML', 'WF-HEAD', 'WF-BODY']);
 	function rewriteTagName(node: Element) {
 		const originalTagName = node.tagName;
-		if (['WF-HTML', 'WF-HEAD', 'WF-BODY'].includes(originalTagName)) {
+		if (WF_CUSTOM_ELEMENTS.has(originalTagName)) {
 			Object.defineProperty(node, 'tagName', {
 				get() {
 					return originalTagName.replace(/^WF-/i, '');
