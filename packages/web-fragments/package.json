@@ -43,6 +43,7 @@
 		"types:root": "tsc -p .",
 		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\"",
+		"test:unit": "pnpm vitest run src",
 		"test:gateway": "pnpm -C test/gateway test",
 		"test:playground": "pnpm -C test/playground test",
 		"test-debug:gateway": "vitest test/gateway --test-timeout=0 --no-file-parallelism",
@@ -58,7 +59,8 @@
 		"path-to-regexp": "^6.2.2",
 		"ts-node-dev": "^2.0.0",
 		"typescript": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vitest": "catalog:"
 	},
 	"author": "Igor Minar<i@igor.dev>",
 	"contributors": [
