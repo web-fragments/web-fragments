@@ -1,6 +1,5 @@
 ---
 'web-fragments': patch
-'reframed': patch
 ---
 
 fix(reframed): don't create an superfluous browser history record in firefox

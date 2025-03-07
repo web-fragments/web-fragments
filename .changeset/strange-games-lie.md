@@ -1,6 +1,5 @@
 ---
 'web-fragments': minor
-'reframed': minor
 ---
 
 feat(web-fragments): all fragments have css style display:block and position:relative set on the host
