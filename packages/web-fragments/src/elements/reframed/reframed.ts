@@ -130,7 +130,26 @@ async function reframeWithFetch(
 	iframe.src = reframedSrc;
 	iframe.name = options.name;
 
+	let alreadyLoaded = false;
+
 	iframe.addEventListener('load', () => {
+		if (alreadyLoaded) {
+			// iframe reload detected!
+
+			if (options.bound) {
+				// let's update the main location.href
+				iframe.ownerDocument.defaultView!.location.href = iframe?.contentWindow?.location.href!;
+			} else {
+				// TODO: what to do here?
+				// should we recreate the fragment with the new src?
+				// the current fragment is broken because the JS code was unloaded, so we can't resurrect it any more
+				// for now we just blow away the content
+				console.warn('unbound fragment reload detected, clearing fragment content!');
+				(target as Element).innerHTML = '';
+			}
+			return;
+		}
+
 		reframedHtmlStream
 			.pipeThrough(new TextDecoderStream())
 			.pipeTo(new WritableDOMStream(target))
@@ -141,6 +160,7 @@ async function reframeWithFetch(
 						target,
 						title: iframe.contentDocument?.title,
 					});
+				alreadyLoaded = true;
 				resolve();
 			});
 	});
