@@ -246,7 +246,15 @@ function nodeToWebResponse(
 		callNodeNextPromise,
 	);
 
-	let originResponsePromise = originResponse.head.then((head) => new Response(originResponse.body, head));
+	let originResponsePromise = originResponse.head.then((head) => {
+		const originStatus = head.status;
+		const body =
+			(originStatus && originStatus < 200) || originStatus === 204 || originStatus === 205 || originStatus === 304
+				? null
+				: originResponse.body;
+
+		return new Response(body, head);
+	});
 
 	const sendResponse = async (response: Response) => {
 		response.headers.forEach((value, name) => {
