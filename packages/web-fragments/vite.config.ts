@@ -13,7 +13,7 @@ export default defineConfig({
 			formats: ['es'],
 		},
 		rollupOptions: {
-			external: ['reframed', 'node:stream'],
+			external: ['htmlrewriter', 'node:stream'],
 			output: {},
 		},
 	},
