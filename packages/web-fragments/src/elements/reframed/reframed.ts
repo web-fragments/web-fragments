@@ -422,17 +422,17 @@ function monkeyPatchIFrameEnvironment(
 		},
 		documentElement: {
 			get() {
-				return shadowRoot.querySelector('wf-html');
+				return shadowRoot.querySelector('wf-html') ?? shadowRoot;
 			},
 		},
 		head: {
 			get() {
-				return shadowRoot.querySelector('wf-head');
+				return shadowRoot.querySelector('wf-head') ?? shadowRoot;
 			},
 		},
 		body: {
 			get() {
-				return shadowRoot.querySelector('wf-body');
+				return shadowRoot.querySelector('wf-body') ?? shadowRoot;
 			},
 		},
 	});
