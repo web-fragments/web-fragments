@@ -1,0 +1,176 @@
+import { ReframedShadowRoot, reframedMetadataSymbol } from './reframed';
+import { reframedDomInsertion, setInertScriptType, restoreScriptType, executeInertScript } from './script-execution';
+
+export function initializeMainContext(patchHistory: boolean) {
+	if (!(reframedInitializedSymbol in window)) {
+		Object.assign(window, { [reframedInitializedSymbol]: true });
+		monkeyPatchDOMInsertionMethods();
+		monkeyPatchMiscNodeMethods();
+	}
+
+	if (patchHistory && !(reframedInitializedHistoryPatchSymbol in window)) {
+		Object.assign(window, { [reframedInitializedHistoryPatchSymbol]: true });
+		monkeyPatchHistoryAPI();
+	}
+}
+
+const reframedInitializedSymbol = Symbol('reframed:initialized');
+const reframedInitializedHistoryPatchSymbol = Symbol('reframed:initializedHistoryPatch');
+
+const unpatchedNodeProto = {
+	appendChild: Node.prototype.appendChild,
+	insertBefore: Node.prototype.insertBefore,
+	replaceChild: Node.prototype.replaceChild,
+	getRootNode: Node.prototype.getRootNode,
+};
+
+const unpatchedElementProto = {
+	after: Element.prototype.after,
+	append: Element.prototype.append,
+	prepend: Element.prototype.prepend,
+	replaceChildren: Element.prototype.replaceChildren,
+	replaceWith: Element.prototype.replaceWith,
+	insertAdjacentElement: Element.prototype.insertAdjacentElement,
+};
+
+function getIframeDocumentIfWithinReframedDom(node: Node) {
+	const root = unpatchedNodeProto.getRootNode.call(node) as ReframedShadowRoot;
+	return root?.[reframedMetadataSymbol]?.iframe.contentDocument ?? undefined;
+}
+
+function monkeyPatchDOMInsertionMethods() {
+	Node.prototype.appendChild = function appendChild<T extends Node>(this: Node, childNode: T): T {
+		const doInsertTheNode = () => unpatchedNodeProto.appendChild.apply(this, arguments as any) as T;
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+		return reframedDomInsertion(childNode, doInsertTheNode, iframeDocument);
+	};
+
+	Node.prototype.insertBefore = function insertBefore<T extends Node>(this: Node, childNode: T): T {
+		const doInsertTheNode = () => unpatchedNodeProto.insertBefore.apply(this, arguments as any) as T;
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+		return reframedDomInsertion(childNode, doInsertTheNode, iframeDocument);
+	};
+
+	Node.prototype.replaceChild = function replaceChild<T extends Node>(this: Node, childNode: Node, oldChildNode: T): T {
+		const doInsertTheNode = () => unpatchedNodeProto.replaceChild.apply(this, arguments as any) as T;
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+		reframedDomInsertion(childNode, doInsertTheNode, iframeDocument);
+		return oldChildNode;
+	};
+
+	(['append', 'prepend', 'replaceChildren', 'replaceWith'] as const).forEach((elementInsertionMethod) => {
+		Element.prototype[elementInsertionMethod] = function patchedElementInsertion(...nodes) {
+			const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+
+			if (!iframeDocument) {
+				return unpatchedElementProto[elementInsertionMethod].apply(this, arguments as any);
+			}
+
+			const scripts: HTMLScriptElement[] = [];
+
+			nodes.forEach((node) => {
+				if (node instanceof HTMLScriptElement) {
+					scripts.push(node);
+				} else if (node instanceof Element) {
+					scripts.push(...node.querySelectorAll?.('script'));
+				}
+			});
+
+			scripts.forEach((script) => setInertScriptType(script));
+			unpatchedElementProto[elementInsertionMethod].apply(this, arguments as any);
+			scripts.forEach((script) => restoreScriptType(script));
+			scripts.forEach((script) => executeInertScript(script, iframeDocument));
+		};
+	});
+
+	Element.prototype.insertAdjacentElement = function after(this: Element, where: InsertPosition, element: Element) {
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+
+		if (!iframeDocument) {
+			return unpatchedElementProto.insertAdjacentElement.apply(this, arguments as any);
+		}
+
+		const scripts: HTMLScriptElement[] = [];
+
+		if (element instanceof HTMLScriptElement) {
+			scripts.push(element);
+		} else {
+			scripts.push(...element.querySelectorAll?.('script'));
+		}
+
+		scripts.forEach((script) => setInertScriptType(script));
+		const returnVal = unpatchedElementProto.insertAdjacentElement.apply(this, arguments as any);
+		scripts.forEach((script) => restoreScriptType(script));
+		scripts.forEach((script) => executeInertScript(script, iframeDocument));
+		return returnVal;
+	} satisfies typeof Element.prototype.insertAdjacentElement;
+}
+
+function monkeyPatchMiscNodeMethods() {
+	// https://developer.mozilla.org/en-US/docs/Web/API/Node/ownerDocument
+	const _Node__ownerDocument = Object.getOwnPropertyDescriptor(Node.prototype, 'ownerDocument')!.get!;
+	Object.defineProperty(Node.prototype, 'ownerDocument', {
+		configurable: true,
+		enumerable: true,
+		get() {
+			const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+			if (iframeDocument) {
+				return iframeDocument;
+			}
+			return _Node__ownerDocument.call(this);
+		},
+	});
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/Node/getRootNode
+	const _Node_getRootNode = Node.prototype.getRootNode;
+	Node.prototype.getRootNode = function getRootNode(options) {
+		const realRoot = _Node_getRootNode.call(this);
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(realRoot);
+		if (iframeDocument) {
+			return iframeDocument;
+		}
+		return !options ? realRoot : _Node_getRootNode.call(this, options);
+	};
+}
+
+function monkeyPatchHistoryAPI() {
+	/**
+	 * window.location is read-only and non-configurable, so we can't patch it
+	 *
+	 * In a browsing context with one or more iframes, the history all frames contribute to
+	 * is the joint history: https://www.w3.org/TR/2011/WD-html5-20110525/history.html#joint-session-history.
+	 * This means that we need to be careful not to add duplicate entries to the
+	 * history stack via pushState within the iframe as that would double the
+	 * number of history entries that back/forward button would have to work through
+	 *
+	 * Therefore we do the following:
+	 * - Store all the original history functions for both the iframe and the main window.
+	 * - intercept all history.pushState history.replaceState calls and replay them in the main window
+	 * - update the window.location within the iframe via history.replaceState
+	 * - intercept window.addEventListener('popstate', ...) registration and forward it onto the main window
+	 * - restore the main window history prototype when the iframe is removed
+	 *
+	 * Make sure we only patch main window history once
+	 */
+
+	const historyMethods: (keyof Omit<History, 'length'>)[] = ['pushState', 'replaceState', 'back', 'forward', 'go'];
+
+	historyMethods.forEach((historyMethod) => {
+		const originalFn = window.history[historyMethod];
+
+		Object.defineProperty(window.history, historyMethod, {
+			// TODO: come up with a better workaround that a no-op setter that doesn't break Qwik.
+			// QwikCity tries to monkey-patch `pushState` and `replaceState` which results in a runtime error:
+			//   TypeError: Cannot set property pushState of #<History> which only has a getter
+			// https://github.com/QwikDev/qwik/blob/3c5e5a7614c3f64cbf89f1304dd59609053eddf0/packages/qwik-city/runtime/src/spa-init.ts#L127-L135
+			set: () => {},
+			get: () => {
+				return function reframedHistoryGetter() {
+					Reflect.apply(originalFn, window.history, arguments);
+					window.dispatchEvent(new CustomEvent('reframed:navigate'));
+				};
+			},
+			configurable: true,
+		});
+	});
+}
