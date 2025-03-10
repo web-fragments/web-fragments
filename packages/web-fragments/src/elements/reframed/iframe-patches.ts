@@ -220,17 +220,17 @@ export function initializeIFrameContext(
 		},
 		documentElement: {
 			get() {
-				return shadowRoot.querySelector('wf-html') ?? shadowRoot;
+				return shadowRoot.querySelector('wf-html') ?? shadowRoot.firstElementChild;
 			},
 		},
 		head: {
 			get() {
-				return shadowRoot.querySelector('wf-head') ?? shadowRoot;
+				return shadowRoot.querySelector('wf-head') ?? shadowRoot.firstElementChild;
 			},
 		},
 		body: {
 			get() {
-				return shadowRoot.querySelector('wf-body') ?? shadowRoot;
+				return shadowRoot.querySelector('wf-body') ?? shadowRoot.firstElementChild;
 			},
 		},
 	});
