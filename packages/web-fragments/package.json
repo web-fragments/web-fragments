@@ -51,7 +51,7 @@
 		"prepare": "pnpm build"
 	},
 	"dependencies": {
-		"htmlrewriter": "anfibiacreativa/htmlrewriter#fix-emoji-crash",
+		"htmlrewriter": "npm:wf-htmlrewriter@0.0.13",
 		"writable-dom": "github:web-fragments/writable-dom#build-improvements"
 	},
 	"devDependencies": {
