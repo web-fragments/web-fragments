@@ -1,5 +1,23 @@
 # web-fragments
 
+## 0.4.2
+
+### Patch Changes
+
+- [#136](https://github.com/web-fragments/web-fragments/pull/136) [`6c2d0ee`](https://github.com/web-fragments/web-fragments/commit/6c2d0ee7283e4615c693546981ecb50e54624a29) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: improve support for document.currentScript and execution of scripts
+
+  All non-module scripts (inline and external) can now read the document.currentScript reference.
+
+  Internally we map the call to from the executing script's element to it's inert source element present in the reframed DOM.
+
+  This change also includes improvements to how we append, clone, and execute scripts to virtualize script loading more faithfully.
+
+- [#136](https://github.com/web-fragments/web-fragments/pull/136) [`34f9644`](https://github.com/web-fragments/web-fragments/commit/34f9644a2124be728934d9f7c0064a9e226ff2d6) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: improve Node#getRootNode() and Node#ownerDocument compatibility
+
+  Small changes to be html spec compliant.
+
+  I also added tests to cover all the cases.
+
 ## 0.4.1
 
 ### Patch Changes
