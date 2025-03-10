@@ -49,7 +49,6 @@ export default defineConfig({
 			name: 'chromium',
 			use: { ...devices['Desktop Chrome'] },
 		},
-		// TODO: uncomment before merge
 		{
 			name: 'firefox',
 			use: { ...devices['Desktop Firefox'] },
