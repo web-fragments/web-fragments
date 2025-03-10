@@ -12,64 +12,108 @@
 				<input id="inline-script-sync-running" type="checkbox" />
 				in reframed JS context
 				<input id="inline-script-sync-reframed" type="checkbox" />
+				and <code>document.currentScript</code> is set
+				<input id="inline-script-sync-currentScript" type="checkbox" />
 			</li>
 			<li>
 				Inline async scripts are running
 				<input id="inline-script-async-running" type="checkbox" />
 				in a reframed JS context
 				<input id="inline-script-async-reframed" type="checkbox" />
+				and <code>document.currentScript</code> is set
+				<input id="inline-script-async-currentScript" type="checkbox" />
 			</li>
 			<li>
 				Inline module scripts are running
 				<input id="inline-script-module-running" type="checkbox" />
 				in a reframed JS context
 				<input id="inline-script-module-reframed" type="checkbox" />
+				and <code>document.currentScript</code> is set
+				<code>N/A</code>
 			</li>
 			<li>
 				External sync script are running
 				<input id="external-script-sync-running" type="checkbox" />
 				in a reframed JS context
 				<input id="external-script-sync-reframed" type="checkbox" />
+				and <code>document.currentScript</code> is set
+				<input id="external-script-sync-currentScript" type="checkbox" />
 			</li>
 			<li>
 				External async script are running
 				<input id="external-script-async-running" type="checkbox" />
 				in a reframed JS context
 				<input id="external-script-async-reframed" type="checkbox" />
+				and <code>document.currentScript</code> is set
+				<input id="external-script-async-currentScript" type="checkbox" />
 			</li>
 			<li>
 				External defer script are running
 				<input id="external-script-defer-running" type="checkbox" />
 				in a reframed JS context
 				<input id="external-script-defer-reframed" type="checkbox" />
+				and <code>document.currentScript</code> is set
+				<input id="external-script-defer-currentScript" type="checkbox" />
 			</li>
 			<li>
 				External module script are running
 				<input id="external-script-module-running" type="checkbox" />
 				in a reframed JS context
 				<input id="external-script-module-reframed" type="checkbox" />
+				and <code>document.currentScript</code> is set
+				<code>N/A</code>
+			</li>
+			<li>
+				Inline child script are running
+				<input id="inline-child-script-sync-running" type="checkbox" />
+				in a reframed JS context
+				<input id="inline-child-script-sync-reframed" type="checkbox" />
+				and <code>document.currentScript</code> is set
+				<input id="inline-child-script-sync-currentScript" type="checkbox" />
+			</li>
+			<li>
+				External child script are running
+				<input id="external-child-script-sync-running" type="checkbox" />
+				in a reframed JS context
+				<input id="external-child-script-sync-reframed" type="checkbox" />
+				and <code>document.currentScript</code> is set
+				<input id="external-child-script-sync-currentScript" type="checkbox" />
 			</li>
 		</ul>
-		<script>
-			window.SCRIPT_CONTEXT_MARKER = '🔥';
-			window.SCRIPT_COUNTER = 1;
+		<script id="inline-script-sync">
 			document.getElementById('inline-script-sync-running').checked = true;
-			if (window.parent !== window) {
+
+			if (window.name === 'wf:script-loading') {
 				document.getElementById('inline-script-sync-reframed').checked = true;
 			}
+
+			if (document.querySelector('script#inline-script-sync') === document.currentScript) {
+				document.getElementById('inline-script-sync-currentScript').checked = true;
+			}
+
+			window.SCRIPT_COUNTER = 1;
 		</script>
-		<script async>
+
+		<script async id="inline-script-async">
 			document.getElementById('inline-script-async-running').checked = true;
-			if (window.parent !== window && window.SCRIPT_CONTEXT_MARKER === '🔥') {
+
+			if (window.name === 'wf:script-loading') {
 				document.getElementById('inline-script-async-reframed').checked = true;
+			}
+
+			if (document.querySelector('script#inline-script-async') === document.currentScript) {
+				document.getElementById('inline-script-async-currentScript').checked = true;
 			}
 			window.SCRIPT_COUNTER++;
 		</script>
+
 		<script type="module" vite-ignore>
 			document.getElementById('inline-script-module-running').checked = true;
-			if (window.parent !== window && window.SCRIPT_CONTEXT_MARKER === '🔥') {
+
+			if (window.name === 'wf:script-loading') {
 				document.getElementById('inline-script-module-reframed').checked = true;
 			}
+
 			window.SCRIPT_COUNTER++;
 		</script>
 
@@ -79,10 +123,13 @@
 			The scripts themselves are stored under public/fragments/script-loading/ so that they are served without any processing.
 		-->
 
-		<script vite-ignore async src="/script-loading/script-async.js"></script>
-		<script vite-ignore defer src="/script-loading/script-defer.js"></script>
+		<script vite-ignore async src="/script-loading/script-async.js" id="external-script-async"></script>
+		<script vite-ignore defer src="/script-loading/script-defer.js" id="external-script-defer"></script>
 		<script vite-ignore type="module" src="/script-loading/script-module.js"></script>
-		<!-- TODO: why does this one have to be the last one? Is there some silenced error or what? -->
-		<script vite-ignore src="/script-loading/script-sync.js"></script>
+		<script vite-ignore type="module" src="/script-loading/script-with-child-scripts.js"></script>
+		<article id="child-script-sync-append-target"></article>
+
+		<!-- TODO: why this one must be last? is this due to a reframed/writabledom bug?-->
+		<script vite-ignore src="/script-loading/script-sync.js" id="external-script-sync"></script>
 	</body>
 </html>

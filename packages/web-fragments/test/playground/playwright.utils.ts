@@ -46,8 +46,8 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 
 export async function getFragmentContext(fragment: Locator): Promise<Frame> {
 	const fragmentId = await fragment.evaluate((element) => element.getAttribute('fragment-id'));
-	expect(fragment.page().locator(`iframe[name=${fragmentId}]`)).toBeAttached();
-	const context = fragment.page().frame({ name: fragmentId })!;
+	expect(fragment.page().locator(`iframe[name="wf:${fragmentId}"]`)).toBeAttached();
+	const context = fragment.page().frame({ name: `wf:${fragmentId}` })!;
 	expect(context).toBeDefined();
 	return context;
 }

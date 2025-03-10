@@ -1,5 +1,7 @@
 document.getElementById('external-script-module-running').checked = true;
-if (window.parent !== window && window.SCRIPT_CONTEXT_MARKER === '🔥') {
+
+if (window.name === 'wf:script-loading') {
 	document.getElementById('external-script-module-reframed').checked = true;
 }
+
 window.SCRIPT_COUNTER++;

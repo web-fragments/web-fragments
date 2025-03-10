@@ -53,12 +53,12 @@ test('fragment initialization', async ({ page }) => {
 	await step(`fragment's iframe should have it's name set to fragment-id`, async () => {
 		const fragment = page.locator('web-fragment[fragment-id=fragment-creation]');
 		await expect(await fragment.locator('h2')).toBeVisible();
-		const fragmentIframe = page.locator('iframe[name=fragment-creation]');
+		const fragmentIframe = page.locator('iframe[name="wf:fragment-creation"]');
 		await expect(await fragmentIframe).toBeAttached();
 
 		const fragment4 = page.locator('web-fragment[fragment-id=fragment-creation4]');
 		await expect(await fragment4.locator('h2')).toBeVisible();
-		const fragmentIframe4 = page.locator('iframe[name=fragment-creation4]');
+		const fragmentIframe4 = page.locator('iframe[name="wf:fragment-creation4"]');
 		await expect(await fragmentIframe4).toBeAttached();
 	});
 });
