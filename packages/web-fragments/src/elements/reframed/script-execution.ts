@@ -49,6 +49,10 @@ export function reframedDomInsertion<T extends Node>(
 }
 
 export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: HTMLIFrameElement) {
+	// In addition to executing scripts, we also need to patch wf- tags if they are present so that the scripts see them
+	// without the prefix.
+	[...shadowRoot.querySelectorAll('wf-html, wf-body, wf-head')].forEach(rewriteTagName);
+
 	const scripts = [...shadowRoot.querySelectorAll('script')];
 
 	scripts.forEach((script) => {
