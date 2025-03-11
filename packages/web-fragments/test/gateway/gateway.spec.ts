@@ -138,6 +138,37 @@ for (const environment of environments) {
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
 			});
 
+			it(`should strip if-none-match and if-modified-since headers from the pierced fragment request`, async () => {
+				fetchMock.doMockIf((request) => {
+					if (request.url.toString() === 'http://foo.test:1234/foo') {
+						expect(request.headers.has('if-none-match')).toBe(false);
+						expect(request.headers.has('if-modified-since')).toBe(false);
+						return true;
+					}
+					return false;
+				}, new Response('<p>foo fragment</p>'));
+
+				mockShellAppResponse(
+					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
+				);
+
+				const response = await testRequest(
+					new Request('http://localhost/foo', {
+						headers: {
+							// must be 'document' since we are emulating piercing
+							'sec-fetch-dest': 'document',
+							'if-modified-since': 'Mon, 10 Mar 2025 23:55:13 GMT',
+							'if-none-match': 'W/"a2fd-195827be9b2"',
+						},
+					}),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe(
+					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></web-fragment-host></body></html>`,
+				);
+			});
+
 			it(`should append additional headers to the SSR request for the fragment`, async () => {
 				fetchMock.doMockIf((request) => {
 					if (request.url.toString() === 'http://foo.test:1234/foo') {
@@ -545,6 +576,23 @@ for (const environment of environments) {
 				expect(barImgResponse.status).toBe(200);
 				expect(await barImgResponse.text()).toBe(`bar cat img`);
 				expect(barImgResponse.headers.get('content-type')).toBe('image/jpeg');
+			});
+
+			it(`should handle 304 responses`, async () => {
+				// fetch an image from the fooFragment
+				mockFragmentFooResponse('/_fragment/foo/image.jpg', new Response(null, { status: 304 }));
+
+				const imgResponse = await testRequest(
+					new Request('http://localhost/_fragment/foo/image.jpg', {
+						headers: {
+							'if-modified-since': 'Mon, 10 Mar 2025 23:55:13 GMT',
+							'if-none-match': 'W/"a2fd-195827be9b2"',
+						},
+					}),
+				);
+
+				expect(imgResponse.status).toBe(304);
+				expect(imgResponse.body).toBe(null);
 			});
 
 			it(`should append x-forwarded-host and x-forwarded-proto headers to the asset request`, async () => {
