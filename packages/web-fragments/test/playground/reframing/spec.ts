@@ -25,6 +25,18 @@ test('window sizing in fragment should delegate to the main context', async ({ p
 	}
 });
 
+test('documentElement, head, and body sizing in fragment should delegate to the main context', async ({ page }) => {
+	for (const element of ['documentElement', 'head', 'body']) {
+		for (const property of ['clientHeight', 'clientWidth']) {
+			await step(`should delegate ${element}.${property} to the main context`, async () => {
+				expect(
+					await page.evaluate(`document.${element}.${property} === fragmentContext().document.${element}.${property}`),
+				).toBe(true);
+			});
+		}
+	}
+});
+
 test('DOM related observers should be delegate to the main context', async ({ page }) => {
 	const observers = ['IntersectionObserver', 'MutationObserver', 'ResizeObserver'];
 	for (const property of observers) {

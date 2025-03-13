@@ -172,13 +172,32 @@ function prepareUnattachedInlineScript(script: HTMLScriptElement, iframeDocument
 //
 // TODO: optimize patch for tagname rewrite to short circuit earlier,
 // otherwise we potentially need to run this check millions/billions of times
-const WF_CUSTOM_ELEMENTS = new Set(['WF-HTML', 'WF-HEAD', 'WF-BODY']);
+const WF_CUSTOM_ELEMENTS = new Map([
+	['WF-HTML', document.documentElement],
+	['WF-HEAD', document.head],
+	['WF-BODY', document.body],
+]);
 function rewriteTagName(node: Element) {
 	const originalTagName = node.tagName;
-	if (WF_CUSTOM_ELEMENTS.has(originalTagName)) {
-		Object.defineProperty(node, 'tagName', {
-			get() {
-				return originalTagName.replace(/^WF-/i, '');
+	if (originalTagName === 'WF-HTML') {
+	}
+	const mappedElement = WF_CUSTOM_ELEMENTS.get(originalTagName);
+	if (mappedElement) {
+		Object.defineProperties(node, {
+			clientWidth: {
+				get() {
+					return mappedElement.clientWidth;
+				},
+			},
+			clientHeight: {
+				get() {
+					return mappedElement.clientHeight;
+				},
+			},
+			tagName: {
+				get() {
+					return originalTagName.replace(/^WF-/i, '');
+				},
 			},
 		});
 	}
