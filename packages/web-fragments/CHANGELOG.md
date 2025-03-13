@@ -1,5 +1,21 @@
 # web-fragments
 
+## 0.4.4
+
+### Patch Changes
+
+- [#168](https://github.com/web-fragments/web-fragments/pull/168) [`4310b73`](https://github.com/web-fragments/web-fragments/commit/4310b735584e3e738b12c8c2fdd74b98459af048) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: make writabledom a npm devDependency rather than dependency
+
+  We bundle it in, so there is no need to have it installed by the clients.
+
+  This resolves issues with installations that struggled with the github: protocol we use with this dep.
+
+- [#168](https://github.com/web-fragments/web-fragments/pull/168) [`6af4011`](https://github.com/web-fragments/web-fragments/commit/6af40111c39bfba3079d7776fd2fde9843723330) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: correctly report clientWidth and clientHeight on document.documentElement
+
+  We previously reported 0 because the wf-\* elements don't have width.
+
+  Now we proxy to the main document to get the document (and body) width and height.
+
 ## 0.4.3
 
 ### Patch Changes
