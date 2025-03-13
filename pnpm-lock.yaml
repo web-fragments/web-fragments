@@ -397,9 +397,6 @@ importers:
       htmlrewriter:
         specifier: npm:wf-htmlrewriter@0.0.13
         version: wf-htmlrewriter@0.0.13
-      writable-dom:
-        specifier: github:web-fragments/writable-dom#build-improvements
-        version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6
     devDependencies:
       '@types/node':
         specifier: ^20.12.7
@@ -419,6 +416,9 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 3.0.5(@types/debug@4.1.12)(@types/node@20.14.10)(lightningcss@1.27.0)(terser@5.34.1)
+      writable-dom:
+        specifier: github:web-fragments/writable-dom#build-improvements
+        version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6
 
   packages/web-fragments/test/gateway:
     devDependencies:
