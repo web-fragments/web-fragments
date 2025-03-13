@@ -82,6 +82,7 @@ export function getWebMiddleware(
 					throw response;
 				})
 				.catch(handleFetchErrors)
+				.then(stripDoctype)
 				.then(prefixHtmlHeadBody)
 				.then(neutralizeScriptTags)
 				.then((fragmentResponse) =>
@@ -296,6 +297,41 @@ export function getWebMiddleware(
 				.transform(appShellResponse);
 		}
 	}
+}
+
+/**
+ * Strips <!doctype> from the response body.
+ *
+ * Nested doctype tags might cause some browsers to complain or choke (e.g. Firefox in some cases).
+ *
+ * Browsers don't materialize this tag in the DOM anyway so it should be ok to strip them (if it's nested within other elements).
+ *
+ * HTMLRewriter doesn't support modifying the doctype tag, so we strip it manually here.
+ *
+ * @param fragmentResponse
+ * @returns
+ */
+export function stripDoctype(fragmentResponse: Response): Response {
+	let firstChunk = true;
+
+	const rewrittenBody = fragmentResponse.body
+		?.pipeThrough(new TextDecoderStream())
+		.pipeThrough(
+			new TransformStream({
+				transform(chunk, controller) {
+					// it's highly unlikely that the first chunk won't contain the full doctype
+					// so we don't need to bother buffering the chunks and instead can just check the first one
+					if (firstChunk) {
+						firstChunk = false;
+						chunk = chunk.replace(/<!doctype[^>]*>/i, '');
+					}
+
+					controller.enqueue(chunk);
+				},
+			}),
+		)
+		.pipeThrough(new TextEncoderStream());
+	return new Response(rewrittenBody, fragmentResponse);
 }
 
 /**

@@ -113,6 +113,29 @@ for (const environment of environments) {
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
 			});
 
+			it(`should strip doctype from html`, async () => {
+				// browsers don't create DOM nodes for nested doctype and it could cause problems for some browsers
+
+				mockShellAppResponse(
+					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
+				);
+				mockFragmentFooResponse(
+					'/foo',
+					new Response('<!doctype html><html><head><title>test</title></head><body>hello</body></html>'),
+				);
+
+				const response = await testRequest(
+					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe(
+					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-html><wf-head><title>test</title></wf-head><wf-body>hello</wf-body></wf-html></template></web-fragment-host></body></html>`,
+				);
+				expect(response.headers.get('content-type')).toBe('text/html');
+				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
+			});
+
 			it(`should rewrite <html>, <head>, and <body> tags in fragment's html`, async () => {
 				// we want to rewrite the <html>, <head>, and <body> tags in the fragment's html because browser will otherwise strip them out
 
@@ -122,7 +145,7 @@ for (const environment of environments) {
 				mockFragmentFooResponse(
 					'/foo',
 					new Response(
-						'<html lang="en-US"><head data-foo="bar"><meta>some head content</head><body class="foo"><p>foo fragment</p></body></html>',
+						'<html lang="en-US"><head data-foo="bar"><meta>some head content</meta></head><body class="foo"><p>foo fragment</p></body></html>',
 					),
 				);
 
@@ -132,7 +155,7 @@ for (const environment of environments) {
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(
-					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-html lang="en-US"><wf-head data-foo="bar"><meta>some head content</wf-head><wf-body class="foo"><p>foo fragment</p></wf-body></wf-html></template></web-fragment-host></body></html>`,
+					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-html lang="en-US"><wf-head data-foo="bar"><meta>some head content</meta></wf-head><wf-body class="foo"><p>foo fragment</p></wf-body></wf-html></template></web-fragment-host></body></html>`,
 				);
 				expect(response.headers.get('content-type')).toBe('text/html');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
