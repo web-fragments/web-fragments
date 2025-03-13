@@ -1,5 +1,15 @@
 # web-fragments
 
+## 0.4.3
+
+### Patch Changes
+
+- [#165](https://github.com/web-fragments/web-fragments/pull/165) [`d4a7b58`](https://github.com/web-fragments/web-fragments/commit/d4a7b58669301ba2bef87b592be2ad2b457475e2) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): strip <!doctype> tags from fragment responses
+
+  Nested doctype tags might cause some browsers to complain or choke (e.g. Firefox in some cases).
+
+  Browsers don't materialize this tag in the DOM anyway so it should be ok to strip them (if it's nested within other elements).
+
 ## 0.4.2
 
 ### Patch Changes
