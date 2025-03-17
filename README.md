@@ -13,7 +13,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License](https://img.shields.io/badge/License-MIT-white?style=flat-square)](LICENSE)
 
-[Overview](#overview) | [The Goal](#the-goal) | [Getting started](#getting-started) |  [More Resources](#more-resources)
+[Overview](#overview) | [The Goal](#the-goal) | [Getting started](#getting-started) | [More Resources](#more-resources)
 
 </div>
 
