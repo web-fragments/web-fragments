@@ -3,19 +3,15 @@ title: "Elements"
 layout: "~/layouts/MarkdownLayout.astro"
 ---
 
-_Last updated_: December 8, 2024
+_Last updated_: March 13, 2025
 
-Web Fragments uses `custom elements` as an implementation detail to embed applications in an existing user-interface. By using custom elements we ensure there is only one `Document Object Model` that's walkable and interactive while the `shadowRoot` keeps the fragment application styles encapsulated, to prevent `css` pollution and specifity problems.
+Web Fragments uses `custom elements` as an implementation detail to embed applications in an existing user-interface. By using custom elements keep the implementation lightweight and benefit from using `shadowRoot` for style encapsulation.
 
-Additionally, all scripts in the fragment application are encapsulated in an `iframe` element with a mechanism known as [reframing](./reframed.md)
+Additionally, all scripts of the fragment application execute in an isolated JavaScript context via a mechanism known as [reframing](./reframed.md)
 
 ## Custom elements registration
 
-Before using the `web fragments` custom elements in an application, they must be registered by importing the `register` function provided.
-
-Please notice that different frameworks may require additional utilities to work with `custom elements`. For example `Angular` needs `CUSTOM_ELEMENTS_SCHEMA` to be provided.
-
-The library exports the `initializeWebFragments()` function that should be called early in the application bootstrapping.
+Before using the Web Fragments on the client-side of an application, the library needs to be initialized via exported `initializeWebFragments()` function:
 
 ```javascript
 import { initializeWebFragments } from "web-fragments";
@@ -23,13 +19,25 @@ import { initializeWebFragments } from "web-fragments";
 initializeWebFragments();
 ```
 
-## Fragment Outlet
+This initialization should occur as early as possible during the bootstrap of a the existing application.
 
-In the context of Web Fragments, a `fragment outlet` is a custom element, reponsible for setting up the `fragment-id` and triggering the Web Fragment `reframing`. The `fragment outlet` is then used as a placeholder to kick off the [portaling](./glossary#portaling)
+Please notice that different frameworks may require additional utilities to work with `custom elements`. For example `Angular` needs `CUSTOM_ELEMENTS_SCHEMA` to be provided.
+
+## `<web-fragment>` element
+
+`<web-fragment>` is a custom element reponsible for marking the location in the existing application where a Web Fragment should be nested.
+
+`<web-fragment>` have a `fragment-id` attribute to identify the fragment to be nested.
 
 ```html
-<fragment-outlet src="/some-url" fragment-id="some-id"></fragment-outlet>
+<fragment-outlet fragment-id="some-id"></fragment-outlet>
 ```
+
+By default, `<web-fragment>` will create a bound fragment, which shares (binds) `window.location` and navigation history with the existing application that contains the fragment.
+Navigation initialized from the existing application, or a web fragment will be reflected in both.
+
+Optionally, a fragment can be created with the `src` attribute.
+This will cause a creation of an "unbound" fragments, which has it's own `window.location` and history, both of which are independent of that of the rest of the application or other fragments.
 
 ## Fragment Host Client-Side
 

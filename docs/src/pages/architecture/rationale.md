@@ -3,7 +3,7 @@ title: "Web Fragments Rationale"
 layout: "~/layouts/MarkdownLayout.astro"
 ---
 
-_Last updated_: December 8, 2024
+_Last updated_: March 13, 2025
 
 **As developers wanting to push the web forward, we know that progress is not linear.**
 

@@ -83,7 +83,7 @@ Note: the optional commit `-a` command line option will automatically "add" and 
 git push origin my-fix-branch
 ```
 
-9. In GitHub, send a pull request to `contoso-real-estate:main`.
+9. In GitHub, send a pull request to `web-fragments:main`.
 
 ### Reviewing a Pull Request
 
@@ -214,6 +214,7 @@ The `<type>` and `<summary>` fields are mandatory, the `(<scope>)` field is opti
 Must be one of the following:
 
 - `build`
+- `dev`
 - `ci`
 - `docs`
 - `feat`
