@@ -3,9 +3,9 @@ title: "Broadcasting events and communicating state"
 layout: "~/layouts/MarkdownLayout.astro"
 ---
 
-_Last updated_: December 8, 2024
+_Last updated_: March 13, 2025
 
-Because Web Fragments are encapsulated in a `custom element` `shadowRoot`, they are part of the same [Document Object Model](https://developer.mozilla.org/en-US/docs/Glossary/DOM) and can leverage [Web Platform APIs](https://developer.mozilla.org/en-US/docs/Web/API). This makes Web Fragments future-proof and agnostic, and reduces maintenance efforts.
+Because Web Fragments are encapsulated in a `custom element` `shadowRoot`, they are part of the same [Document Object Model](https://developer.mozilla.org/en-US/docs/Glossary/DOM) and can leverage [Web Platform APIs](https://developer.mozilla.org/en-US/docs/Web/API). This makes Web Fragments lightweight and encourages use of Web platform APIs rather than custom library APIs.
 
 > Our team is currently working with standards bodies to push parts of the Web Fragments to the Web Platform as standards.
 

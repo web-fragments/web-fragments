@@ -3,15 +3,19 @@ title: "Gateway"
 layout: "~/layouts/MarkdownLayout.astro"
 ---
 
-_Last updated_: December 8, 2024
+_Last updated_: March 13, 2025
 
 ## What is the Fragments Gateway
 
-The fragments gateway is responsible for the registration of fragments in the application, and for matching the requests intercepted by the middleware, using the `urlpathname` with a fragment, using a regular expression pattern as defined in the `routePatterns` property.
+The fragments gateway is how all fragments and the application containing them can live on a single origin, preventing headaches and performance issues with cross-origin requests.
+
+The gateway routes all requests from the browser to the right destination — either the existing application, fragment endpoints, or both.
+
+The Fragment Gateway is implemented as a lightweight middleware, that is compatible with both Node.js and Web based request/response APIs.
 
 ## Gateway usage
 
-To register fragments, the gateway must be imported to the server application, and instantiated, with the corresponding `fragment` configuration.
+Before a gateway can be installed as a middleware, it needs to be configured.
 
 ```javascript
 const gateway = new FragmentGateway(config: FragmentGatewayConfig);
@@ -29,7 +33,7 @@ const gateway = new FragmentGateway(config: FragmentGatewayConfig);
 
 ### Optional gateway configuration object
 
-A `fragment gatway` configuration object can define the cofiguration for `prePiercingStyles`:
+A `fragment gateway` configuration object can define the cofiguration for `prePiercingStyles`:
 
 ```javascript
 type FragmentGatewayConfig = {
@@ -46,7 +50,7 @@ Once the gateway is instantiated, for example like this
 // application is bootstrapped
 const gateway = new FragmentGateway({
 	prePiercingStyles: `<style id="fragment-piercing-styles" type="text/css">
-      fragment-host[data-piercing="true"] {
+      web-fragment-host[data-piercing="true"] {
         position: absolute;
         z-index: 1;
       }

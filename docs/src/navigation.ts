@@ -3,36 +3,33 @@ import { getPermalink, /* getBlogPermalink, */ getAsset } from "./utils/permalin
 export const headerData = {
 	links: [
 		{
-			text: "API Documentation",
+			text: "Developer Documentation",
 			links: [
 				{
 					text: "Getting Started",
 					href: getPermalink("/documentation/getting-started"),
 				},
+
+				{
+					text: "Glossary",
+					href: getPermalink("/documentation/glossary"),
+				},
+
 				{
 					text: "Elements",
 					href: getPermalink("/documentation/elements"),
 				},
+
 				{
 					text: "Gateway",
 					href: getPermalink("/documentation/gateway"),
 				},
-				{
-					text: "Middleware",
-					href: getPermalink("/documentation/middleware"),
-				},
-				{
-					text: "Reframed",
-					href: getPermalink("/documentation/reframed"),
-				},
-				{
-					text: "Eager-rendering (piercing)",
-					href: getPermalink("/documentation/middleware#eager-rendering-or-piercing"),
-				},
+
 				{
 					text: "Broadcasting events",
 					href: getPermalink("/documentation/broadcasting-state"),
 				},
+
 				{
 					text: "Troubleshooting",
 					href: getPermalink("/documentation/troubleshooting"),
@@ -43,30 +40,13 @@ export const headerData = {
 			text: "Architecture",
 			links: [
 				{
-					text: "Rationale",
-					href: getPermalink("/architecture/rationale"),
-				},
-				{
 					text: "Architecture",
 					href: getPermalink("/architecture/architecture"),
 				},
-			],
-		},
-		{
-			text: "Blog",
-			links: [
 				{
-					text: "Coming soon!",
-					href: getPermalink("coming-soon", "post"),
+					text: "Rationale",
+					href: getPermalink("/architecture/rationale"),
 				},
-				/*         {
-          text: 'Blog List',
-          href: getBlogPermalink(),
-        },
-        {
-          text: 'Category Page',
-          href: getPermalink('tutorials', 'category'),
-        }, */
 			],
 		},
 	],
