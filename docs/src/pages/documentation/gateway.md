@@ -7,41 +7,24 @@ _Last updated_: March 19, 2025
 
 ## What is the Fragments Gateway
 
-The fragments gateway is how all fragments and the application containing them can live on a single origin, preventing headaches and performance issues with cross-origin requests.
+The fragment gateway enables web fragments and the application containing them to live on a single origin.
+Operating the micro-frontend deployment on a single origin avoid configuration overhead and performance issues of cross-origin requests.
 
 The gateway routes all requests from the browser to the right destination — either the existing application, fragment endpoints, or both.
 
-The Fragment Gateway is implemented as a lightweight middleware, that is compatible with both Node.js and Web based request/response APIs.
+The fragment gateway is implemented as a lightweight middleware that is compatible with both Node.js or Web based request/response APIs.
 
 ## Gateway usage
 
 Before a gateway can be installed as a middleware, it needs to be configured.
 
 ```javascript
-const gateway = new FragmentGateway(config: FragmentGatewayConfig);
+import { FragmentGateway } from "web-fragments/gateway";
+
+const gateway = new FragmentGateway(config);
 ```
 
-## Fragment Gatway API reference
-
-| Member                                                                                   | Type      | Description                                                                                                                                                                                                                                          |
-| ---------------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `fragmentConfigs`                                                                        | (private) | Internal storage for fragment configurations.                                                                                                                                                                                                        |
-| `routeMap`                                                                               | (private) | Internal mapping of routes for fragment handling.                                                                                                                                                                                                    |
-| `piercingStyles`                                                                         | `string`  | Returns a string representing styles applied before piercing fragments.                                                                                                                                                                              |
-| `registerFragment(fragmentConfig: FragmentConfig): void`                                 | Method    | Registers a fragment in the gateway worker for integration with the gateway worker. <br/> **Parameters:** <ul><li>`fragmentConfig`: Configuration object for the fragment.</li></ul>                                                                 |
-| `matchRequestToFragment(urlOrRequest: string \| URL \| Request): FragmentConfig \| null` | Method    | Matches an incoming request to a fragment configuration. <br/> **Parameters:** <ul><li>`urlOrRequest`: The URL or request to match against registered fragments.</li></ul> **Returns:** The matched `FragmentConfig` or `null` if no match is found. |
-
-### Optional gateway configuration object
-
-A `fragment gateway` configuration object can define the cofiguration for `piercingStyles`:
-
-```javascript
-type FragmentGatewayConfig = {
-    piercingStyles?: string;
-};
-```
-
-Once the gateway is instantiated, for example like this
+A fragment gateway configuration object can define `piercingStyles` which can position fragments during piercing (early rendering of fragments):
 
 ```javascript
 // Gateway instantiation
@@ -49,7 +32,7 @@ Once the gateway is instantiated, for example like this
 // is placed in the right position and there is no content-layout-shift, once the legacy
 // application is bootstrapped
 const gateway = new FragmentGateway({
-	piercingStyles: `<style id="fragment-piercing-styles" type="text/css">
+	prePiercingStyles: `<style id="fragment-piercing-styles" type="text/css">
       web-fragment-host[data-piercing="true"] {
         position: absolute;
         z-index: 1;
@@ -58,51 +41,25 @@ const gateway = new FragmentGateway({
 });
 ```
 
-fragments can be registered, using the `registerFragment` method, that accepts a configuration object.
+Afterwards, one or more fragments can be registered with the gateway using the `registerFragment` method.
 
-## Fragment configuration object and API reference
-
-| Property                  | Type                                                                                                                   | Description                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `fragmentId`              | `string`                                                                                                               | Unique Id for the fragment.                                                                                                                                                                                                                                                                                                                                                                                   |
-| `fragmentSrc`             | `string`                                                                                                               | Route URL. Describes the location of the fragment in the original application, as defined by the router in place.                                                                                                                                                                                                                                                                                             |
-| `piercingClassNames`      | `string[]`                                                                                                             | Styles to apply to the fragment before it gets pierced. Their purpose is to style the fragment to look as close as possible to the final pierced view, ensuring the piercing operation appears seamless. For best results, use the following selector: `:not(piercing-fragment-outlet) > piercing-fragment-host[fragment-id="fragmentId"]`.                                                                   |
-| `routePatterns`           | `string[]`                                                                                                             | An array of route patterns this fragment should handle serving. Pattern format must adhere to [path-to-regexp](https://github.com/pillarjs/path-to-regexp#parameters) syntax.                                                                                                                                                                                                                                 |
-| `upstream`                | `string`                                                                                                               | The upstream URI of the fragment application. This will be fetched for any request paths matching the specified `routePatterns`.                                                                                                                                                                                                                                                                              |
-| `forwardFragmentHeaders?` | `string[]`                                                                                                             | An optional list of fragment response headers to forward to the gateway response.                                                                                                                                                                                                                                                                                                                             |
-| `onSsrFetchError?`        | `(req: RequestInfo, failedResOrError: Response \| unknown) => SSRFetchErrorResponse \| Promise<SSRFetchErrorResponse>` | A handler or fallback to apply when the fetch for a fragment SSR code fails. It allows the gateway to serve a fallback response instead of an error response from the server. <br/> **Parameters:** <ul><li>`req`: The request sent to the fragment.</li><li>`failedResOrError`: The failed response (4xx/5xx status) or the thrown error.</li></ul> **Returns:** The response to use for the document's SSR. |
-
-### Example of a fragment registration for a remote Qwik application
-
-A Qwik application fragment hosted remotely and being fetched, can be registered like this
+For example a shopping cart application fragment hosted remotely and being fetched, can be registered like this:
 
 ```javascript
 gateway.registerFragment({
-	fragmentId: "qwik",
-	piercingClassNames: ["qwik"],
-	routePatterns: ["/qwik-page/:_*", "/_fragment/qwik/:_*", "/ecommerce-page/:_*"],
-	upstream: "http://localhost:4173",
-	onSsrFetchError: () => ({
-		response: new Response(
-			`<p id="qwik-fragment-not-found">
-         <style>#qwik-fragment-not-found { color: red; font-size: 2rem; }</style>
-         Qwik fragment not found
-       </p>`,
-			{ headers: [["content-type", "text/html"]] },
-		),
-	}),
+	fragmentId: "cart",
+	piercingClassNames: ["cart"],
+	routePatterns: ["/_fragment/cart/:_*", "/shop/:_*"],
+	endpoint: "https://mycart.example.com",
 });
 ```
 
-## Pre-requirements and conventions
+## Requirements and conventions
 
-Please note that at this time, the following apply, for the fragment to be correctly fetched
+A typical fragment has two kinds of url patterns which you need to configure in `routePatterns` of a web fragment configuration:
 
-- the `routePatterns` array should include the `pathName` in the request in the [shell application](../architecture/architecture#application-shell). For example, to fetch a fragment for which the `<fragment-outlet>`, was placed in the URL `https://myshellapp.com/shop`, `/shop/:_*` must be added to `routePatterns` when registering the fragment. This is so the server knows to intercept the request and process with the middleware in place
-
-- we recommend to namespace the assets distribution in a folder called `_fragment`. The resulting `path` should be part of the `routePatterns` configuration
-
-- for fragments that are pulling a specific route in the [upstream application](../architecture/architecture#remote-upstream), the `<fragment-outlet>` `src` attribute must be that `route` value
+- The routable url pattern — navigating to a url matching this pattern with the browser should invoke a fragment
+- The asset url patter — a pattern which uniquely identifies static assets of a fragment belonging to a particular fragment. We recommend using `/_fragment/<fragment-id>/` prefix to ensure uniqueness.
 
 ---
 
