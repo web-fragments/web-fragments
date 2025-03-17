@@ -5,7 +5,7 @@
 
 # Web Fragments: A radically new architecture to build micro-frontends
 
-[![Official documentation](https://img.shields.io/badge/Official%20Docs-8A2BE2?style=flat-square)](https://webfragments.dev/)
+[![Official documentation](https://img.shields.io/badge/Official%20Docs-8A2BE2?style=flat-square)](https://web-fragments.dev/)
 [![Our blog](https://img.shields.io/badge/Blog%20post-F28021?style=flat-square&logo=cloudflare&logoColor=white)](https://blog.cloudflare.com/better-micro-frontends)
 [![New to micro-frontends?](https://img.shields.io/badge/Microfrontend.dev-2F80ED?style=flat-square)](https://microfrontend.dev)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/web-fragments/web-fragments/release.yml?style=flat-square&label=Release%20Status)](https://github.com/web-fragments/web-fragments/actions)
@@ -13,35 +13,31 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License](https://img.shields.io/badge/License-MIT-white?style=flat-square)](LICENSE)
 
-[Overview](#overview) | [Getting started](#getting-started) | [Usage](#usage) | [More Resources](#more-resources)
+[Overview](#overview) | [The Goal](#the-goal) | [Getting started](#getting-started) |  [More Resources](#more-resources)
 
 </div>
 
 ## Overview
 
-Web Fragments are a radically new approach to Web Micro-frontends which is framework and platform agnostic. New to micro-frontends? Check out https://microfrontend.dev
+Web Fragments are a radically new approach to Web micro-frontends which is framework, tooling, and platform agnostic.
 
-This project is an early phase, but we are working on launching it for production use at Cloudflare very soon.
+New to micro-frontends? Check out https://microfrontend.dev
+
+> [!NOTE] The project is in beta, but is already being used in production by teams at [Cloudflare](https://www.cloudflare.com/).
+> We are looking for teams and companies interested in providing early feedback that can help us shape the feature set and APIs.
+
+## The goal
+
+The main goals of Web Fragments is to enable teams operating enterprise web frontends to:
+
+1. Modernize and re-platform their apps using an incremental migration approach that is low risk and allows product owners to prioritize the most valuable parts of the frontend.
+2. Scale large web frontends via decentralization and decomposition of monolithic web frontends into independently developed and released micro-frontends, that still form a cohesive user experience.
 
 ## Getting started
 
-To get started install the package with your favorite package manager. For example
+The best way to learn more is going to [our official documentation](https://web-fragments.dev/documentation/getting-started/).
 
-```bash
-npm install web-fragments
-```
-
-## Usage
-
-After having recreated a component of a user-interface as an independent application, you can use the customElement provided to add it to the frontend as a fragment. For example
-
-```html
-<fragment-outlet fragment-id="qwik-cart" src="/cart"></fragment-outlet>
-```
-
-You should also implement the corresponding middleware to intercept the requests matching the fragment-id, and triggering the reframing.
-
-The best way to learn more is going to [our official documentation](https://webfragments.dev/). You can also check out the demos present in this repository. A good example to understand the building blocks of Web Fragments is [e2e/pierced-react/README.md](e2e/pierced-react/README.md)
+You can also check out the [demos present in this repository](./e2e/) where you can find examples [e2e/pierced-react/README.md](./e2e/pierced-react/README.md) for platforms supporting [Web Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API) like Cloudflare or Netlify, or [e2e/node-servers/README.md](./e2e/node-servers/README.md) for platforms supporting Node.js runtimes.
 
 ## More resources
 
