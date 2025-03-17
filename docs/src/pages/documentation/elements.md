@@ -3,7 +3,7 @@ title: "Elements"
 layout: "~/layouts/MarkdownLayout.astro"
 ---
 
-_Last updated_: March 13, 2025
+_Last updated_: March 17, 2025
 
 Web Fragments uses `custom elements` as an implementation detail to embed applications in an existing user-interface. By using custom elements keep the implementation lightweight and benefit from using `shadowRoot` for style encapsulation.
 
@@ -23,41 +23,24 @@ This initialization should occur as early as possible during the bootstrap of a 
 
 Please notice that different frameworks may require additional utilities to work with `custom elements`. For example `Angular` needs `CUSTOM_ELEMENTS_SCHEMA` to be provided.
 
-## `<web-fragment>` element
+## The `<web-fragment>` element
 
-`<web-fragment>` is a custom element reponsible for marking the location in the existing application where a Web Fragment should be nested.
+`<web-fragment>` is a custom element responsible for marking the location in the existing application where a Web Fragment should be nested.
 
-`<web-fragment>` have a `fragment-id` attribute to identify the fragment to be nested.
+`<web-fragment>` have a `fragment-id` attribute to uniquely identify the fragment.
 
 ```html
-<fragment-outlet fragment-id="some-id"></fragment-outlet>
+<web-fragment fragment-id="some-id"></web-fragment>
 ```
 
 By default, `<web-fragment>` will create a bound fragment, which shares (binds) `window.location` and navigation history with the existing application that contains the fragment.
-Navigation initialized from the existing application, or a web fragment will be reflected in both.
+The `window.location` in a bound fragment is initialized to the current `window.location` of the top level application.
+Navigation initialized from the existing application or a web fragment will be reflected in both contexts.
 
-Optionally, a fragment can be created with the `src` attribute.
-This will cause a creation of an "unbound" fragments, which has it's own `window.location` and history, both of which are independent of that of the rest of the application or other fragments.
+Optionally, a fragment can be created with the `src` attribute, which specifies the url from which the fragment should be initialized.
+This will cause a creation of an "unbound" fragments, which has its own `window.location` and history, both of which are independent of that of the rest of the application or other fragments.
 
-## Fragment Host Client-Side
-
-When the application runs and the `fragment-outlet` element `connectedCallback` is callled, it dispatches the 'fragment-outlet-ready' event and, when not already in place a `fragment host` custom element is mounted and nested inside of the `fragment-outlet`, taking its `fragment-id`.
-
-From that moment on, the following `fragment-host` lifecycle take place:
-
-1. the `fragment-outlet-ready` event is registered
-2. a the `fragment-host` is checked for the presence of a `shadow-root` that is created when not in place. it is the initial HTML of the fragment
-3. b otherwise, to bootstrap the fragment:
-   - the `location.href` is captured
-   - it is then used to make a fetch GET request to the gateway
-   - the returned server-side rendered HTML stream is used to populate the `shadow-root` of the `fragment-host`
-4. a new reframed container (iframe) is created, all script tags from the initial fragment HTML (that were neutralized with the inert property) are copied into the the reframed iframe and executed
-5. if `fragment-outlet-ready` event fires, portaling of the fragment takes place
-   - DOM state (`activeElement`, `textSelection`, etc), of the fragment is captured
-   - `fragment-host` element is appended as a child of the `fragment-outlet`
-   - DOM state previously captured, is restored
-
-Steps 1 and 4 only apply when we're performing [server-side piercing](#server-side-piercing)
+Both bound and unbound fragments run in a dedicated JavaScript context through [reframing](./reframed.md) — a virtualization technique unique to Web Fragments.
 
 ## Server-side piercing
 
@@ -69,9 +52,10 @@ It allows the eager display and initialization of a fragment at the moment of bo
 
 ![web fragments middleware](../../assets/images/wf-middleware.drawio.png)
 
-## Middleware
+## Routing of fragment's requests
 
-Middleware in place will be responsible for intercepting all requests coming from the legacy application, identifying those that match with a fragment request using the `routePattern` in the fragment registration configuration, handling scripts and other assets and embedding the resulting fragment content.
+All requests initiated from DOM or JavaScript of a fragment are intercepted by the fragment gateway middleware.
+This middleware sits in front of the legacy application, identifies requests originating from the fragment via the `routePattern` in the fragment registration configuration, and reroutes all assets requests to the right fragment endpoint.
 
 Learn more about middleware in the [gateway](./gateway) section.
 
