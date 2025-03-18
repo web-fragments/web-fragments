@@ -3,14 +3,22 @@ import { MatchFunction, match } from 'path-to-regexp';
 export class FragmentGateway {
 	private fragmentConfigs: Map<string, FragmentConfig> = new Map();
 	private routeMap: Map<MatchFunction, FragmentConfig> = new Map();
-	#prePiercingStyles: string;
+	#piercingStyles?: string;
 
 	constructor(config?: FragmentGatewayConfig) {
-		this.#prePiercingStyles = config?.prePiercingStyles ?? '';
+		if (config?.prePiercingStyles) {
+			this.#piercingStyles = config.prePiercingStyles;
+			console.warn(
+				"\x1b[31m You're using the deprecated `prePiercingStyles` property" +
+					` in the fragment gateway config. Please use \`piercingStyles\` instead. \x1b[0m`,
+			);
+		} else {
+			this.#piercingStyles = config?.piercingStyles ?? '';
+		}
 	}
 
-	get prePiercingStyles() {
-		return this.#prePiercingStyles;
+	get piercingStyles() {
+		return this.#piercingStyles;
 	}
 
 	/**
@@ -91,7 +99,12 @@ export interface FragmentConfig {
 	 * For best results they should use the following selector:
 	 * :not(web-fragment) > web-fragment-host[fragment-id="fragmentId"]
 	 */
-	prePiercingClassNames: string[];
+	piercingClassNames?: string[];
+	/**
+	 * @deprecated use `piercingClassNames` instead
+	 *
+	 */
+	prePiercingClassNames?: string[];
 	/**
 	 * An array of route patterns this fragment should handle serving.
 	 * Pattern format must adhere to https://github.com/pillarjs/path-to-regexp#parameters syntax
@@ -131,6 +144,10 @@ export interface SSRFetchErrorResponse {
 }
 
 export interface FragmentGatewayConfig {
+	piercingStyles?: string;
+	/**
+	 * @deprecated use `piercingStyles` instead
+	 */
 	prePiercingStyles?: string;
 }
 

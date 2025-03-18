@@ -12,7 +12,7 @@ const distPath = path.resolve('dist');
 
 // Initialize the FragmentGateway
 const gateway = new FragmentGateway({
-    prePiercingStyles: `
+    piercingStyles: `
       <style id="fragment-piercing-styles" type="text/css">
         web-fragment-host[data-piercing="true"] {
           position: absolute;

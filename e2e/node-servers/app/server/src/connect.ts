@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3006;
 
 // Initialize the FragmentGateway
 const gateway = new FragmentGateway({
-    prePiercingStyles: `
+    piercingStyles: `
       <style id="fragment-piercing-styles" type="text/css">
         web-fragment-host[data-piercing="true"] {
           position: absolute;
@@ -31,7 +31,7 @@ const gateway = new FragmentGateway({
 // Register fragments
 gateway.registerFragment({
     fragmentId: 'remix',
-    prePiercingClassNames: ['remix'],
+    piercingClassNames: ['remix'],
     routePatterns: ['/remix-page/:_*', '/_fragment/remix/:_*'],
     endpoint: 'http://localhost:3000',
     onSsrFetchError: () => ({
@@ -43,7 +43,7 @@ gateway.registerFragment({
 
 gateway.registerFragment({
     fragmentId: 'qwik',
-    prePiercingClassNames: ['qwik'],
+    piercingClassNames: ['qwik'],
     routePatterns: ['/qwik-page/:_*', '/_fragment/qwik/:_*'],
     endpoint: 'http://localhost:8123',
     forwardFragmentHeaders: ['x-fragment-name'],
