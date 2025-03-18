@@ -251,7 +251,7 @@ export function getWebMiddleware(
 		fragmentConfig: FragmentConfig;
 		gateway: FragmentGatewayConfig;
 	}) {
-		const { fragmentId, prePiercingClassNames } = fragmentConfig;
+		const { fragmentId, piercingClassNames = [] } = fragmentConfig;
 
 		// Native HTMLRewriter now supports appending/merging of streams directly, so we don't need to block the rewriting
 		// until we have the full fragment content. This improves performance.
@@ -262,14 +262,14 @@ export function getWebMiddleware(
 			return new HTMLRewriter()
 				.on('head', {
 					element(element) {
-						element.append(gateway.prePiercingStyles ?? '', { html: true });
+						element.append(gateway.piercingStyles ?? '', { html: true });
 					},
 				})
 				.on('body', {
 					async element(element) {
 						(element.append as any as (content: ReadableStream, options: { html: boolean }) => void)(
 							asReadableStream`
-								<web-fragment-host class="${prePiercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true">
+								<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true">
 									<template shadowrootmode="open">${fragmentResponse.body ?? ''}</template>
 								</web-fragment-host>`,
 							{ html: true },
@@ -283,13 +283,13 @@ export function getWebMiddleware(
 			return new HTMLRewriter()
 				.on('head', {
 					element(element) {
-						element.append(gateway.prePiercingStyles ?? '', { html: true });
+						element.append(gateway.piercingStyles ?? '', { html: true });
 					},
 				})
 				.on('body', {
 					element(element) {
 						element.append(
-							`<web-fragment-host class="${prePiercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${fragmentContent}</template></web-fragment-host>`,
+							`<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${fragmentContent}</template></web-fragment-host>`,
 							{ html: true },
 						);
 					},

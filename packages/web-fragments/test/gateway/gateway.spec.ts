@@ -646,7 +646,7 @@ for (const environment of environments) {
 
 			fragmentGateway.registerFragment({
 				fragmentId: 'fragmentFoo',
-				prePiercingClassNames: ['foo'],
+				piercingClassNames: ['foo'],
 				routePatterns: ['/foo/:_*', '/_fragment/foo/:_*'],
 				endpoint: 'http://foo.test:1234',
 				upstream: 'http://foo.test:1234',
@@ -654,7 +654,7 @@ for (const environment of environments) {
 
 			fragmentGateway.registerFragment({
 				fragmentId: 'fragmentBar',
-				prePiercingClassNames: ['bar'],
+				piercingClassNames: ['bar'],
 				routePatterns: ['/bar/:_*', '/_fragment/bar/:_*'],
 				endpoint: 'http://bar.test:4321',
 				upstream: 'http://bar.test:4321',
@@ -674,7 +674,7 @@ for (const environment of environments) {
 			fragmentGateway.registerFragment({
 				fragmentId: 'unpiercedFragment',
 				piercing: false,
-				prePiercingClassNames: [],
+				piercingClassNames: [],
 				routePatterns: ['/unpierced/:_*', '/_fragment/unpierced/:_*'],
 				endpoint: 'http://unpierced.test:1234',
 				upstream: 'http://unpierced.test:1234',

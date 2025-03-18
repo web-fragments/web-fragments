@@ -14,7 +14,7 @@ Initialize the gateway and register the fragments
 import { FragmentGateway, getStandardMiddleware } from 'web-fragments/gateway';
 // Initialize the FragmentGateway
 const gateway = new FragmentGateway({
-	prePiercingStyles: `<style id="fragment-piercing-styles" type="text/css">
+	piercingStyles: `<style id="fragment-piercing-styles" type="text/css">
     web-fragment-host[data-piercing="true"] {
       position: absolute;
       z-index: 9999999999999999999999999999999;
@@ -25,7 +25,7 @@ const gateway = new FragmentGateway({
 // Register fragments
 gateway.registerFragment({
 	fragmentId: 'remix',
-	prePiercingClassNames: ['remix'],
+	piercingClassNames: ['remix'],
 	routePatterns: ['/remix-page/:_*', '/_fragment/remix/:_*'],
 	endpoint: 'http://localhost:3000',
 	onSsrFetchError: () => ({
@@ -66,7 +66,7 @@ const port = 3000;
 
 // Initialize the FragmentGateway
 const gateway = new FragmentGateway({
-	prePiercingStyles: `<style id="fragment-piercing-styles" type="text/css">
+	piercingStyles: `<style id="fragment-piercing-styles" type="text/css">
         web-fragment-host[data-piercing="true"] {
             position: absolute;
             z-index: 9999999999999999999999999999999;
@@ -77,7 +77,7 @@ const gateway = new FragmentGateway({
 // Register fragments
 gateway.registerFragment({
 	fragmentId: 'example-fragment',
-	prePiercingClassNames: ['example-class'],
+	piercingClassNames: ['example-class'],
 	routePatterns: ['/example-path', '/_fragment/example-path'],
 	endpoint: 'http://localhost:3001',
 	onSsrFetchError: () => ({
