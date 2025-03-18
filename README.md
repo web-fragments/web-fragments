@@ -33,6 +33,15 @@ The main goals of Web Fragments is to enable teams operating enterprise web fron
 1. Modernize and re-platform their apps using an incremental migration approach that is low risk and allows product owners to prioritize the most valuable parts of the frontend.
 2. Scale large web frontends via decentralization and decomposition of monolithic web frontends into independently developed and released micro-frontends, that still form a cohesive user experience.
 
+## What's radically different about Web Fragments?
+
+Unlike other micro-frontend technologies, Web Fragments focus on isolating individual micro-frontends from each other by executing their client-side JavaScript in separate JavaScript context, while enabling them to share the same DOM document, browser navigation and history.
+
+Just like Docker enables containerization of applications, Web Fragments enable containerization of web frontends on the client-side, and by extension also on the server-side.
+
+This JavaScript execution context isolation and low-overhead virtualization enables large monolithic web frontends to be broken up into smaller, independently developed and released web applications, that in production are composed into a single cohesive UI.
+In this way Web Fragments enable scaling and incremental modernization of the frontend tech stack.
+
 ## Getting started
 
 The best way to learn more is going to [our official documentation](https://web-fragments.dev/documentation/getting-started/).

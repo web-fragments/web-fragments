@@ -3,9 +3,28 @@ title: "Web Fragments Rationale"
 layout: "~/layouts/MarkdownLayout.astro"
 ---
 
-_Last updated_: March 13, 2025
+_Last updated_: March 18, 2025
 
-**As developers wanting to push the web forward, we know that progress is not linear.**
+## What's radically different about Web Fragments?
+
+Unlike other micro-frontend technologies, Web Fragments focus on isolating individual micro-frontends from each other by executing their client-side JavaScript in separate JavaScript context, while enabling them to share the same DOM document, browser navigation and history.
+
+Just like Docker enables containerization of applications, Web Fragments enable containerization of web frontends on the client-side, and by extension also on the server-side.
+
+This JavaScript execution context isolation and low-overhead virtualization enables large monolithic web frontends to be broken up into smaller, independently developed and released web applications, that in production are composed into a single cohesive UI.
+In this way Web Fragments enable scaling and incremental modernization of the frontend tech stack.
+
+## Pushing the Web forward
+
+Our long term goal is to help push the Web forward, which requires not only creating new architectures and technologies, but also enabling large applications to adopt them.
+
+Enterprise frontends have historically lacked technological mobility.
+Due to their size, risk-aversion, and inability to incrementally migrate from the past "state-of-the-art" tech stack or architecture to the current one, enterprise frontends have always been several generations behind on the latest frontend technology, often forgoing major developer experience and user experience advancements.
+
+Web Fragments enable enterprises to modernize and scale their web frontends, with only minimal overhead, and no vendor lock-in.
+
+<!--
+**As developers wanting to push the Web forward, we know that progress is not linear.**
 
 We know that progress is not linear and the modernization of application stacks and architectures, to integrate innovation leads to churn.
 
@@ -38,6 +57,7 @@ By following this strategy, cross-functional teams can modernize applications ef
 > What if we could take an enterprise monolithic frontend, carve out out pieces of the UI, develop and deploy them separately, and compose everything back into a single user interface and consolidated experience?
 
 We can! Learn more about [Web Fragment architecture](./architecture) to find out how.
+-->
 
 ---
 
