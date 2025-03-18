@@ -37,7 +37,7 @@
 		"dev": "vite",
 		"dev:playground": "pnpm -C test/playground dev",
 		"preview:playground": "pnpm -C test/playground preview",
-		"build": "pnpm types && vite build",
+		"build": "pnpm types && vite build && cp ../../README.md dist/",
 		"types:elements": "tsc -p src/elements",
 		"types:gateway": "tsc -p src/gateway",
 		"types:root": "tsc -p .",
