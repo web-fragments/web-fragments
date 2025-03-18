@@ -83,8 +83,8 @@ export const footerData = {
 		},
 	],
 	secondaryLinks: [
-		{ text: "Terms", href: getPermalink("/terms") },
-		{ text: "Privacy Policy", href: getPermalink("/privacy") },
+		{ text: "GitHub Project", href: "https://github.com/web-fragments/web-fragments" },
+		{ text: "Npm package", href: "https://www.npmjs.com/package/web-fragments" },
 	],
 	socialLinks: [
 		{ ariaLabel: "X", icon: "tabler:brand-x", href: "https://x.com/igorminar" },
