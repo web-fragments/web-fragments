@@ -7,7 +7,7 @@ _Last updated_: March 13, 2025
 
 Web Fragments uses `custom elements` as an implementation detail to embed applications in an existing user-interface. By using custom elements keep the implementation lightweight and benefit from using `shadowRoot` for style encapsulation.
 
-Additionally, all scripts of the fragment application execute in an isolated JavaScript context via a mechanism known as [reframing](./reframed.md)
+Additionally, all scripts of the fragment application execute in an isolated JavaScript context.
 
 ## Custom elements registration
 
@@ -65,7 +65,7 @@ Server-side piercing refers to he process through which the legacy app shell is 
 
 It allows the eager display and initialization of a fragment at the moment of bootstrapping the shell application.
 
-[pre-piercing-styles](./glossary#eager-rendering-piercing) configured during fragment registration, help positioning the fragment in the correct slot.
+[piercing-styles](./glossary#eager-rendering-piercing) configured during fragment registration, help positioning the fragment in the correct slot.
 
 ![web fragments middleware](../../assets/images/wf-middleware.drawio.png)
 
@@ -73,7 +73,7 @@ It allows the eager display and initialization of a fragment at the moment of bo
 
 Middleware in place will be responsible for intercepting all requests coming from the legacy application, identifying those that match with a fragment request using the `routePattern` in the fragment registration configuration, handling scripts and other assets and embedding the resulting fragment content.
 
-Learn more about [middleware](./middleware) and the Web Fragment mechanisms that port fully working independent applications to be embedded in a functional, legacy shell user interface, in the [middleware](./middleware) section.
+Learn more about [middleware](./elements.md) and the Web Fragment mechanisms that port fully working independent applications to be embedded in a functional, legacy shell user interface, in the [middleware](./middleware) section.
 
 ---
 
