@@ -3,7 +3,7 @@ title: "Gateway"
 layout: "~/layouts/MarkdownLayout.astro"
 ---
 
-_Last updated_: March 13, 2025
+_Last updated_: March 19, 2025
 
 ## What is the Fragments Gateway
 
@@ -27,17 +27,17 @@ const gateway = new FragmentGateway(config: FragmentGatewayConfig);
 | ---------------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `fragmentConfigs`                                                                        | (private) | Internal storage for fragment configurations.                                                                                                                                                                                                        |
 | `routeMap`                                                                               | (private) | Internal mapping of routes for fragment handling.                                                                                                                                                                                                    |
-| `prePiercingStyles`                                                                      | `string`  | Returns a string representing styles applied before piercing fragments.                                                                                                                                                                              |
+| `piercingStyles`                                                                      | `string`  | Returns a string representing styles applied before piercing fragments.                                                                                                                                                                              |
 | `registerFragment(fragmentConfig: FragmentConfig): void`                                 | Method    | Registers a fragment in the gateway worker for integration with the gateway worker. <br/> **Parameters:** <ul><li>`fragmentConfig`: Configuration object for the fragment.</li></ul>                                                                 |
 | `matchRequestToFragment(urlOrRequest: string \| URL \| Request): FragmentConfig \| null` | Method    | Matches an incoming request to a fragment configuration. <br/> **Parameters:** <ul><li>`urlOrRequest`: The URL or request to match against registered fragments.</li></ul> **Returns:** The matched `FragmentConfig` or `null` if no match is found. |
 
 ### Optional gateway configuration object
 
-A `fragment gateway` configuration object can define the cofiguration for `prePiercingStyles`:
+A `fragment gateway` configuration object can define the cofiguration for `piercingStyles`:
 
 ```javascript
 type FragmentGatewayConfig = {
-    prePiercingStyles?: string;
+    piercingStyles?: string;
 };
 ```
 
@@ -45,11 +45,11 @@ Once the gateway is instantiated, for example like this
 
 ```javascript
 // Gateway instantiation
-// Pre-piercing styles are only necessary for eager-rendering or piercing, to make sure the fragment
+// Piercing styles are only necessary for eager-rendering or piercing, to make sure the fragment
 // is placed in the right position and there is no content-layout-shift, once the legacy
 // application is bootstrapped
 const gateway = new FragmentGateway({
-	prePiercingStyles: `<style id="fragment-piercing-styles" type="text/css">
+	piercingStyles: `<style id="fragment-piercing-styles" type="text/css">
       web-fragment-host[data-piercing="true"] {
         position: absolute;
         z-index: 1;
@@ -66,7 +66,7 @@ fragments can be registered, using the `registerFragment` method, that accepts a
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `fragmentId`              | `string`                                                                                                               | Unique Id for the fragment.                                                                                                                                                                                                                                                                                                                                                                                   |
 | `fragmentSrc`             | `string`                                                                                                               | Route URL. Describes the location of the fragment in the original application, as defined by the router in place.                                                                                                                                                                                                                                                                                             |
-| `prePiercingClassNames`   | `string[]`                                                                                                             | Styles to apply to the fragment before it gets pierced. Their purpose is to style the fragment to look as close as possible to the final pierced view, ensuring the piercing operation appears seamless. For best results, use the following selector: `:not(piercing-fragment-outlet) > piercing-fragment-host[fragment-id="fragmentId"]`.                                                                   |
+| `piercingClassNames`   | `string[]`                                                                                                             | Styles to apply to the fragment before it gets pierced. Their purpose is to style the fragment to look as close as possible to the final pierced view, ensuring the piercing operation appears seamless. For best results, use the following selector: `:not(piercing-fragment-outlet) > piercing-fragment-host[fragment-id="fragmentId"]`.                                                                   |
 | `routePatterns`           | `string[]`                                                                                                             | An array of route patterns this fragment should handle serving. Pattern format must adhere to [path-to-regexp](https://github.com/pillarjs/path-to-regexp#parameters) syntax.                                                                                                                                                                                                                                 |
 | `upstream`                | `string`                                                                                                               | The upstream URI of the fragment application. This will be fetched for any request paths matching the specified `routePatterns`.                                                                                                                                                                                                                                                                              |
 | `forwardFragmentHeaders?` | `string[]`                                                                                                             | An optional list of fragment response headers to forward to the gateway response.                                                                                                                                                                                                                                                                                                                             |
@@ -79,7 +79,7 @@ A Qwik application fragment hosted remotely and being fetched, can be registered
 ```javascript
 gateway.registerFragment({
 	fragmentId: "qwik",
-	prePiercingClassNames: ["qwik"],
+	piercingClassNames: ["qwik"],
 	routePatterns: ["/qwik-page/:_*", "/_fragment/qwik/:_*", "/ecommerce-page/:_*"],
 	upstream: "http://localhost:4173",
 	onSsrFetchError: () => ({

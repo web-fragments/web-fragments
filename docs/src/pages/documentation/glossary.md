@@ -16,7 +16,7 @@ This endpoint hosts "component as a service".
 
 ## Application Shell (or app shell)
 
-Pre-existing application, typically a single page application (SPA), that contains Web Fragments.
+Existing legacy application, typically a single page application (SPA), that will have content migrated or modernized with Web Fragments.
 
 ## &lt;web-fragment&gt; element
 
@@ -30,7 +30,7 @@ The `<web-fragment-host>` element is an internal element produced by the gateway
 
 The `shadowRoot` of a `<web-fragment-host>` will contain all of the fragment's DOM elements.
 
-Any scripts (declared via `<script>` elements present in a fragment's shadowRoot, will be intercepted, and executed in an isolated context via a technique called `reframing`.
+Any scripts declared via `<script>` elements present in a fragment's shadowRoot, will be intercepted, and executed in an isolated context via a technique called `reframing`.
 
 The inert script elements will be present in the shadow DOM, because their absence could interfere with proper execution of the application loaded via a fragment.
 

@@ -8,7 +8,7 @@ export const GET = async () => {
 	if (!APP_BLOG.isEnabled) {
 		return new Response(null, {
 			status: 404,
-			statusText: "Not found",
+			statusText: "Not found. Come back when the blog is enabled.",
 		});
 	}
 

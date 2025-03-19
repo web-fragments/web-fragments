@@ -73,9 +73,7 @@ const myGateway = new FragmentGateway();
 myGateway.registerFragment({
 	// a unique ID of the fragment
 	fragmentId: "party-button",
-	// class names used during fragment piercing
-	// this is an advanced feature and can be initially omitted
-	prePiercingClassNames: [],
+	piercingClassNames: [],
 	endpoint: "https://party-button.demos.web-fragments.dev",
 	routePatterns: [
 		// url pattern for fetching all assets of this fragment, this pattern is determined by the fragment and should be unique:
