@@ -28,14 +28,14 @@ New to micro-frontends? Check out https://microfrontend.dev
 
 ## The goal
 
-The main goals of Web Fragments is to enable teams operating enterprise web frontends to:
+The main goal of Web Fragments is to enable teams operating enterprise web frontends so they can:
 
 1. Modernize and re-platform their apps using an incremental migration approach that is low risk and allows product owners to prioritize the most valuable parts of the frontend.
 2. Scale large web frontends via decentralization and decomposition of monolithic web frontends into independently developed and released micro-frontends, that still form a cohesive user experience.
 
 ## What's radically different about Web Fragments?
 
-Unlike other micro-frontend technologies, Web Fragments focus on isolating individual micro-frontends from each other by executing their client-side JavaScript in separate JavaScript context, while enabling them to share the same DOM document, browser navigation and history.
+Unlike other micro-frontend technologies, Web Fragments focuses on isolating individual micro-frontends from each other by executing their client-side JavaScript in separate JavaScript context, while enabling them to share the same DOM document, browser navigation and history.
 
 Just like Docker enables containerization of applications, Web Fragments enable containerization of web frontends on the client-side, and by extension also on the server-side.
 
