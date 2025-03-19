@@ -73,7 +73,7 @@ It allows the eager display and initialization of a fragment at the moment of bo
 
 Middleware in place will be responsible for intercepting all requests coming from the legacy application, identifying those that match with a fragment request using the `routePattern` in the fragment registration configuration, handling scripts and other assets and embedding the resulting fragment content.
 
-Learn more about [middleware](./elements.md) and the Web Fragment mechanisms that port fully working independent applications to be embedded in a functional, legacy shell user interface, in the [middleware](./middleware) section.
+Learn more about middleware in the [gateway](./gateway) section.
 
 ---
 
