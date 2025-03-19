@@ -98,7 +98,7 @@ gateway.registerFragment({
 
 Please note that at this time, the following apply, for the fragment to be correctly fetched
 
-- the `routePatterns` array should include the `pathName` in the request in the [shell application](../architecture/architecture#application-shell). For example, to fetch a fragment for which the `<fragment-outlet>`, was placed in the URL `https://myshellapp.com/shop`, `/shop/:_*` must be added to `routePatterns` when registering the fragment. This is so the server knows to intercept the request and process with the [middleware](./middleware) in place
+- the `routePatterns` array should include the `pathName` in the request in the [shell application](../architecture/architecture#application-shell). For example, to fetch a fragment for which the `<fragment-outlet>`, was placed in the URL `https://myshellapp.com/shop`, `/shop/:_*` must be added to `routePatterns` when registering the fragment. This is so the server knows to intercept the request and process with the middleware in place
 
 - we recommend to namespace the assets distribution in a folder called `_fragment`. The resulting `path` should be part of the `routePatterns` configuration
 
