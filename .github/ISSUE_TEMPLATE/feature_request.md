@@ -3,7 +3,7 @@ order: 5
 name: Feature request
 about: Suggest a new feature for Web Fragments
 title: ''
-labels: ''
+labels: type:feature
 assignees: ''
 ---
 

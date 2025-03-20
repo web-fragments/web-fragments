@@ -3,7 +3,7 @@ order: 4
 name: Bug report
 about: Create a report to help us improve Web Fragments
 title: ''
-labels: ''
+labels: type:bug
 assignees: igorminar
 ---
 
