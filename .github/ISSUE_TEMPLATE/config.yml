@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Web Fragments Discussions
+    url: https://github.com/orgs/web-fragments/discussions
+    about: Participate in discussions about Web Fragments
+  - name: Web Fragments Issues
+    url: https://github.com/web-fragments/web-fragments/issues
+    about: Report issues with Web Fragments
+  - name: Web Fragments Documentation
+    url: https://web-fragments.dev/
+    about: All documentation about Web Fragments
+
