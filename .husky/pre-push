@@ -1,0 +1,10 @@
+# .husky/pre-push
+pnpm prettier:fix
+
+# Check if there are any changes after running Prettier
+if ! git diff --cached --quiet; then
+    echo "Files were modified by Prettier. Staging only Prettier-modified files..."
+    git diff --name-only --cached | xargs git add
+    echo "Please commit the changes before pushing."
+    exit 1
+fi

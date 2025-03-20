@@ -61,3 +61,7 @@ We also blogged about how Web Fragments can enable incremental adoption of micro
 This research and development is sponsored by Cloudflare:
 
 <img src="https://github.com/user-attachments/assets/daee5d2d-174d-4679-80d5-29cc3b38a903" data-canonical-src="https://github.com/user-attachments/assets/daee5d2d-174d-4679-80d5-29cc3b38a903" width="300" />
+
+## Contributing
+
+We are open source, and we welcome contributions! Please read our [contribution guidelines]()
