@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"test": "vitest",
-		"test:once": "vitest --run"
+		"test:once": "vitest --run",
 		"test-debug": "vitest --test-timeout=0 --no-file-parallelism"
 	},
 	"devDependencies": {
