@@ -5,6 +5,7 @@
 	"scripts": {
 		"test": "vitest",
 		"test:once": "vitest --run"
+		"test-debug": "vitest --test-timeout=0 --no-file-parallelism"
 	},
 	"devDependencies": {
 		"@types/connect": "^3.4.38",
