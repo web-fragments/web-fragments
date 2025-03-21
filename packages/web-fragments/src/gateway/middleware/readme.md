@@ -51,8 +51,6 @@ export const onRequest: PagesFunction = async (context) => {
 };
 ```
 
-More examples will be added soon!
-
 ## Node.js support middleware type
 
 ### Usage
