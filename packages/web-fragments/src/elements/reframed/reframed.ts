@@ -79,7 +79,7 @@ export function reframed(
 			options,
 		);
 	} else {
-		reframeReady = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe);
+		reframeReady = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe, options);
 	}
 
 	const ready = Promise.all([monkeyPatchReady, reframeReady]).then(() => {
@@ -174,10 +174,15 @@ async function reframeWithFetch(
 	return promise;
 }
 
-async function reframeFromTarget(source: ShadowRoot, iframe: HTMLIFrameElement): Promise<void> {
+async function reframeFromTarget(
+	source: ShadowRoot,
+	iframe: HTMLIFrameElement,
+	options: ReframedOptions,
+): Promise<void> {
 	console.debug('reframing! (reframeFromTarget)', { source });
 
-	iframe.src = document.location.href;
+	iframe.src = location.pathname + location.search;
+	iframe.name = `wf:${options.name}`;
 
 	const { promise, resolve } = Promise.withResolvers<void>();
 
