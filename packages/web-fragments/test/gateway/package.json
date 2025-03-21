@@ -3,7 +3,8 @@
 	"name": "wf-gateway-tests",
 	"type": "module",
 	"scripts": {
-		"test": "vitest"
+		"test": "vitest",
+		"test-debug": "vitest --test-timeout=0 --no-file-parallelism"
 	},
 	"devDependencies": {
 		"@types/connect": "^3.4.38",
