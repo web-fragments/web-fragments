@@ -1,10 +1,40 @@
 # .husky/pre-push
-pnpm prettier:fix
 
-# Check if there are any changes after running Prettier
-if ! git diff --cached --quiet; then
-    echo "Files were modified by Prettier. Staging only Prettier-modified files..."
-    git diff --name-only --cached | xargs git add
-    echo "Please commit the changes before pushing."
-    exit 1
+root_dir="$(git rev-parse --show-toplevel)"
+
+# Check for changes in gateway or middleware files
+# and run tests only once and exit, if any changes are detected
+changed_files=$(git diff --cached --name-only)
+if echo "$changed_files" | grep -q "^packages/web-fragments/src/gateway/"; then
+	echo "🧪 Running Web Fragments gateway and middleware test suite..."
+	cd "$root_dir/packages/web-fragments" || exit 1
+	echo "📦 Installing dependencies..."
+	if ! pnpm i; then
+		echo "❌ Dependencies installation failed"
+		exit 1
+	fi
+	if ! pnpm test:gateway:once; then
+		echo "❌ Gateway tests failed"
+		exit 1
+	fi
+	cd "$root_dir" || exit 1
+else
+	echo "No gateway changes detected, skipping tests"
 fi
+
+echo "🎨 Running prettier..."
+if ! pnpm prettier:fix; then
+	echo "❌ Prettier formatting failed"
+	exit 1
+fi
+
+# Check for files modified by Prettier
+if ! git diff --cached --quiet; then
+	echo "⚠️ Files were modified by Prettier. Staging changes..."
+	git diff --name-only --cached | xargs git add
+	echo "❌ Please commit the Prettier changes before pushing"
+	exit 1
+fi
+
+echo "✅ Pre-push checks passed"
+exit 0

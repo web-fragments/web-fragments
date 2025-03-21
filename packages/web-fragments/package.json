@@ -45,6 +45,7 @@
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\"",
 		"test:unit": "pnpm vitest run src",
 		"test:gateway": "pnpm -C test/gateway test",
+		"test:gateway:once": "pnpm -C test/gateway test:once",
 		"test:playground": "pnpm -C test/playground test",
 		"test-debug:gateway": "vitest test/gateway --test-timeout=0 --no-file-parallelism",
 		"changeset": "pnpm -C ../../ exec changeset",

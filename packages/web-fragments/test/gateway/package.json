@@ -3,7 +3,8 @@
 	"name": "wf-gateway-tests",
 	"type": "module",
 	"scripts": {
-		"test": "vitest"
+		"test": "vitest",
+		"test:once": "vitest --run"
 	},
 	"devDependencies": {
 		"@types/connect": "^3.4.38",

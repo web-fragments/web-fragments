@@ -1,9 +1,1 @@
 # .husky/pre-commit
-
-changed_files=$(git diff --cached --name-only)
-if echo "$changed_files" | grep -q "^packages/web-fragments/gateway/\|^packages/web-fragments/gateway/middleware/"; then
-	cd packages/web-fragments
-	pnpm test:gateway
-else
-	echo "No tests to run, committing changes."
-fi
