@@ -19,6 +19,7 @@ function App() {
 			</p>
 			<Link to="/remix-page">Remix Page</Link>
 			<Link to="/qwik-page">Qwik Page</Link>
+			<web-fragment fragment-id="party-button" src="__wf/dev.web-fragments.demos.party-button/"></web-fragment>
 		</div>
 	);
 }
