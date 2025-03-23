@@ -60,29 +60,48 @@ export function reframed(
 	 * We need to know when monkeyPatchIFrameDocument resolves so we can return from reframe()
 	 * since this happens after the iframe loads.
 	 */
-	let { promise: monkeyPatchReady, resolve: resolveMonkeyPatchReady } = Promise.withResolvers<void>();
+	let { promise: iframeReady, resolve: resolveIframeReady } = Promise.withResolvers<void>();
+
+	let alreadyLoaded = false;
 
 	iframe.addEventListener('load', () => {
+		if (alreadyLoaded) {
+			// iframe reload detected!
+
+			if (options.bound) {
+				// let's update the main location.href
+				location.href = iframe?.contentWindow?.location.href!;
+			} else {
+				// TODO: what to do here?
+				// should we recreate the fragment with the new src?
+				// the current fragment is broken because the JS code was unloaded, so we can't resurrect it any more
+				// for now we just blow away the content
+				console.warn('unbound fragment reload detected, clearing fragment content!');
+				reframedContainer.shadowRoot.innerHTML = '';
+			}
+			return;
+		}
+		alreadyLoaded = true;
+
 		initializeIFrameContext(iframe, reframedContainerShadowRoot, options.bound);
-		resolveMonkeyPatchReady();
+		resolveIframeReady();
 	});
 
-	let reframeReady: Promise<void>;
+	let reframingDone: Promise<void>;
 
 	if (typeof reframedSrcOrSourceShadowRoot === 'string') {
-		const reframedSrc = reframedSrcOrSourceShadowRoot;
-		reframedContainer.setAttribute('reframed-src', reframedSrc);
-		reframeReady = reframeWithFetch(
+		reframingDone = reframeWithFetch(
 			reframedSrcOrSourceShadowRoot,
 			reframedContainer.shadowRoot as ParentNode,
 			iframe,
 			options,
+			iframeReady,
 		);
 	} else {
-		reframeReady = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe, options);
+		reframingDone = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe, options, iframeReady);
 	}
 
-	const ready = Promise.all([monkeyPatchReady, reframeReady]).then(() => {
+	const ready = reframingDone.then(() => {
 		reframedContainer.shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'interactive';
 		reframedContainer.shadowRoot!.dispatchEvent(new Event('readystatechange'));
 		// TODO: this should be called when reframed async loading activities finish
@@ -106,6 +125,7 @@ async function reframeWithFetch(
 	target: ParentNode,
 	iframe: HTMLIFrameElement,
 	options: ReframedOptions,
+	iframeReady: Promise<void>,
 ): Promise<void> {
 	console.debug('reframing (with fetch)!', {
 		source: reframedSrc,
@@ -132,26 +152,7 @@ async function reframeWithFetch(
 	iframe.src = reframedSrc;
 	iframe.name = `wf:${options.name}`;
 
-	let alreadyLoaded = false;
-
-	iframe.addEventListener('load', () => {
-		if (alreadyLoaded) {
-			// iframe reload detected!
-
-			if (options.bound) {
-				// let's update the main location.href
-				iframe.ownerDocument.defaultView!.location.href = iframe?.contentWindow?.location.href!;
-			} else {
-				// TODO: what to do here?
-				// should we recreate the fragment with the new src?
-				// the current fragment is broken because the JS code was unloaded, so we can't resurrect it any more
-				// for now we just blow away the content
-				console.warn('unbound fragment reload detected, clearing fragment content!');
-				(target as Element).innerHTML = '';
-			}
-			return;
-		}
-
+	iframeReady.then(() => {
 		reframedHtmlStream
 			.pipeThrough(new TextDecoderStream())
 			.pipeTo(new WritableDOMStream(target))
@@ -162,7 +163,6 @@ async function reframeWithFetch(
 						target,
 						title: iframe.contentDocument?.title,
 					});
-				alreadyLoaded = true;
 				resolve();
 			});
 	});
@@ -178,6 +178,7 @@ async function reframeFromTarget(
 	source: ShadowRoot,
 	iframe: HTMLIFrameElement,
 	options: ReframedOptions,
+	iframeReady: Promise<void>,
 ): Promise<void> {
 	console.debug('reframing! (reframeFromTarget)', { source });
 
@@ -186,7 +187,7 @@ async function reframeFromTarget(
 
 	const { promise, resolve } = Promise.withResolvers<void>();
 
-	iframe.addEventListener('load', () => {
+	iframeReady.then(() => {
 		executeScriptsInPiercedFragment(source, iframe);
 
 		import.meta.env.DEV &&

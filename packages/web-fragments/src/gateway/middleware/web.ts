@@ -260,26 +260,11 @@ export function getWebMiddleware(
 		//
 		// Since the wasm HTMLRewriter doesn't have this feature yet, so we need to split the implementation into two for now.
 		if (isNativeHtmlRewriter) {
-			return new HTMLRewriter()
-				.on('head', {
-					element(element) {
-						element.append(gateway.piercingStyles ?? '', { html: true });
-					},
-				})
-				.on('body', {
-					async element(element) {
-						(element.append as any as (content: ReadableStream, options: { html: boolean }) => void)(
-							asReadableStream`
-								<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true">
-									<template shadowrootmode="open">${fragmentResponse.body ?? ''}</template>
-								</web-fragment-host>`,
-							{ html: true },
-						);
-					},
-				})
-				.transform(appShellResponse);
-		} else {
-			const fragmentContent = await fragmentResponse.text();
+			let fragmentPierced = false;
+			const fragmentStream = asReadableStream`
+			<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true">
+				<template shadowrootmode="open">${fragmentResponse.body ?? ''}</template>
+			</web-fragment-host>`;
 
 			return new HTMLRewriter()
 				.on('head', {
@@ -287,12 +272,59 @@ export function getWebMiddleware(
 						element.append(gateway.piercingStyles ?? '', { html: true });
 					},
 				})
-				.on('body', {
+				.on('web-fragment', {
 					element(element) {
+						if (element.getAttribute('fragment-id') !== fragmentId) return;
+
+						(element.append as any as (content: ReadableStream, options: { html: boolean }) => void)(fragmentStream, {
+							html: true,
+						});
+						fragmentPierced = true;
+					},
+				})
+				.on('body', {
+					async element(element) {
+						element.onEndTag((endTag) => {
+							if (fragmentPierced) return;
+
+							(endTag.before as any as (content: ReadableStream, options: { html: boolean }) => void)(fragmentStream, {
+								html: true,
+							});
+						});
+					},
+				})
+				.transform(appShellResponse);
+		} else {
+			const fragmentContent = await fragmentResponse.text();
+			let fragmentPierced = false;
+
+			return new HTMLRewriter()
+				.on('head', {
+					element(element) {
+						element.append(gateway.piercingStyles ?? '', { html: true });
+					},
+				})
+				.on('web-fragment', {
+					element(element) {
+						if (element.getAttribute('fragment-id') !== fragmentId) return;
+
 						element.append(
-							`<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${fragmentContent}</template></web-fragment-host>`,
+							`<template shadowrootmode="open"><web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${fragmentContent}</template></web-fragment-host></template>`,
 							{ html: true },
 						);
+						fragmentPierced = true;
+					},
+				})
+				.on('body', {
+					element(element) {
+						element.onEndTag((endTag) => {
+							if (fragmentPierced) return;
+
+							endTag.before(
+								`<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${fragmentContent}</template></web-fragment-host>`,
+								{ html: true },
+							);
+						});
 					},
 				})
 				.transform(appShellResponse);
