@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>reframed-node fragment</title>
+	</head>
+	<body>
+		<h2>reframed-events fragment</h2>
+		<ul>
+			<li>
+				<code>document fired "DOMContentLoaded"</code>
+				<input id="web-fragment-document-dcl" type="checkbox" />
+			</li>
+			<li>
+				<code>window fired "load"</code>
+				<input id="web-fragment-window-load" type="checkbox" />
+			</li>
+		</ul>
+		<script>
+			document.addEventListener('DOMContentLoaded', () => {
+				document.querySelector('#web-fragment-document-dcl').checked = true;
+			});
+			window.addEventListener('load', () => {
+				document.querySelector('#web-fragment-window-load').checked = true;
+			});
+		</script>
+	</body>
+</html>
