@@ -65,7 +65,7 @@ for (const environment of environments) {
 		});
 
 		describe(`pierced fragment requests`, () => {
-			it(`should match a fragment and return html that combines the app shell and fragment payloads`, async () => {
+			it(`should match a fragment and return html that combines the CSR-ed app shell and fragment payloads`, async () => {
 				mockShellAppResponse(
 					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
 				);
@@ -96,6 +96,27 @@ for (const environment of environments) {
 				expect(await response2.text()).toBe(
 					`<html><body>legacy host content<web-fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><p>bar fragment</p></template></web-fragment-host></body></html>`,
 				);
+			});
+
+			it(`should match a fragment and return html that combines the SSR-ed app shell and fragment payloads`, async () => {
+				mockShellAppResponse(
+					new Response(
+						'<html><body>legacy host content<web-fragment fragment-id="fragmentFoo"></web-fragment></body></html>',
+						{ headers: { 'content-type': 'text/html' } },
+					),
+				);
+				mockFragmentFooResponse('/foo', new Response('<p>foo fragment</p>'));
+
+				const response = await testRequest(
+					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe(
+					`<html><body>legacy host content<web-fragment fragment-id="fragmentFoo"><template shadowrootmode="open"><web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></web-fragment-host></template></web-fragment></body></html>`,
+				);
+				expect(response.headers.get('content-type')).toBe('text/html');
+				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
 			});
 
 			it(`should return the original app shell response but with vary header if the fragment's config disabled piercing`, async () => {
