@@ -33,8 +33,27 @@ const unpatchedElementProto = {
 	insertAdjacentElement: Element.prototype.insertAdjacentElement,
 };
 
-function getIframeDocumentIfWithinReframedDom(node: Node) {
+/**
+ * Returns the iframe document associated with a fragment if the `node` passed is part of the fragment.
+ *
+ * The `includeShadowRoot` flag is useful because when `node` is the fragment's shadowroot, there are times when we want to consider it to be part of the fragment and other times when when we want it to be considered outside of the fragment's dom.
+ *
+ * Because the fragment's shadowroot is a boundary between the virtualized and non-virtualized DOM, it is being interacted with by both the code running in the iframe and the code running in the main frame. This is why we need to be able to treat it correctly in both contexts.
+ *
+ * Good example of shadowroot being considered to be part of the fragment is when we are appending a new child to the shadowroot, and we need to get hold of the iframe document so that we execute any scripts being appended in the iframe.
+ *
+ * On the other hand if a code executing in the main frame is checking `ownerdocument` of the shadowroot, we don't want to expose the iframe document.
+ *
+ * @param node
+ * @param includeShadowRoot  If true, consider the shadow root node to be part of the fragment and return the iframe document, otherwise return undefined.
+ * @returns
+ */
+function getIframeDocumentIfWithinReframedDom(node: Node, includeShadowRoot = true) {
 	const root = unpatchedNodeProto.getRootNode.call(node) as ReframedShadowRoot;
+	// if the node is a shadowroot then return nothing.
+	if (root === node && !includeShadowRoot) {
+		return undefined;
+	}
 	return root?.[reframedMetadataSymbol]?.iframe.contentDocument ?? undefined;
 }
 
@@ -113,7 +132,7 @@ function monkeyPatchMiscNodeMethods() {
 		configurable: true,
 		enumerable: true,
 		get() {
-			const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+			const iframeDocument = getIframeDocumentIfWithinReframedDom(this, false);
 			if (iframeDocument) {
 				return iframeDocument;
 			}
