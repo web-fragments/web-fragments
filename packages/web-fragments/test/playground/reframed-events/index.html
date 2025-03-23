@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF Playground: reframed-events</title>
+		<style>
+			fragment-host {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF Playground: reframed-events</h1>
+		<ul>
+			<li>
+				<code>document fired "DOMContentLoaded"</code>
+				<input id="main-document-dcl" type="checkbox" />
+			</li>
+			<li>
+				<code>window fired "load"</code>
+				<input id="main-window-load" type="checkbox" />
+			</li>
+		</ul>
+		<script>
+			document.addEventListener('DOMContentLoaded', () => {
+				document.querySelector('#main-document-dcl').checked = true;
+			});
+			window.addEventListener('load', () => {
+				document.querySelector('#main-window-load').checked = true;
+			});
+		</script>
+
+		<script type="module">
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
+		</script>
+
+		<web-fragment fragment-id="reframed-events"></web-fragment>
+	</body>
+</html>
