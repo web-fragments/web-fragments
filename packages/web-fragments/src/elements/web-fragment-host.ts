@@ -2,14 +2,9 @@ import { reframed } from './reframed/reframed';
 
 export class WebFragmentHost extends HTMLElement {
 	#iframe: HTMLIFrameElement | undefined;
-	ready: Promise<void> | undefined;
+	#ready: Promise<void> | undefined;
 	isInitialized = false;
 	isPortaling = false;
-
-	constructor() {
-		super();
-		this.handlePiercing = this.handlePiercing.bind(this);
-	}
 
 	async connectedCallback() {
 		/**
@@ -35,13 +30,7 @@ export class WebFragmentHost extends HTMLElement {
 			});
 
 			this.#iframe = iframe;
-			this.ready = ready;
-
-			/**
-			 * <web-fragment> will dispatch the web-fragment-ready event.
-			 * When that happens, move the entire host element + shadowRoot into the web-fragment
-			 */
-			document.addEventListener('fragment-outlet-ready', this.handlePiercing);
+			this.#ready = ready;
 		}
 	}
 
@@ -51,43 +40,29 @@ export class WebFragmentHost extends HTMLElement {
 			return;
 		}
 
-		if (this.#iframe && !this.isPortaling) {
+		if (this.#iframe) {
 			this.#iframe.remove();
 			this.#iframe = undefined;
-
-			document.removeEventListener('fragment-outlet-ready', this.handlePiercing);
 		}
 	}
 
-	async handlePiercing(event: Event) {
-		if (
-			event.defaultPrevented ||
-			(event.target as Element).getAttribute('fragment-id') !== this.getAttribute('fragment-id')
-		) {
-			return;
-		}
-
-		// Call preventDefault() to signal the web-fragment that
-		// we will pierce this web-fragment-host into it, so it shouldn't render its own.
-		event.preventDefault();
-
+	async portalHost(targetShadowRoot: ShadowRoot) {
 		// Wait until reframed() has signaled that the new iframe context is ready.
-		await this.ready;
+		await this.#ready;
 
 		// Any script tags injected into the <web-fragment-host> via reframe have already been made inert through writeable-dom.
-		// We need to do the same when we move <web-fragment-host> into <web-fragment>>
-		this.neutralizeScriptTags();
+		// We need to do the same when we move <web-fragment-host> into <web-fragment> to avoid re-executing scripts.
+		this.#neutralizeScriptTags();
 
 		// Preserve the existing stylesheets to avoid a FOUC when reinserting this element into the DOM
-		this.preserveStylesheets();
+		this.#preserveStylesheets();
 
 		const activeElement = this.shadowRoot?.activeElement;
-		const selectionRange = this.getSelectionRange();
+		const selectionRange = this.#getSelectionRange();
 
 		// Move <web-fragment-host> into <web-fragment> and set a flag to return early in the disconnectedCallback
 		this.isPortaling = true;
-		const targetElement = event.target as HTMLElement;
-		targetElement.shadowRoot!.replaceChildren(this);
+		targetShadowRoot.replaceChildren(this);
 
 		// Restore focus to any element that was previously focused inside the shadow root
 		if (activeElement) {
@@ -95,11 +70,11 @@ export class WebFragmentHost extends HTMLElement {
 		}
 
 		if (selectionRange) {
-			this.setSelectionRange(selectionRange);
+			this.#setSelectionRange(selectionRange);
 		}
 
 		// Restore the initial type attributes of the script tags
-		this.restoreScriptTags();
+		this.#restoreScriptTags();
 		this.removeAttribute('data-piercing');
 	}
 
@@ -118,7 +93,7 @@ export class WebFragmentHost extends HTMLElement {
 	//
 	// Until we have the ability to perform atomic move operations in the DOM (https://github.com/whatwg/dom/issues/1255)
 	// this is probably the best way we can deal with the FOUC.
-	preserveStylesheets() {
+	#preserveStylesheets() {
 		if (this.shadowRoot) {
 			this.shadowRoot.adoptedStyleSheets = Array.from(this.shadowRoot.styleSheets, (sheet) => {
 				const clone = new CSSStyleSheet();
@@ -136,7 +111,7 @@ export class WebFragmentHost extends HTMLElement {
 		}
 	}
 
-	neutralizeScriptTags() {
+	#neutralizeScriptTags() {
 		const scripts = [...this.shadowRoot!.querySelectorAll('script')];
 		scripts.forEach((script) => {
 			const type = script.getAttribute('type');
@@ -145,7 +120,7 @@ export class WebFragmentHost extends HTMLElement {
 		});
 	}
 
-	restoreScriptTags() {
+	#restoreScriptTags() {
 		const scripts = [...this.shadowRoot!.querySelectorAll('script')];
 		scripts.forEach((script) => {
 			script.removeAttribute('type');
@@ -161,7 +136,7 @@ export class WebFragmentHost extends HTMLElement {
 	// span across shadow root boundaries. We can utilize
 	// https://developer.mozilla.org/en-US/docs/Web/API/Selection/getComposedRanges
 	// to help with this once it gets more browser support.
-	getSelectionRange() {
+	#getSelectionRange() {
 		try {
 			return (this.shadowRoot as unknown as Document).getSelection()?.getRangeAt(0);
 		} catch {
@@ -169,7 +144,7 @@ export class WebFragmentHost extends HTMLElement {
 		}
 	}
 
-	setSelectionRange(range: Range) {
+	#setSelectionRange(range: Range) {
 		try {
 			const selection = (this.shadowRoot as unknown as Document).getSelection();
 			selection?.removeAllRanges();
