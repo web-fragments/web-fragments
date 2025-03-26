@@ -61,8 +61,7 @@ export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: 
 		const iframeDocument = iframe.contentDocument;
 
 		assert(iframeDocument !== null, 'iframe.contentDocument is not defined');
-
-		getInternalReference(iframeDocument, 'body').appendChild(iframeDocument.importNode(script, true));
+		executeInertScript(script, iframeDocument);
 	});
 }
 
@@ -70,6 +69,7 @@ export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: 
  * Weak map of scripts running in the iframe to their inert clones in the reframed DOM.
  */
 export const execToInertScriptMap = new WeakMap<HTMLScriptElement, HTMLScriptElement>();
+export const alreadyExecutedScripts = new Set<HTMLScriptElement>();
 
 /**
  * Executes a script in a reframed JS context.
@@ -85,6 +85,12 @@ export function executeInertScript(inertScript: HTMLScriptElement, iframeDocumen
 		return false;
 	}
 
+	// If the inert script has already been evaluated but later re-added to the DOM
+	// via any DOM insertion method (i.e insertBefore() and appendChild()), do not evaluate the script again,
+	if (alreadyExecutedScripts.has(inertScript)) {
+		return false;
+	}
+
 	assert(!!(inertScript.src || inertScript.textContent), `Can't execute script without src or textContent!`);
 
 	const execScript = iframeDocument.importNode(inertScript, true);
@@ -94,6 +100,7 @@ export function executeInertScript(inertScript: HTMLScriptElement, iframeDocumen
 	// - inline scripts (script with textContent) will be executed synchronously when attached
 	// - external scripts (with src attribute) will execute once the current turn of the event loop unwinds
 	getInternalReference(iframeDocument, 'body').appendChild(execScript);
+	alreadyExecutedScripts.add(inertScript);
 
 	return true;
 }
