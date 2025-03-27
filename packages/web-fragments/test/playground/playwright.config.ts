@@ -6,7 +6,10 @@ import { defineConfig, devices } from '@playwright/test';
  * - if tests run from command line, run against the `pnpm preview`
  */
 const VSCODE_MODE = !!process.env.VSCODE_CWD;
-const WEBSERVER_COMMAND = VSCODE_MODE ? 'pnpm dev --port 4998' : 'pnpm preview --port 4999';
+const PIERCING = process.env.PIERCING;
+const WEBSERVER_COMMAND = VSCODE_MODE
+	? `PIERCING=${PIERCING} pnpm dev --port 4998`
+	: `PIERCING=${PIERCING} pnpm preview --port 4999`;
 const WEBSERVER_URL = VSCODE_MODE ? 'http://localhost:4998' : 'http://localhost:4999';
 
 export default defineConfig({
@@ -15,7 +18,7 @@ export default defineConfig({
 	testMatch: '**/spec.ts',
 	testIgnore: 'dist/**',
 
-	outputDir: 'node_modules/.wf-playground-tests/test-results',
+	outputDir: `node_modules/.wf-playground-tests/test-results-piercing-${PIERCING}`,
 
 	// Run all tests in parallel.
 	fullyParallel: true,
@@ -23,14 +26,14 @@ export default defineConfig({
 	// Fail the build on CI if you accidentally left test.only in the source code.
 	forbidOnly: !!process.env.CI,
 
-	// Retry on CI only.
-	retries: process.env.CI ? 2 : 0,
+	// Don't retry when running via VSCode plugin
+	retries: VSCODE_MODE ? 0 : 3,
 
 	// Opt out of parallel tests on CI.
 	workers: process.env.CI ? 1 : undefined,
 
 	// Reporter to use
-	reporter: [['html', { outputFolder: 'node_modules/.wf-playground-tests/playwright-report' }]],
+	reporter: [['html', { outputFolder: `node_modules/.wf-playground-tests/playwright-report-piercing-${PIERCING}` }]],
 
 	use: {
 		// Base URL to use in actions like `await page.goto('/')`.

@@ -45,7 +45,9 @@
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\"",
 		"test:unit": "pnpm vitest run src",
 		"test:gateway": "pnpm -C test/gateway test",
-		"test:playground": "pnpm -C test/playground test",
+		"test:playground": "pnpm test:playground:pierced && pnpm test:playground:nonpierced",
+		"test:playground:pierced": "PIERCING=true pnpm -C test/playground test",
+		"test:playground:nonpierced": "PIERCING=false pnpm -C test/playground test",
 		"test-debug:gateway": "pnpm -C test/gateway test-debug",
 		"changeset": "pnpm -C ../../ exec changeset",
 		"prepare": "pnpm build"

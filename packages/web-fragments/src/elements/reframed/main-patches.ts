@@ -33,8 +33,12 @@ const unpatchedElementProto = {
 	insertAdjacentElement: Element.prototype.insertAdjacentElement,
 };
 
-function getIframeDocumentIfWithinReframedDom(node: Node) {
+function getIframeDocumentIfWithinReframedDom(node: Node, includeShadowRoot = true) {
 	const root = unpatchedNodeProto.getRootNode.call(node) as ReframedShadowRoot;
+	// if the node is a shadowroot then return nothing.
+	if (root === node && !includeShadowRoot) {
+		return undefined;
+	}
 	return root?.[reframedMetadataSymbol]?.iframe.contentDocument ?? undefined;
 }
 
@@ -113,7 +117,7 @@ function monkeyPatchMiscNodeMethods() {
 		configurable: true,
 		enumerable: true,
 		get() {
-			const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+			const iframeDocument = getIframeDocumentIfWithinReframedDom(this, false);
 			if (iframeDocument) {
 				return iframeDocument;
 			}

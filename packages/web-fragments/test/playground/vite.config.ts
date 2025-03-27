@@ -84,7 +84,7 @@ async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 		console.log(`Registering fragment: ${fragmentId}`);
 		fragmentGateway.registerFragment({
 			fragmentId: fragmentId,
-			piercing: false,
+			piercing: process.env.PIERCING === 'false' ? false : true,
 			routePatterns: [`/${fragmentId}/:_*`],
 			get endpoint() {
 				return getServerUrl();

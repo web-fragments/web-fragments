@@ -53,16 +53,17 @@ export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: 
 	// without the prefix.
 	[...shadowRoot.querySelectorAll('wf-html, wf-body, wf-head')].forEach(rewriteTagName);
 
+	const iframeDocument = iframe.contentDocument;
+	assert(iframeDocument !== null, 'iframe.contentDocument is not defined');
+
 	const scripts = [...shadowRoot.querySelectorAll('script')];
 
-	scripts.forEach((script) => {
-		restoreScriptType(script);
+	scripts.forEach((inertScript) => {
+		restoreScriptType(inertScript);
 
-		const iframeDocument = iframe.contentDocument;
-
-		assert(iframeDocument !== null, 'iframe.contentDocument is not defined');
-
-		getInternalReference(iframeDocument, 'body').appendChild(iframeDocument.importNode(script, true));
+		const execScript = iframeDocument.importNode(inertScript, true);
+		execToInertScriptMap.set(execScript, inertScript);
+		getInternalReference(iframeDocument, 'body').appendChild(execScript);
 	});
 }
 
@@ -179,8 +180,6 @@ const WF_CUSTOM_ELEMENTS = new Map([
 ]);
 function rewriteTagName(node: Element) {
 	const originalTagName = node.tagName;
-	if (originalTagName === 'WF-HTML') {
-	}
 	const mappedElement = WF_CUSTOM_ELEMENTS.get(originalTagName);
 	if (mappedElement) {
 		Object.defineProperties(node, {

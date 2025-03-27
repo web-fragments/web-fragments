@@ -404,7 +404,7 @@ export function initializeIFrameContext(
 	// Event listeners for these events should be added normally
 	// instead of being redirected to other event targets.
 	// TODO: there are probably a lot more events we don't want to redirect, e.g. "pagehide" / "pageshow"
-	const nonRedirectedEvents = ['DOMContentLoaded', 'popstate', 'unload'];
+	const nonRedirectedEvents = ['load', 'popstate', 'beforeunload', 'unload'];
 
 	// Redirect event listeners (except for the events listed above)
 	// from the iframe window or document to the main window or shadow root respectively.
