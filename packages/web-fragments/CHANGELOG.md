@@ -1,5 +1,19 @@
 # web-fragments
 
+## 0.4.5
+
+### Patch Changes
+
+- [#172](https://github.com/web-fragments/web-fragments/pull/172) [`957c06a`](https://github.com/web-fragments/web-fragments/commit/957c06ab2fe4faf4570f3edf517574654bf25435) Thanks [@anfibiacreativa](https://github.com/anfibiacreativa)! - feat: replace prePiercingStyles and prePiercingClassNames with ¨piercing¨ prefix
+
+  These APIs were originally misnamed, so this change corrects it.
+
+  Piercing is the process of inserting a fragment into the initial payload, and there isn´t such thing as "prepiercing" stage in the fragment´s lifecycle.
+
+  The change was made a backwards compatible way.
+
+- [#182](https://github.com/web-fragments/web-fragments/pull/182) [`177a53a`](https://github.com/web-fragments/web-fragments/commit/177a53a692824bcb2d63b6ba2cdd88611f29aebc) Thanks [@rnguyen17](https://github.com/rnguyen17)! - Fix inert scripts being incorrectly evaluated multiple times on DOM insertion
+
 ## 0.4.4
 
 ### Patch Changes
