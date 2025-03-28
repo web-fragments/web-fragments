@@ -36,7 +36,7 @@ Multiple rendering strategies and approaches are now available, from the early M
 
 Small application developers building greenfield can adopt the latest and greatest from the get-go, but for the enterprise development teams, where brownfield is the norm, the ability to modernize their stacks and patterns is limited by monolithic coupling and SLAs.
 
-**Big bang migrations are undersirable**; the way forward and out of a legacy monolith, must be incremental.
+**Big bang migrations are undesirable**; the way forward and out of a legacy monolith, must be incremental.
 
 ## Enabling mobility to move forward
 

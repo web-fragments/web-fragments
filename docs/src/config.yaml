@@ -10,7 +10,7 @@ site:
 metadata:
   title:
     default: Web Fragments
-    template: "%s — AstroWind"
+    template: "%s"
   description: "\U0001F680 An incremental, low-risk, high ROI approach, to building micro-frontends."
   robots:
     index: true

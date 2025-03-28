@@ -61,8 +61,7 @@ export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: 
 		const iframeDocument = iframe.contentDocument;
 
 		assert(iframeDocument !== null, 'iframe.contentDocument is not defined');
-
-		getInternalReference(iframeDocument, 'body').appendChild(iframeDocument.importNode(script, true));
+		executeInertScript(script, iframeDocument);
 	});
 }
 
@@ -70,6 +69,7 @@ export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: 
  * Weak map of scripts running in the iframe to their inert clones in the reframed DOM.
  */
 export const execToInertScriptMap = new WeakMap<HTMLScriptElement, HTMLScriptElement>();
+export const alreadyExecutedScripts = new WeakSet<HTMLScriptElement>();
 
 /**
  * Executes a script in a reframed JS context.
@@ -78,6 +78,12 @@ export const execToInertScriptMap = new WeakMap<HTMLScriptElement, HTMLScriptEle
  * @returns true if the script executed, false if it was ignored
  */
 export function executeInertScript(inertScript: HTMLScriptElement, iframeDocument: Document): boolean {
+	// If the inert script has already been evaluated but later re-added to the DOM
+	// via any DOM insertion method (i.e insertBefore() and appendChild()), do not evaluate the script again,
+	if (alreadyExecutedScripts.has(inertScript)) {
+		return false;
+	}
+
 	// If the script does not have a valid type attribute, treat the script node as a data block.
 	// We can add the data block directly to the main document instead of the iframe context.
 	const validScriptTypes = ['module', 'text/javascript', 'importmap', 'speculationrules', '', null];
@@ -94,6 +100,7 @@ export function executeInertScript(inertScript: HTMLScriptElement, iframeDocumen
 	// - inline scripts (script with textContent) will be executed synchronously when attached
 	// - external scripts (with src attribute) will execute once the current turn of the event loop unwinds
 	getInternalReference(iframeDocument, 'body').appendChild(execScript);
+	alreadyExecutedScripts.add(inertScript);
 
 	return true;
 }
@@ -154,8 +161,7 @@ function prepareUnattachedInlineScript(script: HTMLScriptElement, iframeDocument
 	inertScript.remove();
 	inertScript.firstChild!.remove();
 
-	execToInertScriptMap.set(execScript, inertScript);
-	getInternalReference(iframeDocument, 'body').appendChild(execScript);
+	executeInertScript(inertScript, iframeDocument);
 
 	const origScriptAppendChild = inertScript.appendChild;
 	inertScript.appendChild = function (node) {
