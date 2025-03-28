@@ -161,7 +161,8 @@ function prepareUnattachedInlineScript(script: HTMLScriptElement, iframeDocument
 	inertScript.remove();
 	inertScript.firstChild!.remove();
 
-	executeInertScript(inertScript, iframeDocument);
+	execToInertScriptMap.set(execScript, inertScript);
+	getInternalReference(iframeDocument, 'body').appendChild(execScript);
 
 	const origScriptAppendChild = inertScript.appendChild;
 	inertScript.appendChild = function (node) {
