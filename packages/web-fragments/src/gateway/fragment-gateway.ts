@@ -2,7 +2,7 @@ import { MatchFunction, match } from 'path-to-regexp';
 
 export class FragmentGateway {
 	private fragmentConfigs: Map<string, FragmentConfig> = new Map();
-	private routeMap: Map<MatchFunction, FragmentConfig> = new Map();
+	private routeMap: Map<(url: string) => boolean, FragmentConfig> = new Map();
 	#piercingStyles?: string;
 
 	constructor(config?: FragmentGatewayConfig) {
@@ -54,9 +54,38 @@ export class FragmentGateway {
 		// create a reverse mapping of route patterns to fragment configs
 		// used for lookup when finding a route match.
 		fragmentConfig.routePatterns.forEach((routePattern) => {
-			const matcher = match(routePattern, {
+			const [pathnamePattern, searchPattern = ''] = routePattern.split('?');
+
+			const pathMatcher = match(pathnamePattern, {
 				decode: globalThis.decodeURIComponent,
 			});
+
+			const searchMatcher = (search: string) => {
+				// If there is no search param pattern rule in the route pattern, match the request
+				if (!searchPattern) return true;
+
+				// Compare the request search params with the search params in th route pattern
+				const searchParamsPattern = new URLSearchParams(searchPattern);
+				const searchParams = new URLSearchParams(search);
+
+				// For every search params pattern specified in the route config,
+				// Check against the decoded search param from the request.
+				// Only match the request if all search params match the pattern.
+				for (const [searchKey, searchValue] of searchParamsPattern) {
+					const matcher = match(searchValue, {
+						decode: globalThis.decodeURIComponent,
+					});
+
+					if (!matcher(searchParams.get(searchKey) || '')) return false;
+				}
+
+				return true;
+			};
+
+			const matcher = (urlPath: string) => {
+				const [pathname, search = ''] = urlPath.split('?');
+				return pathMatcher(pathname) && searchMatcher(search);
+			};
 
 			this.routeMap.set(matcher, fragmentConfig);
 		});
