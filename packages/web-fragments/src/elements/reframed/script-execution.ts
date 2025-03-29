@@ -93,16 +93,36 @@ export function executeInertScript(inertScript: HTMLScriptElement, iframeDocumen
 
 	assert(!!(inertScript.src || inertScript.textContent), `Can't execute script without src or textContent!`);
 
-	const execScript = iframeDocument.importNode(inertScript, true);
-	execToInertScriptMap.set(execScript, inertScript);
+	attachScriptsToIframe({ inertScript, iframeDocument });
+
+	return true;
+}
+
+/**
+ * Attaches exec scripts to iframe and keeps a record of already evaluated scripts
+ * @param inertScript inert script already appended to a document within reframed DOM
+ * @param execScript exec script to be attached to the iframe document.
+ * @param iframeDocument iframe document in which the script should execute.
+ */
+export function attachScriptsToIframe({
+	inertScript,
+	execScript,
+	iframeDocument,
+}: {
+	inertScript: HTMLScriptElement;
+	execScript?: HTMLScriptElement;
+	iframeDocument: Document;
+}) {
+	if (!execScript) {
+		execScript = iframeDocument.importNode(inertScript, true);
+	}
 
 	// the following line will append the executable script to iframe
 	// - inline scripts (script with textContent) will be executed synchronously when attached
 	// - external scripts (with src attribute) will execute once the current turn of the event loop unwinds
+	execToInertScriptMap.set(execScript, inertScript);
 	getInternalReference(iframeDocument, 'body').appendChild(execScript);
 	alreadyExecutedScripts.add(inertScript);
-
-	return true;
 }
 
 /**
@@ -161,7 +181,9 @@ function prepareUnattachedInlineScript(script: HTMLScriptElement, iframeDocument
 	inertScript.remove();
 	inertScript.firstChild!.remove();
 
-	executeInertScript(inertScript, iframeDocument);
+	// We have already cloned the inertScript so we don't need to clone it again.
+	// Cloning again will cause the execScript to be neutralized.
+	attachScriptsToIframe({ inertScript, execScript, iframeDocument });
 
 	const origScriptAppendChild = inertScript.appendChild;
 	inertScript.appendChild = function (node) {

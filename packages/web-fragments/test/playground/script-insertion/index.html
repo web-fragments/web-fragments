@@ -35,6 +35,7 @@
 								<input id="script-counter-checkbox" type="checkbox" />
 							</div>
 						</section>
+
 						<script id="counter-script" type="inert">
 							if (window.scriptExecutionCount) {
 								window.scriptExecutionCount++;
@@ -43,16 +44,19 @@
 							}
 							document.getElementById('script-execution-count').textContent = window.scriptExecutionCount;
 						</script>
-						<script type="inert">
+
+						<script id="script-insertion" type="inert">
 							const counterScript = document.getElementById('counter-script');
 							const referenceNode = document.getElementById('reference-node');
+
+							counterScript.remove();
+							document.body.appendChild(counterScript);
+
+							counterScript.remove();
 							document.body.insertBefore(counterScript, referenceNode);
-							document.body.appendChild(counterScript);
-							document.body.appendChild(counterScript);
-							document.body.appendChild(counterScript);
 						</script>
 
-						<script type="inert">
+						<script id="script-assertion" type="inert">
 							if (window.scriptExecutionCount === 1) {
 								document.getElementById('script-counter-checkbox').checked = true;
 							}
