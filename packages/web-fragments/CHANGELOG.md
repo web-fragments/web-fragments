@@ -1,5 +1,13 @@
 # web-fragments
 
+## 0.4.6
+
+### Patch Changes
+
+- [#183](https://github.com/web-fragments/web-fragments/pull/183) [`bbd8506`](https://github.com/web-fragments/web-fragments/commit/bbd850635f6b2e4bb987549da0525bc94742ec97) Thanks [@rnguyen17](https://github.com/rnguyen17)! - add support for search params pattern matching in the gateway
+
+- [#183](https://github.com/web-fragments/web-fragments/pull/183) [`5e56bd8`](https://github.com/web-fragments/web-fragments/commit/5e56bd858d1bede52f1273fc12a096f56ca09683) Thanks [@rnguyen17](https://github.com/rnguyen17)! - fix regression in prepareUnattachedInlineScript() in reframed.ts where empty scripts were not being added to the iframe
+
 ## 0.4.5
 
 ### Patch Changes
