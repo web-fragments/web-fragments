@@ -82,8 +82,9 @@ export class FragmentGateway {
 				return true;
 			};
 
-			const matcher = (urlPath: string) => {
-				const [pathname, search = ''] = urlPath.split('?');
+			// The url parameter is only the pathname and search param (i.e /foo?search=value)
+			const matcher = (url: string) => {
+				const [pathname, search = ''] = url.split('?');
 				return pathMatcher(pathname) && searchMatcher(search);
 			};
 
