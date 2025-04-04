@@ -427,6 +427,7 @@ for (const environment of environments) {
 				expect(await response.text()).toBe(`<!doctype html><title>`);
 				expect(response.headers.get('content-type')).toBe('text/html');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(response.headers.get('cache-control')).toBe('max-age=3600, public, stale-while-revalidate=31536000');
 
 				// make one more request to the second fragment path
 				mockShellAppResponse(

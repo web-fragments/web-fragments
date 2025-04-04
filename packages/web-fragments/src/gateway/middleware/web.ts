@@ -47,7 +47,12 @@ export function getWebMiddleware(
 		 */
 		if (requestSecFetchDest === 'iframe') {
 			return new Response('<!doctype html><title>', {
-				headers: { 'Content-Type': 'text/html', vary: 'sec-fetch-dest' },
+				headers: {
+					'Content-Type': 'text/html',
+					vary: 'sec-fetch-dest',
+					// cache the response for 1 hour and then revalidate in the background just in case we need to make some changes to the served content in the future
+					'Cache-Control': 'max-age=3600, public, stale-while-revalidate=31536000',
+				},
 			});
 		}
 
