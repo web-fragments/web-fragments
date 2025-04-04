@@ -4,28 +4,34 @@ import { initializeMainContext } from './main-patches';
 import { executeScriptsInPiercedFragment } from './script-execution';
 
 type ReframedOptions = {
+	pierced: boolean;
+	shadowRoot: ShadowRoot;
 	bound: boolean;
-	container: HTMLElement;
 	headers?: HeadersInit;
 	name: string;
 };
 
 /**
+ * Creates a new reframed context for a fragment that virtualizes the DOM and browser APIs using a monkey-patched hidden iframe.
  *
- * @param reframedSrcOrSourceShadowRoot url of an http endpoint that will generate html stream to be reframed, or a shadowRoot containing the html to reframe
- * @param containerTagName tag name of the HTMLElement that will be created and used as the target container.
- *    The default is [`article`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article).
+ * The fragment will be initialized by fetching the initial html from `reframedSrc` unless `options.pierced` is set to true in which case `option.shadowRoot` will be used to initialize the fragment.
+ *
+ * The window.location in the reframed context is always initialized to `reframedSrc`.
+ *
+ * @param reframedSrc source url of the reframed context
+ * @param options options to configure the reframed context
  * @returns
  */
 export function reframed(
-	reframedSrcOrSourceShadowRoot: string | ShadowRoot,
+	reframedSrc: string,
 	options: ReframedOptions,
 ): {
 	iframe: HTMLIFrameElement;
-	container: HTMLElement;
 	ready: Promise<void>;
 } {
 	initializeMainContext(options.bound);
+
+	import.meta.env.DEV && console.debug('web-fragment init', { source: reframedSrc, pierced: options.pierced });
 
 	/**
 	 * Create the iframe that we'll use to load scripts into, but hide it from the viewport.
@@ -34,33 +40,33 @@ export function reframed(
 	 */
 	const iframe = document.createElement('iframe');
 	iframe.hidden = true;
+	iframe.src = reframedSrc;
+	iframe.name = `wf:${options.name}`;
+	// We can append the iframe to the main document only once the iframe[src] is set.
+	// This is especially the case in Firefox where an extra history record is created for iframes
+	// appended for at least one turn of the event loop (a task), which then have their src is set.
+	document.body.appendChild(iframe);
 
 	const reframeMetadata: ReframedMetadata = {
 		iframeDocumentReadyState: 'loading',
 		iframe,
 	};
 
-	// create the reframed container
-	const reframedContainer = options.container as ReframedContainer;
-
-	const reframedContainerShadowRoot = Object.assign(
-		reframedContainer.shadowRoot ?? reframedContainer.attachShadow({ mode: 'open' }),
-		{
-			[reframedMetadataSymbol]: reframeMetadata,
-		},
-	);
+	const reframedShadowRoot = Object.assign(options.shadowRoot, {
+		[reframedMetadataSymbol]: reframeMetadata,
+	});
 
 	// Since fragments will most likely contain other block elements, they should be blocks themselves by default
 	const blockSheet = new CSSStyleSheet();
 	blockSheet.insertRule(':host { display: block; position: relative; }');
-	reframedContainer.shadowRoot?.adoptedStyleSheets.push(blockSheet);
+	reframedShadowRoot.adoptedStyleSheets.push(blockSheet);
 
 	/**
 	 * Initialize a promise and resolver for monkeyPatchIFrameDocument.
 	 * We need to know when monkeyPatchIFrameDocument resolves so we can return from reframe()
 	 * since this happens after the iframe loads.
 	 */
-	let { promise: iframeReady, resolve: resolveIframeReady } = Promise.withResolvers<void>();
+	let { promise: iframeReady, resolve: resolveIframeReady } = Promise.withResolvers<HTMLIFrameElement>();
 
 	let alreadyLoaded = false;
 
@@ -77,62 +83,55 @@ export function reframed(
 				// the current fragment is broken because the JS code was unloaded, so we can't resurrect it any more
 				// for now we just blow away the content
 				console.warn('unbound fragment reload detected, clearing fragment content!');
-				reframedContainer.shadowRoot.innerHTML = '';
+				reframedShadowRoot.innerHTML = '';
 			}
 			return;
 		}
 		alreadyLoaded = true;
 
-		initializeIFrameContext(iframe, reframedContainerShadowRoot, options.bound);
-		resolveIframeReady();
+		initializeIFrameContext(iframe, reframedShadowRoot, options.bound);
+		resolveIframeReady(iframe);
 	});
 
 	let reframingDone: Promise<void>;
 
-	if (typeof reframedSrcOrSourceShadowRoot === 'string') {
-		reframingDone = reframeWithFetch(
-			reframedSrcOrSourceShadowRoot,
-			reframedContainer.shadowRoot as ParentNode,
-			iframe,
-			options,
-			iframeReady,
-		);
+	if (options.pierced) {
+		reframingDone = reframeFromTarget(reframedShadowRoot, iframeReady);
 	} else {
-		reframingDone = reframeFromTarget(reframedSrcOrSourceShadowRoot, iframe, options, iframeReady);
+		reframingDone = reframeWithFetch(reframedSrc, reframedShadowRoot, options, iframeReady);
 	}
 
 	const ready = reframingDone.then(() => {
-		reframedContainer.shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'interactive';
-		reframedContainer.shadowRoot!.dispatchEvent(new Event('readystatechange'));
-		reframedContainer.shadowRoot!.dispatchEvent(new Event('DOMContentLoaded'));
+		reframedShadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'interactive';
+		reframedShadowRoot.dispatchEvent(new Event('readystatechange'));
+		reframedShadowRoot.dispatchEvent(new Event('DOMContentLoaded'));
 		// TODO: this should be called when reframed async loading activities finish
 		//       (see: https://github.com/web-fragments/web-fragments/issues/36)
 		setTimeout(() => {
-			reframedContainer.shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'complete';
-			reframedContainer.shadowRoot.dispatchEvent(new Event('readystatechange'));
+			reframedShadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'complete';
+			reframedShadowRoot.dispatchEvent(new Event('readystatechange'));
 			iframe.contentWindow?.dispatchEvent(new Event('load'));
+
+			import.meta.env.DEV &&
+				console.debug('web-fragment loaded', {
+					source: reframedSrc,
+					shadowRoot: reframedShadowRoot,
+				});
 		});
 	});
 
 	return {
 		iframe,
-		container: reframedContainer,
 		ready,
 	};
 }
 
 async function reframeWithFetch(
 	reframedSrc: string,
-	target: ParentNode,
-	iframe: HTMLIFrameElement,
+	shadowRoot: ShadowRoot,
 	options: ReframedOptions,
-	iframeReady: Promise<void>,
+	iframeReady: Promise<HTMLIFrameElement>,
 ): Promise<void> {
-	console.debug('reframing (with fetch)!', {
-		source: reframedSrc,
-		targetContainer: target,
-	});
-
 	const reframedHtmlResponse = await fetch(reframedSrc, {
 		headers: options.headers,
 	});
@@ -148,60 +147,25 @@ async function reframeWithFetch(
 
 	const { promise, resolve } = Promise.withResolvers<void>();
 
-	// It is important to set the src of the iframe AFTER we get the html stream response.
-	// Doing so after ensures that the "iframe" load event triggers properly after content is streamed.
-	iframe.src = reframedSrc;
-	iframe.name = `wf:${options.name}`;
-
 	iframeReady.then(() => {
 		reframedHtmlStream
 			.pipeThrough(new TextDecoderStream())
-			.pipeTo(new WritableDOMStream(target))
+			.pipeTo(new WritableDOMStream(shadowRoot))
 			.finally(() => {
-				import.meta.env.DEV &&
-					console.log('reframing done (reframeWithFetch)!', {
-						source: reframedSrc,
-						target,
-						title: iframe.contentDocument?.title,
-					});
 				resolve();
 			});
 	});
 
-	// We can append the iframe to the main document only once the iframe[src] is set.
-	// This is especially the case in Firefox where an extra history record is created for iframes appended for at least one turn of the event loop (a task), which then have their src is set.
-	document.body.appendChild(iframe);
-
 	return promise;
 }
 
-async function reframeFromTarget(
-	source: ShadowRoot,
-	iframe: HTMLIFrameElement,
-	options: ReframedOptions,
-	iframeReady: Promise<void>,
-): Promise<void> {
-	console.debug('reframing! (reframeFromTarget)', { source });
-
-	iframe.src = location.pathname + location.search;
-	iframe.name = `wf:${options.name}`;
-
+async function reframeFromTarget(source: ShadowRoot, iframeReady: Promise<HTMLIFrameElement>): Promise<void> {
 	const { promise, resolve } = Promise.withResolvers<void>();
 
-	iframeReady.then(() => {
+	iframeReady.then((iframe) => {
 		executeScriptsInPiercedFragment(source, iframe);
-
-		import.meta.env.DEV &&
-			console.log('reframing done (reframeFromTarget)!', {
-				source,
-				title: document.defaultView!.document.title,
-			});
 		resolve();
 	});
-
-	// We can append the iframe to the main document only once the iframe[src] is set.
-	// This is especially the case in Firefox where an extra history record is created for iframes appended for at least one turn of the event loop (a task), which then have their src is set.
-	document.body.appendChild(iframe);
 
 	return promise;
 }
@@ -233,8 +197,4 @@ export const reframedMetadataSymbol = Symbol('reframed:metadata');
 
 export type ReframedShadowRoot = ShadowRoot & {
 	[reframedMetadataSymbol]: ReframedMetadata;
-};
-
-type ReframedContainer = HTMLElement & {
-	shadowRoot: ReframedShadowRoot;
 };
