@@ -1,5 +1,60 @@
 # web-fragments
 
+## 0.5.0
+
+### Minor Changes
+
+- [#181](https://github.com/web-fragments/web-fragments/pull/181) [`0bf2dd1`](https://github.com/web-fragments/web-fragments/commit/0bf2dd13eac50f761157dabf250d2e93c0f040bc) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat: add support for piercing fragments into static/SSRed app shell
+
+  Previously piercing was only supported when the app shell was client-side rendered.
+
+  With this change, fragments are pierced (embedded) into the app shell by the gateway even in the cases when the app shell is static or SSRed html.
+
+  On the client side, the pierced fragment is then adopted into the surrounding `<web-fragment>` element without any DOM moves (portaling).
+
+  This change not only enables SSRed app shell use-cases, but is also a prerequisite for nesting fragments which is something we'd like to support in the future.
+
+  This change required moving around quite a few pieces of code both on the gateway and in the elements.
+  I cleaned up some of the code along the way, including making most of the web-fragment-host APIs private.
+
+### Patch Changes
+
+- [#187](https://github.com/web-fragments/web-fragments/pull/187) [`889b501`](https://github.com/web-fragments/web-fragments/commit/889b5013b135bf0c6717dea9b5bb9f8f7913e627) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: speed up web-fragment initialization by caching the reframed iframe document using cache-control headers
+
+  We now set Cache-Control headers on the HTTP response that serves the empty iframe document which is needed to correctly initialize window.location in the reframed context.
+
+  With these headers we now cache the network response for 1 hour, and afterwards we revalidate the response via stale-while-revalidate strategy: https://web.dev/articles/stale-while-revalidate
+
+  This gives us significant performance benefits (shaves off 150-250ms in real world scenarios), while we still retain the ability to change the iframe's content in case a need arises in the future.
+
+- [#187](https://github.com/web-fragments/web-fragments/pull/187) [`0fd7294`](https://github.com/web-fragments/web-fragments/commit/0fd72944bb8bbcf9c6e1caee2a45602b42025fa7) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: speed up non-pierced fragment initialization by optimizing iframe creation
+
+  Previously, for non-pierced fragments, we'd first fetch the fragment's html and then we'd initialize the iframe used for reframing.
+  The iframe always needs to make a fetch request to the server, so this would cause a sequence of two waterfall http requests for each fragment slowing down the initialization.
+
+  It turns out that it's not necessary to wait, and we can initialize the iframe early on, potentially parallelizing the initialization.
+
+  While I was at it, I cleaned up a bunch of stuff in reframed that was no longer relevant.
+
+- [#187](https://github.com/web-fragments/web-fragments/pull/187) [`0d623ff`](https://github.com/web-fragments/web-fragments/commit/0d623ff797cfc1691e727d8a7ead93c173945ca1) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: fire onload event without the 2s delay
+
+  Previously we fired the window.onload even in the reframed context after a 2 second delay.
+  This delay was arbitrary, and only slowed down SPAs or simple SSRed rendered apps.
+  The delay was removed in favor of setTimeout without a delay.
+
+  Eventually we'd like to fire this even correctly when all subresources load.
+  Some more research is needed on how to do that efficiently and reliably.
+
+- [#181](https://github.com/web-fragments/web-fragments/pull/181) [`c642347`](https://github.com/web-fragments/web-fragments/commit/c6423479636f6b601d42f92a3a9d55764d59d078) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(web-fragment): support DOMContentLoaded and load events
+
+- [#181](https://github.com/web-fragments/web-fragments/pull/181) [`4c4f1b7`](https://github.com/web-fragments/web-fragments/commit/4c4f1b7fc486cafa70c847927ecc3a69cf823a1f) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(web-fragment): make pierced fragment's iframe consistent with fetched fragment
+
+  When a fragment is pierced rather than fetched during soft navigation, it should behave exactly the same.
+
+  With this fix the iframe's name is prefixed with "wf:" and the iframe#src is relative.
+
+  The tests for these changes are in the next commit which tests pierced and non-pierced fragments on CI.
+
 ## 0.4.6
 
 ### Patch Changes
