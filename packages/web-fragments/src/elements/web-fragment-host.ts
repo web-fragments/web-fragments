@@ -22,8 +22,9 @@ export class WebFragmentHost extends HTMLElement {
 				throw new Error('The <web-fragment-host> is missing fragment-id attribute!');
 			}
 
-			const { iframe, ready } = reframed(this.shadowRoot ?? fragmentSrc ?? locationSrc, {
-				container: this,
+			const { iframe, ready } = reframed(fragmentSrc ?? locationSrc, {
+				pierced: this.shadowRoot !== null,
+				shadowRoot: this.shadowRoot ?? this.attachShadow({ mode: 'open' }),
 				headers: { 'x-fragment-mode': 'embedded' },
 				bound: !fragmentSrc,
 				name: fragmentId,
