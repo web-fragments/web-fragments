@@ -106,13 +106,12 @@ export function reframed(
 		reframedContainer.shadowRoot!.dispatchEvent(new Event('readystatechange'));
 		reframedContainer.shadowRoot!.dispatchEvent(new Event('DOMContentLoaded'));
 		// TODO: this should be called when reframed async loading activities finish
-		//        (note: the 2s delay is completely arbitrary, this is a very temporary solution anyways)
 		//       (see: https://github.com/web-fragments/web-fragments/issues/36)
 		setTimeout(() => {
 			reframedContainer.shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'complete';
 			reframedContainer.shadowRoot.dispatchEvent(new Event('readystatechange'));
 			iframe.contentWindow?.dispatchEvent(new Event('load'));
-		}, 2_000);
+		});
 	});
 
 	return {
