@@ -101,12 +101,17 @@ export function reframed(
 		reframingDone = reframeWithFetch(reframedSrc, reframedShadowRoot, options, iframeReady);
 	}
 
-	const ready = reframingDone.then(() => {
+	const ready = reframingDone.then(async () => {
 		reframedShadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'interactive';
 		reframedShadowRoot.dispatchEvent(new Event('readystatechange'));
 		reframedShadowRoot.dispatchEvent(new Event('DOMContentLoaded'));
-		// TODO: this should be called when reframed async loading activities finish
-		//       (see: https://github.com/web-fragments/web-fragments/issues/36)
+
+		// In order to fire window.load event we need to wait for all the images to load.
+		// By now all styles and scripts have loaded, so images are the main kind of resources to wait for.
+		// Other kind of resources should be rare, and we can add them as we discover them causing the event to fire too early.
+		await allImagesLoaded(reframedShadowRoot);
+
+		// Wrap the event into a task so we don't execute too early in case there are no images.
 		setTimeout(() => {
 			reframedShadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'complete';
 			reframedShadowRoot.dispatchEvent(new Event('readystatechange'));
@@ -198,3 +203,28 @@ export const reframedMetadataSymbol = Symbol('reframed:metadata');
 export type ReframedShadowRoot = ShadowRoot & {
 	[reframedMetadataSymbol]: ReframedMetadata;
 };
+
+/**
+ * Returns a promise indicated when all images in the shadow root have loaded.
+ */
+function allImagesLoaded(shadowRoot: ShadowRoot): Promise<void> {
+	const images = shadowRoot.querySelectorAll('img');
+	if (images.length === 0) {
+		return Promise.resolve();
+	}
+
+	const imagePromises = [...images].map((image) => {
+		return new Promise<void>((resolve) => {
+			if (image.complete) {
+				// if the image is already loaded, resolve immediately
+				resolve();
+			} else {
+				// otherwise register load and error listeners
+				image.addEventListener('load', () => resolve());
+				image.addEventListener('error', () => resolve());
+			}
+		});
+	});
+
+	return Promise.all(imagePromises).then(() => {});
+}
