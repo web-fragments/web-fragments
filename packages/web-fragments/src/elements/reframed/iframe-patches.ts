@@ -78,11 +78,6 @@ export function initializeIFrameContext(
 
 		readyState: {
 			get() {
-				if (shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState === 'complete') {
-					console.warn(
-						"reframed warning: `document.readyState` possibly returned `'complete'` prematurely. If your app is not working correctly, please see https://github.com/web-fragments/web-fragments/issues/36  and comment on this issue so that we can prioritize fixing it.",
-					);
-				}
 				return shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState;
 			},
 		},

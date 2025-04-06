@@ -24,5 +24,11 @@
 				document.querySelector('#web-fragment-window-load').checked = true;
 			});
 		</script>
+		<!-- local images will likely load quickly and trigger the img.completed path -->
+		<img src="/reframed-events/logo.png" height="100" width="100" />
+		<img src="/reframed-events/logo.png?cachebust=1" height="100" width="100" />
+		<img src="/reframed-events/logo.png?cachebust=2" height="100" width="100" />
+		<!-- load external image which is more likely to load slowly and trigger the img.onload path -->
+		<img src="https://placehold.co/600x400" height="100" width="100" />
 	</body>
 </html>
