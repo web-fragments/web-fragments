@@ -141,10 +141,10 @@ export interface FragmentConfig {
 	 */
 	routePatterns: string[];
 	/**
-	 * The endpoint URI of the fragment application.
+	 * The endpoint URL of the fragment application, or a `fetch` function compatible with the standard [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 	 * This will be fetched on any request paths matching the specified `routePatterns`
 	 */
-	endpoint: string;
+	endpoint: string | typeof fetch;
 	/**
 	 * @deprecated use `endpoint` instead
 	 */

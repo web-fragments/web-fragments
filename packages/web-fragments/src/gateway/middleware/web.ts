@@ -147,7 +147,7 @@ export function getWebMiddleware(
 			try {
 				onSsrFetchErrorResponse = await onSsrFetchError(request, fragmentResponseOrError);
 			} catch (error) {
-				console.error('onSsrFetchError failed! Using defaultOnSssrFetchError handler instead', { cause: error });
+				console.error('onSsrFetchError failed! Using defaultOnSsrFetchError handler instead', { cause: error });
 				onSsrFetchErrorResponse = await defaultOnSsrFetchError(request, fragmentResponseOrError);
 			}
 			const { response, overrideResponse } = onSsrFetchErrorResponse;
@@ -190,7 +190,14 @@ export function getWebMiddleware(
 	): Promise<Response> {
 		const { endpoint } = fragmentConfig;
 		const requestUrl = new URL(originalRequest.url);
-		const fragmentEndpoint = new URL(`${requestUrl.pathname}${requestUrl.search}`, endpoint);
+
+		// if the endpoint is a fetcher function we'll use it
+		// otherwise we'll use the endpoint as a URL and fetch it
+		const [fragmentReqUrl, fragmentFetch] =
+			typeof endpoint === 'function'
+				? [requestUrl, endpoint]
+				: [new URL(`${requestUrl.pathname}${requestUrl.search}`, endpoint), globalThis.fetch];
+
 		const fetchingToPierce = originalRequest.headers.get('sec-fetch-dest') === 'document';
 
 		// if we are about to pierce a fragment, drop headers that apply only to the overall document request
@@ -203,7 +210,7 @@ export function getWebMiddleware(
 		//const abortController = new AbortController();
 		//const timeoutTimer = abortIfSlow && setTimeout(() => abortController.abort(), 1_500);
 
-		const fragmentReq = new Request(fragmentEndpoint, originalRequest);
+		const fragmentReq = new Request(fragmentReqUrl, originalRequest);
 
 		// forward the original protocol and host info to the fragment endpoint
 		fragmentReq.headers.set(
@@ -232,7 +239,7 @@ export function getWebMiddleware(
 			fragmentReq.headers.set('Accept-Encoding', 'gzip');
 		}
 
-		return fetch(fragmentReq);
+		return fragmentFetch(fragmentReq);
 
 		// TODO: add timeout handling
 		// return fetch(fragmentReq, { signal: abortController.signal }).finally(
