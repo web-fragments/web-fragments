@@ -96,6 +96,19 @@ for (const environment of environments) {
 				expect(await response2.text()).toBe(
 					`<html><body>legacy host content<web-fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><p>bar fragment</p></template></web-fragment-host></body></html>`,
 				);
+
+				// make one last request, but this time pull the fragment request from a fetcher function
+				mockShellAppResponse(
+					new Response(`<html><body>legacy host content</body></html>`, { headers: { 'content-type': 'text/html' } }),
+				);
+				const response3 = await testRequest(
+					new Request('http://localhost/baz', { headers: { 'sec-fetch-dest': 'document' } }),
+				);
+
+				expect(response3.status).toBe(200);
+				expect(await response3.text()).toBe(
+					`<html><body>legacy host content<web-fragment-host class="baz" fragment-id="fragmentBazFetcher" data-piercing="true"><template shadowrootmode="open">baz fetcher response to (GET /baz)</template></web-fragment-host></body></html>`,
+				);
 			});
 
 			it(`should match a fragment and return html that combines the SSR-ed app shell and fragment payloads`, async () => {
@@ -691,6 +704,17 @@ for (const environment of environments) {
 					}
 					return customFragmentBarOnSsrFetchError(...args);
 				},
+			});
+
+			fragmentGateway.registerFragment({
+				fragmentId: 'fragmentBazFetcher',
+				piercingClassNames: ['baz'],
+				routePatterns: ['/baz/:_*', '/_fragment/baz/:_*'],
+				endpoint: async function bazFetcher(request: Request) {
+					return new Response(`baz fetcher response to (${request.method} ${new URL(request.url).pathname})`, {
+						status: 200,
+					});
+				} as typeof fetch,
 			});
 
 			fragmentGateway.registerFragment({
