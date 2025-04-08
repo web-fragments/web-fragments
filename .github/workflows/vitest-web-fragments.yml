@@ -1,11 +1,14 @@
 name: Web Fragments Unit Tests
 on:
   push:
-    branches: [main]
-    paths: ['packages/**']
+    branches:
+      - main
   pull_request:
-    branches: [main]
-    paths: ['packages/**']
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - '.github/workflows/vitest-web-fragments.yml'
 jobs:
   test:
     timeout-minutes: 60
