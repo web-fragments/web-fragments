@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'packages/web-fragments/src/gateway/**'
-      - 'packages/web-fragments/test/gateway/**'
-      - '.github/workflows/gateway-tests.yml'
   pull_request:
     branches:
       - main
