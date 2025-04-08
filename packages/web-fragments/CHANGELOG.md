@@ -1,5 +1,26 @@
 # web-fragments
 
+## 0.5.1
+
+### Patch Changes
+
+- [#189](https://github.com/web-fragments/web-fragments/pull/189) [`a9b8eb6`](https://github.com/web-fragments/web-fragments/commit/a9b8eb64db19879b77a8ccd1bfc15e6d9c8bafa8) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat: make it possible to register a fragment endpoint as a fetcher function
+
+  Fragments can now be registered using a url or function that matches the standard Fetch API.
+
+  This enables more flexibility when connecting to fragment endpoints.
+  On Cloudflare specifically this means that a gateway can connect to a fragment using a service binding.
+
+- [#188](https://github.com/web-fragments/web-fragments/pull/188) [`1dfe801`](https://github.com/web-fragments/web-fragments/commit/1dfe801cf696cc13c854c1ca9b3989165b69beeb) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: window.load event should be fired after all resources, mainly images load
+
+  Previously we thought that it would be a bit messy to wait for all images to load, but it turns out to be quite simple, and that's what this change implements.
+
+  As for other resource types, we don't need to worry about scripts and styles as those have loaded already.
+
+  It's possible that there are some other resource types we should wait for, and we can add support for those as we discover them causing issues.
+
+  Fixes #36
+
 ## 0.5.0
 
 ### Minor Changes
