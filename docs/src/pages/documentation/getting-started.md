@@ -15,23 +15,21 @@ Check out a simple example of a fragment at https://party-button.demos.web-fragm
 
 Web fragments can be as simple as a button, or as sophisticated as multi-tier full-stack applications, with deeply nested routes and layouts.
 
-## 2. Embed the new fragment into your existing existing application
+## 2. Embed the new fragment into an existing application
 
 ### a. Install the `web-fragments` package
 
-Install the `web-fragments` package as a dependency to your existing web application.
+Install the `web-fragments` package as a dependency to an existing web application. This package provides the tools needed to integrate web fragments seamlessly.
 
 ```bash
-$ npm install web-fragments
+npm install web-fragments
 ```
 
-<!--
-Note: Is your existing frontend app not an npm/JavaScript project? You can still use Web Fragments! See advanced usage.
--->
+> **Note**: If an existing frontend app is not an npm/JavaScript project, you can still use Web Fragments! See [advanced usage](#advanced-usage) for more details.
 
 ### b. Initialize the client side Web Fragments library
 
-Initialize the web fragments library in the bootstrap client-side code of your existing application:
+Initialize the web fragments library in the bootstrap client-side code of an existing application:
 
 ```js
 import { initializeWebFragments } from "web-fragments";
@@ -39,29 +37,29 @@ import { initializeWebFragments } from "web-fragments";
 initializeWebFragments();
 ```
 
-This code is designed to be minimal, and should be invoked as early as possible during your application bootstrap.
+This code is designed to be minimal, and should be invoked as early as possible during the application bootstrap.
 It will initialize the library and register `<web-fragment>` [custom element](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry).
 
-### c. Replace parts of your existing application with web fragments
+### c. Replace parts of an existing application with web fragments
 
-Identify a place in your existing application's HTML or templates where you'd like to embed a web fragment, and place `<web-fragment>` element there.
+Identify a place in an existing application's HTML or templates where you'd like to embed a web fragment, and place `<web-fragment>` element there.
 
 ```html
 <web-fragment fragment-id="party-button"></web-fragment>
 ```
 
-The `fragment-id` attribute uniquely identifies the instance of the fragment in your application.
+The `fragment-id` attribute uniquely identifies the instance of the fragment in the application.
 We'll register this id with the fragment gateway in the next step.
 
-For initial testing you can add the fragment to the root template of your application, or any route of your choosing.
+For initial testing you can add the fragment to the root template of the application, or any route of your choosing.
 In either case ensure that the routable location of the web fragment in the application matches the `routePatterns` configuration in the `FragmentGateway` below.
 
-### d. Register your fragment with the fragment gateway
+### d. Register the fragment with the fragment gateway
 
 Web fragments rely on a thin middleware - the fragment gateway — to route all requests from the browser to the right destination.
 This enables us to reap the performance and maintenance benefits of operating the user-facing micro-frontend application on a single origin, governed by the [same origin policy](https://web.dev/articles/same-origin-policy).
 
-For the gateway to understand how to route your web fragment's requests, the fragment needs to be registered.
+For the gateway to understand how to route the web fragment's requests, the fragment needs to be registered.
 
 ```js
 import { FragmentGateway } from "web-fragments/gateway";
@@ -69,7 +67,7 @@ import { FragmentGateway } from "web-fragments/gateway";
 // initialize the gateway
 const myGateway = new FragmentGateway();
 
-// register our fragment
+// register the fragment
 myGateway.registerFragment({
 	// a unique ID of the fragment
 	fragmentId: "party-button",
@@ -90,13 +88,13 @@ Apart from registering the custom elements, `fragments` must be registered in th
 A detailed guide can be found in the [fragment gateway](./gateway) section.
 -->
 
-### e. Install fragment gateway as a middleware of your existing application
+### e. Install fragment gateway as a middleware of an existing application
 
-The final configuration step of is to add the fragment gateway as a middleware to your application.
+The final configuration step of is to add the fragment gateway as a middleware to the application.
 
-If your existing application already has a middleware infrastructure, or it is deployed to a platform that natively supports middleware (for example Cloudflare, Netlify, or Vercel), then adding the fragment middleware is just a few lines of code.
+If an existing application already has a middleware infrastructure, or it is deployed to a platform that natively supports middleware (for example Cloudflare, Netlify, or Vercel), then adding the fragment middleware is just a few lines of code.
 
-For Web ([Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)) based middleware systems obtain a Web compatible middleware function and integrate it into your application:
+For Web ([Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)) based middleware systems obtain a Web compatible middleware function and integrate it into the application:
 
 ```js
 import { getWebMiddleware } from "web-fragments/middleware";
@@ -127,20 +125,20 @@ See also: [express example](https://github.com/web-fragments/web-fragments/blob/
 
 ### f. Build and deploy
 
-Now build and deploy your existing application with the web fragment enhancements.
+Now build and deploy the existing application with the web fragment enhancements.
 
 ## 3. Enjoy
 
-Once your application is deployed, you can navigate to the route on which the fragment was configured and you should see it embedded in your application, and fully functional.
+Once the application is deployed, you can navigate to the route on which the fragment was configured and you should see it embedded in the application, and fully functional.
 
 Pressing the button shoots confetti throughout the entire viewport.
 Interestingly, this special effect happens via [`canvas-confetti`](https://www.npmjs.com/package/canvas-confetti) a small but sophisticated npm library that uses web workers and offscreen canvas to create the effect.
 
-This library, as well as the party-button application that uses it, run in a "virtualized" environment provided by Web Fragments, just like a native application runs in a Docker container, and is unaware of your existing application in which it was loaded, yet it has full access to the viewport, navigation, history, and more for full expressiveness.
+This library, as well as the party-button application that uses it, run in a "virtualized" environment provided by Web Fragments, just like a native application runs in a Docker container, and is unaware of the existing application in which it was loaded, yet it has full access to the viewport, navigation, history, and more for full expressiveness.
 
 ### Explore the fragment using your browser's dev tools.
 
-You can verify that the web fragment's DOM is part of the main document of your existing application, yet it is encapsulated within a [shadow root](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot), preventing styles collisions between your application's own and the fragment's styles.
+You can verify that the web fragment's DOM is part of the main document of the existing application, yet it is encapsulated within a [shadow root](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot), preventing styles collisions between the application's own and the fragment's styles.
 
 You can also observe that a new JavaScript context called `wf:party-button` has been automatically created for the fragment.
 
