@@ -3,29 +3,33 @@ title: "Broadcasting events and communicating state"
 layout: "~/layouts/MarkdownLayout.astro"
 ---
 
-_Last updated_: March 13, 2025
+_Last updated_: April 12, 2025
 
-Because Web Fragments are encapsulated in a `custom element` `shadowRoot`, they are part of the same [Document Object Model](https://developer.mozilla.org/en-US/docs/Glossary/DOM) and can leverage [Web Platform APIs](https://developer.mozilla.org/en-US/docs/Web/API). This makes Web Fragments lightweight and encourages use of Web platform APIs rather than custom library APIs.
+Web Fragments, encapsulated in `custom elements` with `shadowRoot`, are part of the same [Document Object Model (DOM)](https://developer.mozilla.org/en-US/docs/Glossary/DOM). This allows them to leverage [Web Platform APIs](https://developer.mozilla.org/en-US/docs/Web/API), making them lightweight and encouraging the use of standard Web APIs instead of custom library APIs.
 
-> Our team is currently working with standards bodies to push parts of the Web Fragments to the Web Platform as standards.
+> Efforts are underway to collaborate with standards bodies to integrate parts of Web Fragments into the Web Platform as official standards.
 
-## Using `Broadcast Channel` to communicate between fragments
+## Using the `Broadcast Channel API` for Fragment Communication
 
-Fragments can share data using the [Broadcast Channel API](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API) to post messages and share state.
+Fragments can share data and communicate using the [Broadcast Channel API](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API). This API enables fragments to post messages and share state efficiently.
 
-### Broadcasting scenario example
+### Example: Broadcasting Between Fragments
 
-Assume a catalog or product list as a first fragment and a shopping cart as a second fragment. When items are added to the cart using a button in the product list, the cart gets a message from the catalog.
+Consider a scenario with a catalog or product list as one fragment and a shopping cart as another. When a user adds items to the cart via a button in the product list, the cart fragment receives a message from the catalog fragment.
+
+#### Fragment A: Broadcasting a Message
 
 ```javascript
-// fragment A - post (broadcast) message
+// Fragment A - Post (broadcast) message
 const bc = new BroadcastChannel("/cart");
 bc.postMessage({ type: "cart_cleared" });
 bc.close();
 ```
 
+#### Fragment B: Listening and Processing Messages
+
 ```javascript
-// fragment B - listen and process message
+// Fragment B - Listen and process message
 const handleMessage = (event: MessageEvent) => {
   const { type, product } = event.data;
   if (type === 'add_to_cart') {
@@ -41,9 +45,9 @@ return () => {
 };
 ```
 
-![web fragments middleware](../../assets/images/wf-broadcastchannel.drawio.png)
+![Web Fragments Middleware](../../assets/images/wf-broadcastchannel.drawio.png)
 
-Please note that all [fragments](./glossary#fragment) should share the same origin.
+> **Note**: All [fragments](./glossary#fragment) must share the same origin to ensure seamless communication.
 
 ---
 
