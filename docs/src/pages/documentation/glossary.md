@@ -58,6 +58,22 @@ One mistake by a team member responsible for a relatively insignificant feature,
 
 Check out [Fate-sharing and micro-frontends](https://igor.dev/posts/fate-sharing-and-micro-frontends/) blog post to learn more.
 
+## Broadcast Channel API
+
+A Web API that allows fragments to communicate and share state efficiently. It enables posting messages between fragments using a shared channel. See the [Broadcast Channel API Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API) for more details.
+
+## Shadow DOM
+
+A web standard that encapsulates the DOM and CSS of a fragment, ensuring style and script isolation. Learn more about the [Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM).
+
+## Largest Contentful Paint (LCP)
+
+A performance metric that measures the time it takes for the largest visible content on a page to load. Piercing improves LCP by rendering fragments eagerly. See the [LCP Documentation](https://web.dev/lcp/) for more information.
+
+## Fragment Gateway
+
+A middleware that routes requests from the browser to the correct fragment endpoint. It ensures seamless integration of fragments into an application shell.
+
 ---
 
 #### Authors
