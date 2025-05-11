@@ -26,13 +26,14 @@ for (const environment of environments) {
 			| null = null;
 
 		describe(`app shell requests`, () => {
-			it(`should serve requests from the app shell when there is no fragments match`, async () => {
+			it(`should serve requests from the app shell when no fragments matched`, async () => {
 				mockShellAppResponse(new Response('<p>hello world</p>'));
 
 				const response = await testRequest(new Request('http://localhost/'));
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe('<p>hello world</p>');
+				expect(response.headers.get('x-web-fragment-id')).toBe('<app-shell>');
 
 				// make one more request to a different non-fragment path
 				mockShellAppResponse(new Response('<p>hello moon</p>'));
@@ -41,6 +42,7 @@ for (const environment of environments) {
 
 				expect(response2.status).toBe(200);
 				expect(await response2.text()).toBe('<p>hello moon</p>');
+				expect(response2.headers.get('x-web-fragment-id')).toBe('<app-shell>');
 			});
 
 			it('should serve an error response from the app shell as is', async () => {
@@ -81,6 +83,7 @@ for (const environment of environments) {
 				);
 				expect(response.headers.get('content-type')).toBe('text/html');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(response.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
 
 				// make one more request to the second fragment path
 				mockShellAppResponse(
@@ -96,6 +99,7 @@ for (const environment of environments) {
 				expect(await response2.text()).toBe(
 					`<html><body>legacy host content<web-fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><p>bar fragment</p></template></web-fragment-host></body></html>`,
 				);
+				expect(response2.headers.get('x-web-fragment-id')).toBe('fragmentBar');
 
 				// make one last request, but this time pull the fragment request from a fetcher function
 				mockShellAppResponse(
@@ -109,6 +113,7 @@ for (const environment of environments) {
 				expect(await response3.text()).toBe(
 					`<html><body>legacy host content<web-fragment-host class="baz" fragment-id="fragmentBazFetcher" data-piercing="true"><template shadowrootmode="open">baz fetcher response to (GET /baz)</template></web-fragment-host></body></html>`,
 				);
+				expect(response3.headers.get('x-web-fragment-id')).toBe('fragmentBazFetcher');
 			});
 
 			it(`should match a fragment and return html that combines the SSR-ed app shell and fragment payloads`, async () => {
@@ -130,6 +135,7 @@ for (const environment of environments) {
 				);
 				expect(response.headers.get('content-type')).toBe('text/html');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(response.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
 			});
 
 			it(`should return the original app shell response but with vary header if the fragment's config disabled piercing`, async () => {
@@ -145,6 +151,7 @@ for (const environment of environments) {
 				expect(await response.text()).toBe(`<html><body>legacy host content</body></html>`);
 				expect(response.headers.get('content-type')).toBe('text/html');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(response.headers.get('x-web-fragment-id')).toBe('<app-shell>');
 			});
 
 			it(`should strip doctype from html`, async () => {
@@ -440,6 +447,7 @@ for (const environment of environments) {
 				expect(await response.text()).toBe(`<!doctype html><title>`);
 				expect(response.headers.get('content-type')).toBe('text/html');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(response.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
 				expect(response.headers.get('cache-control')).toBe('max-age=3600, public, stale-while-revalidate=31536000');
 
 				// make one more request to the second fragment path
@@ -474,6 +482,7 @@ for (const environment of environments) {
 				expect(await softNavResponse.text()).toBe(`<p>hello foo world!</p>`);
 				expect(softNavResponse.headers.get('content-type')).toBe('text/html');
 				expect(softNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(softNavResponse.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
 
 				// let's make one more request to the same path but this time with sec-fetch-dest=document to simulate hard navigation
 				mockFragmentFooResponse(
@@ -494,6 +503,7 @@ for (const environment of environments) {
 				);
 				expect(hardNavResponse.headers.get('content-type')).toBe('text/html');
 				expect(hardNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(hardNavResponse.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
 			});
 
 			it(`should rewrite any <html>, <head>, or <body> tags in the served a fragment soft navigation response`, async () => {
@@ -617,6 +627,7 @@ for (const environment of environments) {
 				expect(jsResponse.status).toBe(200);
 				expect(await jsResponse.text()).toBe(`globalThis.$ = () => {};`);
 				expect(jsResponse.headers.get('content-type')).toBe('text/javascript');
+				expect(jsResponse.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
 
 				// fetch a barFragment path
 				mockFragmentBarResponse(
@@ -634,6 +645,7 @@ for (const environment of environments) {
 				expect(barImgResponse.status).toBe(200);
 				expect(await barImgResponse.text()).toBe(`bar cat img`);
 				expect(barImgResponse.headers.get('content-type')).toBe('image/jpeg');
+				expect(barImgResponse.headers.get('x-web-fragment-id')).toBe('fragmentBar');
 			});
 
 			it(`should handle 304 responses`, async () => {

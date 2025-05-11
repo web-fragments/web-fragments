@@ -30,7 +30,9 @@ export function getWebMiddleware(
 		 * If this request doesn't match any fragment routes, then send it to the legacy app by calling the next() middleware function.
 		 */
 		if (!matchedFragment) {
-			return await next();
+			const appShellResponse = (await next()).clone();
+			appShellResponse.headers.append('x-web-fragment-id', '<app-shell>');
+			return appShellResponse;
 		}
 
 		const requestSecFetchDest = request.headers.get('sec-fetch-dest');
@@ -50,6 +52,7 @@ export function getWebMiddleware(
 				headers: {
 					'Content-Type': 'text/html',
 					vary: 'sec-fetch-dest',
+					'x-web-fragment-id': matchedFragment.fragmentId,
 					// cache the response for 1 hour and then revalidate in the background just in case we need to make some changes to the served content in the future
 					'Cache-Control': 'max-age=3600, public, stale-while-revalidate=31536000',
 				},
@@ -78,6 +81,7 @@ export function getWebMiddleware(
 			// If the app shell response is an error or not HTML or we are not piercing, pass it through to the client
 			if (!appShellResponse.ok || !isHTMLResponse || !matchedFragment.piercing) {
 				appShellResponse.headers.append('vary', 'sec-fetch-dest');
+				appShellResponse.headers.append('x-web-fragment-id', '<app-shell>');
 				return appShellResponse;
 			}
 
@@ -102,6 +106,8 @@ export function getWebMiddleware(
 				.then((combinedResponse) => {
 					// Append Vary header to prevent BFCache issues
 					combinedResponse.headers.append('vary', 'sec-fetch-dest');
+					// Append X-Web-Fragment-Id for debugging purposes
+					combinedResponse.headers.append('x-web-fragment-id', matchedFragment.fragmentId);
 					return attachForwardedHeaders(Promise.resolve(combinedResponse), matchedFragment)(combinedResponse);
 				})
 				.catch(renderErrorResponse);
@@ -123,6 +129,7 @@ export function getWebMiddleware(
 					headers: {
 						'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
 						vary: 'sec-fetch-dest',
+						'x-web-fragment-id': matchedFragment.fragmentId,
 					},
 				}),
 			);
@@ -137,7 +144,10 @@ export function getWebMiddleware(
 		return new Response(fragmentResponse.body, {
 			status: fragmentResponse.status,
 			statusText: fragmentResponse.statusText,
-			headers: { 'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain' },
+			headers: {
+				'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
+				'x-web-fragment-id': matchedFragment.fragmentId,
+			},
 		});
 
 		async function handleFetchErrors(fragmentResponseOrError: Response | Error) {

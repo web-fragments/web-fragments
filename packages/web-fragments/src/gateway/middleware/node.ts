@@ -15,6 +15,7 @@ export function getNodeMiddleware(gateway: FragmentGateway, options: FragmentMid
 
 	return async (nodeRequest: http.IncomingMessage, nodeResponse: http.ServerResponse, nodeNext: () => void) => {
 		if (!(nodeRequest.url && gateway.matchRequestToFragment(nodeRequestToUrl(nodeRequest).pathname))) {
+			nodeResponse.setHeader('x-web-fragment-id', '<app-shell>');
 			return nodeNext();
 		}
 
