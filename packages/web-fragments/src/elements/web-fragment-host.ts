@@ -99,14 +99,23 @@ export class WebFragmentHost extends HTMLElement {
 			this.shadowRoot.adoptedStyleSheets = Array.from(this.shadowRoot.styleSheets, (sheet) => {
 				const clone = new CSSStyleSheet();
 
-				// CSSStyleSheet.insertRule() prepends CSS rules to the top of the stylesheet by default.
-				// We need to set the index to sheet.cssRules.length in order to append the rule and maintain specificity.
-				[...sheet.cssRules].forEach((rule) => {
-					// @import directives are not allowed in Constructed Stylesheets
-					if (!(rule instanceof CSSImportRule)) {
-						clone.insertRule(rule.cssText, clone.cssRules.length);
+				try {
+					// CSSStyleSheet.insertRule() prepends CSS rules to the top of the stylesheet by default.
+					// We need to set the index to sheet.cssRules.length in order to append the rule and maintain specificity.
+					[...sheet.cssRules].forEach((rule) => {
+						// @import directives are not allowed in Constructed Stylesheets
+						if (!(rule instanceof CSSImportRule)) {
+							clone.insertRule(rule.cssText, clone.cssRules.length);
+						}
+					});
+				} catch (e: any) {
+					// let's log if this is not a security error
+					// security error is usually cors related errors — most likely due to 3rd party fonts
+					// see: https://stackoverflow.com/questions/49993633/uncaught-domexception-failed-to-read-the-cssrules-property
+					if (e.name !== 'SecurityError') {
+						console.debug(e);
 					}
-				});
+				}
 				return clone;
 			});
 		}
