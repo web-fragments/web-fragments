@@ -200,17 +200,17 @@ export function getWebMiddleware(
 
 		const fetchingToPierce = originalRequest.headers.get('sec-fetch-dest') === 'document';
 
+		const fragmentReq = new Request(fragmentReqUrl, originalRequest);
+
 		// if we are about to pierce a fragment, drop headers that apply only to the overall document request
 		if (fetchingToPierce) {
-			originalRequest.headers.delete('if-none-match');
-			originalRequest.headers.delete('if-modified-since');
+			fragmentReq.headers.delete('if-none-match');
+			fragmentReq.headers.delete('if-modified-since');
 		}
 
 		// TODO: add timeout handling
 		//const abortController = new AbortController();
 		//const timeoutTimer = abortIfSlow && setTimeout(() => abortController.abort(), 1_500);
-
-		const fragmentReq = new Request(fragmentReqUrl, originalRequest);
 
 		// forward the original protocol and host info to the fragment endpoint
 		fragmentReq.headers.set(
