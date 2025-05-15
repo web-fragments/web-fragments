@@ -18,6 +18,7 @@ function App() {
 				Note: Clicking this button should update the URL but not the UI.
 			</p>
 			<Link to="/remix-page">Remix Page</Link>
+			<Link to="/react-router">React Router Page</Link>
 			<Link to="/qwik-page">Qwik Page</Link>
 		</div>
 	);
