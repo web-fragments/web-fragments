@@ -1,6 +1,8 @@
 import { assert } from './utils/assert';
 import { getInternalReference } from './iframe-patches';
 
+let ifd: Document;
+
 export function reframedDomInsertion<T extends Node>(
 	nodeToInsert: T,
 	doInsertTheNode: Function,
@@ -11,9 +13,11 @@ export function reframedDomInsertion<T extends Node>(
 		return doInsertTheNode();
 	}
 
+	ifd = iframeDocument;
+
 	// if the child's prototype is directly HTMLElement, then check if this is a HTML/BODY/HEAD element and rewrite it
 	if (Object.getPrototypeOf(nodeToInsert) === HTMLElement.prototype) {
-		rewriteTagName(nodeToInsert);
+		patchSpecialHtmlElement(nodeToInsert);
 	}
 
 	// if the child is a script, then append and execute it in a reframed context
@@ -49,9 +53,11 @@ export function reframedDomInsertion<T extends Node>(
 }
 
 export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: HTMLIFrameElement) {
+	ifd = iframe.contentDocument!;
+
 	// In addition to executing scripts, we also need to patch wf- tags if they are present so that the scripts see them
 	// without the prefix.
-	[...shadowRoot.querySelectorAll('wf-html, wf-body, wf-head')].forEach(rewriteTagName);
+	[...shadowRoot.querySelectorAll('wf-html, wf-body, wf-head')].forEach(patchSpecialHtmlElement);
 
 	const iframeDocument = iframe.contentDocument;
 	assert(iframeDocument !== null, 'iframe.contentDocument is not defined');
@@ -204,7 +210,7 @@ const WF_CUSTOM_ELEMENTS = new Map([
 	['WF-HEAD', document.head],
 	['WF-BODY', document.body],
 ]);
-function rewriteTagName(node: Element) {
+function patchSpecialHtmlElement(node: Element) {
 	const originalTagName = node.tagName;
 	const mappedElement = WF_CUSTOM_ELEMENTS.get(originalTagName);
 	if (mappedElement) {
@@ -219,11 +225,22 @@ function rewriteTagName(node: Element) {
 					return mappedElement.clientHeight;
 				},
 			},
+			nodeName: {
+				get() {
+					return originalTagName.replace(/^WF-/i, '');
+				},
+			},
 			tagName: {
 				get() {
 					return originalTagName.replace(/^WF-/i, '');
 				},
 			},
 		});
+	}
+
+	if (mappedElement === document.body) {
+		// @ts-ignore
+		node.__proto__.__proto__.__proto__.__proto__ = ifd.defaultView!.EventTarget.prototype;
+		console.log('patched body', node.addEventListener);
 	}
 }

@@ -3,6 +3,7 @@ import { execToInertScriptMap } from './script-execution';
 import { assert } from './utils/assert';
 import { rewriteQuerySelector } from './utils/selector-helpers';
 
+console.log('patched web-fragments');
 /**
  * Apply monkey-patches to the source iframe so that we trick code running in it to behave as if it
  * was running in the main frame.
@@ -117,7 +118,9 @@ export function initializeIFrameContext(
 		// redirect to mainDocument
 		activeElement: {
 			get: () => {
-				return shadowRoot.activeElement;
+				return (
+					shadowRoot.activeElement ?? (mainDocument.activeElement === mainDocument.body ? iframeDocument.body : null)
+				);
 			},
 		},
 
@@ -401,12 +404,26 @@ export function initializeIFrameContext(
 	// TODO: there are probably a lot more events we don't want to redirect, e.g. "pagehide" / "pageshow"
 	const nonRedirectedEvents = ['load', 'popstate', 'beforeunload', 'unload'];
 
+	const MAIN_TO_IFRAME_MAP = new Map<unknown, unknown>([
+		[mainWindow, iframeWindow],
+		[mainDocument, iframeDocument],
+		[mainDocument.body, iframeDocument.body],
+		[shadowRoot, iframeDocument],
+	]);
+
+	const IFRAME_TO_MAIN_MAP = new Map<unknown, unknown>([
+		[iframeWindow, mainWindow],
+		[iframeDocument.body, mainDocument.body],
+		[iframeDocument, shadowRoot],
+	]);
+
 	// Redirect event listeners (except for the events listed above)
 	// from the iframe window or document to the main window or shadow root respectively.
 	// We also inject an abort signal into the provided options
 	// to handle cleanup of these listeners when the iframe is destroyed.
 	iframeWindow.EventTarget.prototype.addEventListener = new Proxy(iframeWindow.EventTarget.prototype.addEventListener, {
 		apply(target, thisArg, argumentsList) {
+			//todo: what if thisArg is undefined? like when someone calls addEventLister(...) without binding it and instead it just defaults to window
 			const [eventName, listener, optionsOrCapture] = argumentsList as Parameters<typeof target>;
 
 			const options =
@@ -419,15 +436,75 @@ export function initializeIFrameContext(
 			// coalesce any provided signal with the one from our abort controller
 			const signal = AbortSignal.any([controller.signal, options.signal].filter((signal) => signal != null));
 
-			const modifiedArgumentsList = [eventName, listener, { ...options, signal }];
+			const modifiedArgumentsList = [
+				eventName,
+				// @ts-ignore
+				(e) => {
+					const newTarget = MAIN_TO_IFRAME_MAP.get(e.target);
+					if (newTarget) {
+						console.log('event retargetting', eventName, e.target, newTarget);
+						Object.defineProperty(e, 'target', {
+							get() {
+								return newTarget;
+							},
+							configurable: true,
+							enumerable: true,
+						});
+					} else if (
+						//e.target instanceof Node &&
+						!shadowRoot.contains(e.target) &&
+						e.composed &&
+						!shadowRoot.contains(e.composedPath()[0])
+					) {
+						// if the target is not a mainDocument, mainWindow, or an node in our shadowRoot, then ignore the event
+						console.log('event outside of fragment', eventName, e.target, e.composedPath(), e.currentTarget);
+						return;
+					}
+
+					let newCurrentTarget = MAIN_TO_IFRAME_MAP.get(e.currentTarget);
+					if (newCurrentTarget) {
+						Object.defineProperty(e, 'currentTarget', {
+							get() {
+								return newCurrentTarget;
+							},
+							configurable: true,
+							enumerable: true,
+						});
+					}
+
+					if (
+						// 	(eventName === 'focusin' ||
+						// 		eventName === 'focusout' ||
+						// 		eventName === 'focus' ||
+						// 		eventName === 'blur' ||
+						// 		eventName === 'click') &&
+						e.composed
+					) {
+						//console.log('event: ', eventName, e.target, e.composedPath()[0]);
+						Object.defineProperty(e, 'target', { value: e.composedPath()[0] });
+					}
+					console.log('event: ', eventName, e.target);
+
+					// @ts-ignore
+					return listener(e);
+				},
+				// preserve the original options object (in case it has getters), and add signal property
+				Object.create(options, { signal: { value: signal } }),
+			];
 
 			// redirect event listeners added to window and document unless the event is allowlisted
 			if (!nonRedirectedEvents.includes(eventName)) {
-				if (thisArg === iframeWindow) {
-					thisArg = mainWindow;
-				} else if (thisArg === iframeDocument) {
-					thisArg = shadowRoot;
-				}
+				thisArg = IFRAME_TO_MAIN_MAP.get(thisArg) ?? thisArg;
+			}
+
+			if (
+				eventName === 'focus' ||
+				eventName === 'blur' ||
+				eventName === 'focusin' ||
+				eventName === 'focusout' ||
+				eventName === 'click'
+			) {
+				console.log('registering event', eventName, thisArg, modifiedArgumentsList);
 			}
 
 			return Reflect.apply(target, thisArg, modifiedArgumentsList);
