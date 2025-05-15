@@ -438,29 +438,7 @@ export function initializeIFrameContext(
 
 			const modifiedArgumentsList = [
 				eventName,
-				// @ts-ignore
-				(e) => {
-					const newTarget = MAIN_TO_IFRAME_MAP.get(e.target);
-					if (newTarget) {
-						console.log('event retargetting', eventName, e.target, newTarget);
-						Object.defineProperty(e, 'target', {
-							get() {
-								return newTarget;
-							},
-							configurable: true,
-							enumerable: true,
-						});
-					} else if (
-						//e.target instanceof Node &&
-						!shadowRoot.contains(e.target) &&
-						e.composed &&
-						!shadowRoot.contains(e.composedPath()[0])
-					) {
-						// if the target is not a mainDocument, mainWindow, or an node in our shadowRoot, then ignore the event
-						console.log('event outside of fragment', eventName, e.target, e.composedPath(), e.currentTarget);
-						return;
-					}
-
+				(e: Event) => {
 					let newCurrentTarget = MAIN_TO_IFRAME_MAP.get(e.currentTarget);
 					if (newCurrentTarget) {
 						Object.defineProperty(e, 'currentTarget', {
@@ -472,21 +450,37 @@ export function initializeIFrameContext(
 						});
 					}
 
-					if (
-						// 	(eventName === 'focusin' ||
-						// 		eventName === 'focusout' ||
-						// 		eventName === 'focus' ||
-						// 		eventName === 'blur' ||
-						// 		eventName === 'click') &&
-						e.composed
+					const newTarget = MAIN_TO_IFRAME_MAP.get(e.target);
+					if (newTarget) {
+						console.log('event retargetting', eventName, e.target, newTarget);
+						Object.defineProperty(e, 'target', {
+							get() {
+								return newTarget;
+							},
+							configurable: true,
+							enumerable: true,
+						});
+					} else if (
+						e.target === iframeWindow ||
+						e.target === iframeDocument ||
+						shadowRoot.contains(e.target as Node)
 					) {
-						//console.log('event: ', eventName, e.target, e.composedPath()[0]);
-						Object.defineProperty(e, 'target', { value: e.composedPath()[0] });
+						// the target is already specific to the fragment, so we don't need to retarget it
+					} else if (shadowRoot.contains(e.composedPath()[0] as Node)) {
+						// the target is inside the shadowRoot, so we need to retarget it
+						Object.defineProperty(e, 'target', {
+							get() {
+								return e.composedPath()[0];
+							},
+							configurable: true,
+							enumerable: true,
+						});
+					} else {
+						// if the target is not a mainDocument, mainWindow, or an node in our shadowRoot then ignore the event
+						return;
 					}
-					console.log('event: ', eventName, e.target);
 
-					// @ts-ignore
-					return listener(e);
+					return typeof listener === 'function' ? listener(e) : listener?.handleEvent(e);
 				},
 				// preserve the original options object (in case it has getters), and add signal property
 				Object.create(options, { signal: { value: signal } }),
