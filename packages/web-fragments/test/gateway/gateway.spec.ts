@@ -361,7 +361,7 @@ for (const environment of environments) {
 						stripMultipleSpaces(`<html><body>app shell 🙂<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>Failed to fetch fragment!<br>
 								Endpoint: http://foo.test:1234<br>
 								Request: GET http://localhost${server ? ':' + server.address()!.port : ''}/foo<br>
-								Response: HTTP 500 <br>fragment failed to render 🙈 </p></template></web-fragment-host></body></html>`),
+								Response: HTTP 500 <br> fragment failed to render 🙈 </p></template></web-fragment-host></body></html>`),
 					);
 				});
 
