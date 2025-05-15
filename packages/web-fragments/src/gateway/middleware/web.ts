@@ -157,13 +157,20 @@ export function getWebMiddleware(
 		}
 
 		async function defaultOnSsrFetchError(fragmentRequest: Request, fragmentResponseOrError: Response | Error) {
+			const fetchError = fragmentResponseOrError instanceof Response;
 			return {
 				response: new Response(
 					mode === 'development'
 						? `<p>Failed to fetch fragment!<br>
 										Endpoint: ${matchedFragment!.endpoint}<br>
 										Request: ${fragmentRequest.method} ${fragmentRequest.url}<br>
-										Response: HTTP ${fragmentResponseOrError instanceof Response ? `${fragmentResponseOrError.status} ${fragmentResponseOrError.statusText}<br>${await fragmentResponseOrError.text()}` : fragmentResponseOrError}
+										${
+											fetchError
+												? `Response: HTTP ${fragmentResponseOrError.status} ${fragmentResponseOrError.statusText}<br>
+												${await fragmentResponseOrError.text()}`
+												: `Internal exception: ${fragmentResponseOrError}<br>
+										 		Stack: <br>${fragmentResponseOrError.stack}`
+										}
 								</p>`
 						: '<p>There was a problem fulfilling your request.</p>',
 					{ status: 500, headers: [['content-type', 'text/html']] },
