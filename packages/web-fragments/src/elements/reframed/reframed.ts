@@ -58,7 +58,8 @@ export function reframed(
 
 	// Since fragments will most likely contain other block elements, they should be blocks themselves by default
 	const blockSheet = new CSSStyleSheet();
-	blockSheet.insertRule(':host { display: block; position: relative; }');
+	blockSheet.insertRule(':host, wf-html, wf-body { display: block; position: relative; }');
+	blockSheet.insertRule('wf-head { display: none;}');
 	reframedShadowRoot.adoptedStyleSheets.push(blockSheet);
 
 	/**
