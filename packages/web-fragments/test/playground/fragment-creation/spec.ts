@@ -41,6 +41,17 @@ test('fragment initialization', async ({ page }) => {
 		const fragment = page.locator('web-fragment[fragment-id=fragment-creation]');
 		await expect(fragment).toHaveCSS('display', 'block');
 		await expect(fragment).toHaveCSS('position', 'relative');
+
+		const wfHtml = page.locator('web-fragment[fragment-id=fragment-creation] wf-html');
+		await expect(wfHtml).toHaveCSS('display', 'block');
+		await expect(wfHtml).toHaveCSS('position', 'relative');
+
+		const wfHead = page.locator('web-fragment[fragment-id=fragment-creation] wf-head');
+		await expect(wfHead).toHaveCSS('display', 'none');
+
+		const wfBody = page.locator('web-fragment[fragment-id=fragment-creation] wf-body');
+		await expect(wfBody).toHaveCSS('display', 'block');
+		await expect(wfBody).toHaveCSS('position', 'relative');
 	});
 
 	await step('fragment should have a shadow root which contains fragment host', async () => {
