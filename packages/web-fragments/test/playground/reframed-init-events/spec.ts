@@ -8,7 +8,7 @@ let fragment: Locator;
 let fragmentContext: Frame;
 
 beforeEach(async ({ page, browserName }) => {
-	await page.goto('/reframed-events/');
+	await page.goto('/reframed-init-events/');
 	// wait for the fragment to load
 	await page.waitForSelector('web-fragment h2');
 
@@ -16,16 +16,16 @@ beforeEach(async ({ page, browserName }) => {
 	fragmentContext = await getFragmentContext(fragment);
 });
 
-test('reframed: node.ownerDocument', async ({ page }) => {
+test('reframed: init events', async ({ page }) => {
 	await step('ensure the test harness app loaded', async () => {
-		await expect(page).toHaveTitle('WF Playground: reframed-events');
-		await expect(page.locator('h1')).toHaveText('WF Playground: reframed-events');
+		await expect(page).toHaveTitle('WF Playground: reframed-init-events');
+		await expect(page.locator('h1')).toHaveText('WF Playground: reframed-init-events');
 	});
 
 	const checkboxes = await page.locator('input[type=checkbox]').all();
 
-	//2 in shell app, 2 in fragment
-	expect(checkboxes.length).toBe(4);
+	//3 in shell app, 3 in fragment
+	expect(checkboxes.length).toBe(6);
 
 	checkboxes.forEach(async (checkbox) => {
 		await expect(checkbox).toBeChecked();

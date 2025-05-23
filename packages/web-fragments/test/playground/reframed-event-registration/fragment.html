@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>reframed-event-registration fragment</title>
+	</head>
+	<body>
+		<h2>reframed-event-registration fragment</h2>
+		<section>
+			<button id="wfClickButton">click me</button>
+			<button id="wfFocusButton">focus input</button>
+			<input id="wfFocusableInput" type="text" value="focusable input box" />
+		</section>
+
+		<script>
+			function prettyName(domTarget) {
+				switch (domTarget) {
+					case window:
+						return 'wf window';
+					case document:
+						return 'wf document';
+					case document.documentElement:
+						return 'wf html';
+					case document.body:
+						return 'wf body';
+					default:
+						return domTarget.tagName?.toLowerCase() ?? domTarget;
+				}
+			}
+
+			function logEvent(
+				source,
+				e,
+				currentTarget = prettyName(e.currentTarget),
+				target = prettyName(e.target),
+				activeElement = prettyName(document.activeElement),
+				composedPath = e.composedPath().map(prettyName).join(' > '),
+			) {
+				parent.logEvent(source, e, true, currentTarget, target, activeElement, composedPath);
+			}
+
+			registerLogListener('click', window);
+			registerLogListener('click', document);
+			registerLogListener('click', document.documentElement);
+			registerLogListener('click', document.body);
+			registerLogListener('click', document.querySelector('#wfClickButton'));
+
+			document.querySelector('#wfFocusButton').addEventListener(
+				'click',
+				(e) => {
+					logEvent('#wfFocusButton', e);
+					document.querySelector('#wfFocusableInput').focus();
+				},
+				true,
+			);
+
+			registerLogListener('keydown', window);
+			registerLogListener('keydown', document);
+			registerLogListener('keydown', document.documentElement);
+			registerLogListener('keydown', document.body);
+			registerLogListener('keydown', document.querySelector('#wfFocusableInput'));
+
+			registerLogListener('focus', window);
+			registerLogListener('focus', document);
+			registerLogListener('focus', document.documentElement);
+			registerLogListener('focus', document.body);
+			registerLogListener('focusin', window);
+			registerLogListener('focusin', document);
+			registerLogListener('focusin', document.documentElement);
+			registerLogListener('focusin', document.body);
+
+			registerLogListener('blur', window);
+			registerLogListener('blur', document);
+			registerLogListener('blur', document.documentElement);
+			registerLogListener('blur', document.body);
+			registerLogListener('focusout', window);
+			registerLogListener('focusout', document);
+			registerLogListener('focusout', document.documentElement);
+			registerLogListener('focusout', document.body);
+
+			function registerLogListener(eventType, target) {
+				target.addEventListener(
+					eventType,
+					(e) => {
+						logEvent(prettyName(target), e);
+					},
+					true,
+				);
+				target.addEventListener(
+					eventType,
+					(e) => {
+						logEvent(prettyName(target), e);
+					},
+					false,
+				);
+			}
+		</script>
+	</body>
+</html>

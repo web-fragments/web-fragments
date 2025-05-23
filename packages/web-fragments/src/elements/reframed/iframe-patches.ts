@@ -405,7 +405,7 @@ export function initializeIFrameContext(
 	// from the iframe window or document to the main window or shadow root respectively.
 	// We also inject an abort signal into the provided options
 	// to handle cleanup of these listeners when the iframe is destroyed.
-	iframeWindow.EventTarget.prototype.addEventListener = new Proxy(iframeWindow.EventTarget.prototype.addEventListener, {
+	const reframedAddEventListener = new Proxy(iframeWindow.EventTarget.prototype.addEventListener, {
 		apply(target, thisArg, argumentsList) {
 			const [eventName, listener, optionsOrCapture] = argumentsList as Parameters<typeof target>;
 
@@ -434,25 +434,25 @@ export function initializeIFrameContext(
 		},
 	});
 
-	iframeWindow.EventTarget.prototype.removeEventListener = new Proxy(
-		iframeWindow.EventTarget.prototype.removeEventListener,
-		{
-			apply(target, thisArg, argumentsList) {
-				const [eventName] = argumentsList as Parameters<typeof target>;
+	const reframedRemoveEventListener = new Proxy(iframeWindow.EventTarget.prototype.removeEventListener, {
+		apply(target, thisArg, argumentsList) {
+			const [eventName] = argumentsList as Parameters<typeof target>;
 
-				// redirect event listener removal unless the event is allowlisted
-				if (!nonRedirectedEvents.includes(eventName)) {
-					if (thisArg === iframeWindow) {
-						thisArg = mainWindow;
-					} else if (thisArg === iframeDocument) {
-						thisArg = shadowRoot;
-					}
+			// redirect event listener removal unless the event is allowlisted
+			if (!nonRedirectedEvents.includes(eventName)) {
+				if (thisArg === iframeWindow) {
+					thisArg = mainWindow;
+				} else if (thisArg === iframeDocument) {
+					thisArg = shadowRoot;
 				}
+			}
 
-				return Reflect.apply(target, thisArg, argumentsList);
-			},
+			return Reflect.apply(target, thisArg, argumentsList);
 		},
-	);
+	});
+
+	iframeWindow.addEventListener = iframeDocument.addEventListener = reframedAddEventListener;
+	iframeWindow.removeEventListener = iframeDocument.removeEventListener = reframedRemoveEventListener;
 
 	if (boundNavigation) {
 		// When a navigation event occurs on the main window, either programmatically through the History API or by the back/forward button,

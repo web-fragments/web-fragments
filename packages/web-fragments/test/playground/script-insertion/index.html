@@ -11,58 +11,60 @@
 
 		<web-fragment-host fragment-id="script-insertion">
 			<template shadowrootmode="open">
-				<wf-html>
-					<wf-head>
-						<style>
-							#script-execution-count {
-								text-decoration: underline;
-								font-weight: 600;
-							}
+				<wf-document>
+					<wf-html>
+						<wf-head>
+							<style>
+								#script-execution-count {
+									text-decoration: underline;
+									font-weight: 600;
+								}
 
-							.assertion-container {
-								display: flex;
-								align-items: center;
-								gap: 4px;
-								margin: 8px 0;
-							}
-						</style>
-					</wf-head>
-					<wf-body>
-						<section id="reference-node">
-							<div>Counter script executed <span id="script-execution-count">0</span> times</div>
-							<div class="assertion-container">
-								<p>Counter script executed only 1 time:</p>
-								<input id="script-counter-checkbox" type="checkbox" />
-							</div>
-						</section>
+								.assertion-container {
+									display: flex;
+									align-items: center;
+									gap: 4px;
+									margin: 8px 0;
+								}
+							</style>
+						</wf-head>
+						<wf-body>
+							<section id="reference-node">
+								<div>Counter script executed <span id="script-execution-count">0</span> times</div>
+								<div class="assertion-container">
+									<p>Counter script executed only 1 time:</p>
+									<input id="script-counter-checkbox" type="checkbox" />
+								</div>
+							</section>
 
-						<script id="counter-script" type="inert">
-							if (window.scriptExecutionCount) {
-								window.scriptExecutionCount++;
-							} else {
-								window.scriptExecutionCount = 1;
-							}
-							document.getElementById('script-execution-count').textContent = window.scriptExecutionCount;
-						</script>
+							<script id="counter-script" type="inert">
+								if (window.scriptExecutionCount) {
+									window.scriptExecutionCount++;
+								} else {
+									window.scriptExecutionCount = 1;
+								}
+								document.getElementById('script-execution-count').textContent = window.scriptExecutionCount;
+							</script>
 
-						<script id="script-insertion" type="inert">
-							const counterScript = document.getElementById('counter-script');
-							const referenceNode = document.getElementById('reference-node');
+							<script id="script-insertion" type="inert">
+								const counterScript = document.getElementById('counter-script');
+								const referenceNode = document.getElementById('reference-node');
 
-							counterScript.remove();
-							document.body.appendChild(counterScript);
+								counterScript.remove();
+								document.body.appendChild(counterScript);
 
-							counterScript.remove();
-							document.body.insertBefore(counterScript, referenceNode);
-						</script>
+								counterScript.remove();
+								document.body.insertBefore(counterScript, referenceNode);
+							</script>
 
-						<script id="script-assertion" type="inert">
-							if (window.scriptExecutionCount === 1) {
-								document.getElementById('script-counter-checkbox').checked = true;
-							}
-						</script>
-					</wf-body>
-				</wf-html>
+							<script id="script-assertion" type="inert">
+								if (window.scriptExecutionCount === 1) {
+									document.getElementById('script-counter-checkbox').checked = true;
+								}
+							</script>
+						</wf-body>
+					</wf-html>
+				</wf-document>
 			</template>
 		</web-fragment-host>
 	</body>

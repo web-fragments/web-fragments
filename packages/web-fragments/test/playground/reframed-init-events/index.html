@@ -2,19 +2,23 @@
 <html>
 	<head>
 		<meta charset="UTF-8" />
-		<title>WF Playground: reframed-events</title>
+		<title>WF Playground: reframed-init-events</title>
 		<style>
-			fragment-host {
+			web-fragment {
 				border: 1px red dashed;
 			}
 		</style>
 	</head>
 	<body>
-		<h1>WF Playground: reframed-events</h1>
+		<h1>WF Playground: reframed-init-events</h1>
 		<ul>
 			<li>
 				<code>document fired "DOMContentLoaded"</code>
 				<input id="main-document-dcl" type="checkbox" />
+			</li>
+			<li>
+				<code>window fired "DOMContentLoaded"</code>
+				<input id="main-window-dcl" type="checkbox" />
 			</li>
 			<li>
 				<code>window fired "load"</code>
@@ -24,6 +28,9 @@
 		<script>
 			document.addEventListener('DOMContentLoaded', () => {
 				document.querySelector('#main-document-dcl').checked = true;
+			});
+			window.addEventListener('DOMContentLoaded', () => {
+				document.querySelector('#main-window-dcl').checked = true;
 			});
 			window.addEventListener('load', () => {
 				document.querySelector('#main-window-load').checked = true;
@@ -35,6 +42,6 @@
 			initializeWebFragments();
 		</script>
 
-		<web-fragment fragment-id="reframed-events"></web-fragment>
+		<web-fragment fragment-id="reframed-init-events"></web-fragment>
 	</body>
 </html>
