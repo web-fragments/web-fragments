@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF Playground: reframed-event-registration</title>
+		<style>
+			web-fragment {
+				border: 1px red dashed;
+			}
+
+			table {
+				border-collapse: collapse;
+			}
+
+			th,
+			td {
+				border: 1px solid black;
+				padding: 8px;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF Playground: reframed-event-registration</h1>
+		<section>
+			<button id="clickButton">click me</button>
+			<button id="focusButton">focus input</button>
+			<input id="focusableInput" type="text" value="focusable input box" />
+		</section>
+
+		<script type="module">
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
+		</script>
+
+		<hr />
+
+		<web-fragment fragment-id="reframed-event-registration"></web-fragment>
+
+		<hr />
+
+		<script>
+			const eventLog = [];
+			window.eventLog = eventLog;
+
+			function prettyName(domTarget) {
+				switch (domTarget) {
+					case window:
+						return 'main window';
+					case document:
+						return 'main document';
+					case document.documentElement:
+						return 'main html';
+					case document.body:
+						return 'main body';
+					default:
+						return domTarget.tagName?.toLowerCase() ?? domTarget;
+				}
+			}
+
+			function logEvent(
+				source,
+				e,
+				wf = false,
+				currentTarget = prettyName(e.currentTarget),
+				target = prettyName(e.target),
+				activeElement = prettyName(document.activeElement),
+				composedPath = e.composedPath().map(prettyName).join(' > '),
+			) {
+				const eventLogTable = document.querySelector('#event-log');
+				const li = document.createElement('li');
+				const separator = '------';
+
+				function wrapIfWf(str) {
+					return wf ? `*${str}*` : str;
+				}
+
+				const tr = document.createElement('tr');
+				tr.innerHTML = `
+					<td>${document.querySelectorAll('#event-log tr').length}.</td>
+					<td>${e.type}</td>
+					<td>${e.eventPhase}</td>
+					<td>${wrapIfWf(source)}</td>
+					<td>${wrapIfWf(currentTarget)}</td>
+					<td>${wrapIfWf(target)}</td>
+					<td>${wrapIfWf(activeElement)}</td>
+					<td>${e.isTrusted}</td>
+					<td>${wrapIfWf(composedPath)}</td>
+				`;
+				eventLogTable.appendChild(tr);
+
+				eventLog.push([e.type, e.eventPhase, source, currentTarget, target, activeElement, e.isTrusted, composedPath]);
+
+				const requestIdleCallback = window.requestIdleCallback || ((cb) => setTimeout(cb, 300));
+
+				requestIdleCallback(() => {
+					if (eventLogTable.lastChild.textContent !== separator) {
+						const separatorTr = document.createElement('tr');
+						separatorTr.innerHTML = `<td colspan="9">${separator}</td>`;
+						eventLogTable.appendChild(separatorTr);
+					}
+				});
+			}
+
+			registerLogListener('click', window);
+			registerLogListener('click', document);
+			registerLogListener('click', document.documentElement);
+			registerLogListener('click', document.body);
+			registerLogListener('click', document.querySelector('#clickButton'));
+
+			document.querySelector('#focusButton').addEventListener(
+				'click',
+				(e) => {
+					logEvent('#focusButton', e);
+					document.querySelector('#focusableInput').focus();
+				},
+				true,
+			);
+
+			registerLogListener('keydown', window);
+			registerLogListener('keydown', document);
+			registerLogListener('keydown', document.documentElement);
+			registerLogListener('keydown', document.body);
+			registerLogListener('keydown', document.querySelector('#focusableInput'));
+
+			registerLogListener('focus', window);
+			registerLogListener('focus', document);
+			registerLogListener('focus', document.documentElement);
+			registerLogListener('focus', document.body);
+			registerLogListener('focusin', window);
+			registerLogListener('focusin', document);
+			registerLogListener('focusin', document.documentElement);
+			registerLogListener('focusin', document.body);
+
+			registerLogListener('blur', window);
+			registerLogListener('blur', document);
+			registerLogListener('blur', document.documentElement);
+			registerLogListener('blur', document.body);
+			registerLogListener('focusout', window);
+			registerLogListener('focusout', document);
+			registerLogListener('focusout', document.documentElement);
+			registerLogListener('focusout', document.body);
+
+			function registerLogListener(eventType, target) {
+				target.addEventListener(
+					eventType,
+					(e) => {
+						logEvent(prettyName(target), e);
+					},
+					true,
+				);
+				target.addEventListener(
+					eventType,
+					(e) => {
+						logEvent(prettyName(target), e);
+					},
+					false,
+				);
+			}
+		</script>
+
+		<h2>Events log:</h2>
+		<table>
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>type</th>
+					<th>phase</th>
+					<th>source</th>
+					<th>currentTarget</th>
+					<th>target</th>
+					<th>activeElement</th>
+					<th>isTrusted</th>
+					<th>composedPath()</th>
+				</tr>
+			</thead>
+			<tbody id="event-log"></tbody>
+		</table>
+	</body>
+</html>

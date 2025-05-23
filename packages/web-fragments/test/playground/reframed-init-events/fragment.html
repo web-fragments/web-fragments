@@ -2,14 +2,18 @@
 <html>
 	<head>
 		<meta charset="UTF-8" />
-		<title>reframed-node fragment</title>
+		<title>reframed-init-events fragment</title>
 	</head>
 	<body>
-		<h2>reframed-events fragment</h2>
+		<h2>reframed-init-events fragment</h2>
 		<ul>
 			<li>
 				<code>document fired "DOMContentLoaded"</code>
 				<input id="web-fragment-document-dcl" type="checkbox" />
+			</li>
+			<li>
+				<code>window fired "DOMContentLoaded"</code>
+				<input id="web-fragment-window-dcl" type="checkbox" />
 			</li>
 			<li>
 				<code>window fired "load"</code>
@@ -19,6 +23,9 @@
 		<script>
 			document.addEventListener('DOMContentLoaded', () => {
 				document.querySelector('#web-fragment-document-dcl').checked = true;
+			});
+			window.addEventListener('DOMContentLoaded', () => {
+				document.querySelector('#web-fragment-window-dcl').checked = true;
 			});
 			window.addEventListener('load', () => {
 				document.querySelector('#web-fragment-window-load').checked = true;
