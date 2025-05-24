@@ -54,6 +54,10 @@
 		<section id="body" class="body">
 			<h3>document.documentElement assertions</h3>
 			<div class="assertion-container">
+				<p>document.documentElement.nodeName === "HTML"</p>
+				<input id="document-element-nodename-checkbox" type="checkbox" />
+			</div>
+			<div class="assertion-container">
 				<p>document.documentElement.tagName === "HTML"</p>
 				<input id="document-element-tagname-checkbox" type="checkbox" />
 			</div>
@@ -68,6 +72,10 @@
 
 			<h3>document.body assertions</h3>
 			<div class="assertion-container">
+				<p>document.body.nodeName === "BODY"</p>
+				<input id="document-body-nodename-checkbox" type="checkbox" />
+			</div>
+			<div class="assertion-container">
 				<p>document.body.tagName === "BODY"</p>
 				<input id="document-body-tagname-checkbox" type="checkbox" />
 			</div>
@@ -81,6 +89,10 @@
 			</div>
 
 			<h3>document.head assertions</h3>
+			<div class="assertion-container">
+				<p>document.head.nodeName === "HEAD"</p>
+				<input id="document-head-nodename-checkbox" type="checkbox" />
+			</div>
 			<div class="assertion-container">
 				<p>document.head.tagName === "HEAD"</p>
 				<input id="document-head-tagname-checkbox" type="checkbox" />
@@ -126,6 +138,9 @@
 			let queryHtml = document.querySelector('html');
 			let queryWfHtml = document.querySelector('wf-html');
 			let documentElement = document.documentElement;
+			if (documentElement.nodeName === 'HTML') {
+				document.getElementById('document-element-nodename-checkbox').checked = true;
+			}
 			if (documentElement.tagName === 'HTML') {
 				document.getElementById('document-element-tagname-checkbox').checked = true;
 			}
@@ -140,6 +155,9 @@
 			let queryBody = document.querySelector('body');
 			let queryWfBody = document.querySelector('wf-body');
 			let documentBody = document.body;
+			if (documentBody.nodeName === 'BODY') {
+				document.getElementById('document-body-nodename-checkbox').checked = true;
+			}
 			if (documentBody.tagName === 'BODY') {
 				document.getElementById('document-body-tagname-checkbox').checked = true;
 			}
@@ -154,6 +172,9 @@
 			let queryHead = document.querySelector('head');
 			let queryWfHead = document.querySelector('wf-head');
 			let documentHead = document.head;
+			if (documentHead.nodeName === 'HEAD') {
+				document.getElementById('document-head-nodename-checkbox').checked = true;
+			}
 			if (documentHead.tagName === 'HEAD') {
 				document.getElementById('document-head-tagname-checkbox').checked = true;
 			}

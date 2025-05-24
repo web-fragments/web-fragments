@@ -18,18 +18,21 @@ test('DOM querying in fragments', async ({ page }) => {
 	});
 
 	await step('ensure document.documentElement is patched to return wf-html', async () => {
+		await expect(fragment.locator('#document-element-nodename-checkbox')).toBeChecked();
 		await expect(fragment.locator('#document-element-tagname-checkbox')).toBeChecked();
 		await expect(fragment.locator('#document-element-query-html-checkbox')).toBeChecked();
 		await expect(fragment.locator('#document-element-query-wfhtml-checkbox')).toBeChecked();
 	});
 
 	await step('ensure document.body is patched to return wf-body', async () => {
+		await expect(fragment.locator('#document-body-nodename-checkbox')).toBeChecked();
 		await expect(fragment.locator('#document-body-tagname-checkbox')).toBeChecked();
 		await expect(fragment.locator('#document-body-query-body-checkbox')).toBeChecked();
 		await expect(fragment.locator('#document-body-query-wfbody-checkbox')).toBeChecked();
 	});
 
 	await step('ensure document.head is patched to return wf-head', async () => {
+		await expect(fragment.locator('#document-head-nodename-checkbox')).toBeChecked();
 		await expect(fragment.locator('#document-head-tagname-checkbox')).toBeChecked();
 		await expect(fragment.locator('#document-head-query-head-checkbox')).toBeChecked();
 		await expect(fragment.locator('#document-head-query-wfhead-checkbox')).toBeChecked();
