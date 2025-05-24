@@ -219,6 +219,11 @@ function rewriteTagName(node: Element) {
 					return mappedElement.clientHeight;
 				},
 			},
+			nodeName: {
+				get() {
+					return originalTagName.replace(/^WF-/i, '');
+				},
+			},
 			tagName: {
 				get() {
 					return originalTagName.replace(/^WF-/i, '');
