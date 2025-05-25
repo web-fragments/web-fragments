@@ -23,7 +23,8 @@ Web Fragments are a radically new approach to Web micro-frontends which is frame
 
 New to micro-frontends? Check out https://microfrontend.dev
 
-> [!NOTE] The project is in beta, but is already being used in production by teams at [Cloudflare](https://www.cloudflare.com/).
+> [!NOTE]
+> The project is in beta, but is already being used in production by teams at [Cloudflare](https://www.cloudflare.com/).
 > We are looking for teams and companies interested in providing early feedback that can help us shape the feature set and APIs.
 
 ## The goal
