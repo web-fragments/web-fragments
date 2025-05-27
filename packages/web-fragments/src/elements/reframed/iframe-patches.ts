@@ -398,8 +398,22 @@ export function initializeIFrameContext(
 	// A list of events for which we don't want to retarget listeners as these events are dispatched in the iframe.
 	const iframeEvents = ['load', 'popstate', 'beforeunload', 'unload'];
 
+	// Maps iframe EventTarget to a target in the main context
+	const iframeToMainTarget = (target: EventTarget, eventName: string): EventTarget => {
+		// redirect event listeners added to window and document unless the event is allowlisted
+		if (target === iframeWindow && iframeEvents.includes(eventName)) {
+			return iframeWindow;
+		}
+
+		if (target === iframeWindow || target === iframeDocument) {
+			return shadowRoot;
+		}
+
+		return target;
+	};
+
 	// Redirect event listeners (except for the events listed above)
-	// from the iframe window or document to the main window or shadow root respectively.
+	// from the iframe window or document to the shadow root.
 	// We also inject an abort signal into the provided options
 	// to handle cleanup of these listeners when the iframe is destroyed.
 	const reframedAddEventListener = new Proxy(iframeWindow.EventTarget.prototype.addEventListener, {
@@ -418,14 +432,7 @@ export function initializeIFrameContext(
 
 			const modifiedArgumentsList = [eventName, listener, { ...options, signal }];
 
-			// redirect event listeners added to window and document unless the event is allowlisted
-			if (!iframeEvents.includes(eventName)) {
-				if (thisArg === iframeWindow) {
-					thisArg = mainWindow;
-				} else if (thisArg === iframeDocument) {
-					thisArg = shadowRoot;
-				}
-			}
+			thisArg = iframeToMainTarget(thisArg, eventName);
 
 			return Reflect.apply(target, thisArg, modifiedArgumentsList);
 		},
@@ -435,14 +442,7 @@ export function initializeIFrameContext(
 		apply(target, thisArg, argumentsList) {
 			const [eventName] = argumentsList as Parameters<typeof target>;
 
-			// redirect event listener removal unless the event is allowlisted
-			if (!iframeEvents.includes(eventName)) {
-				if (thisArg === iframeWindow) {
-					thisArg = mainWindow;
-				} else if (thisArg === iframeDocument) {
-					thisArg = shadowRoot;
-				}
-			}
+			thisArg = iframeToMainTarget(thisArg, eventName);
 
 			return Reflect.apply(target, thisArg, argumentsList);
 		},
