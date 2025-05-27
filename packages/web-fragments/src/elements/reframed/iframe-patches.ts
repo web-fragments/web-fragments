@@ -395,11 +395,8 @@ export function initializeIFrameContext(
 	// Create an abort controller we'll use to remove event listeners when the iframe is destroyed
 	const controller = new AbortController();
 
-	// A list of events for which we don't want to retarget listeners.
-	// Event listeners for these events should be added normally
-	// instead of being redirected to other event targets.
-	// TODO: there are probably a lot more events we don't want to redirect, e.g. "pagehide" / "pageshow"
-	const nonRedirectedEvents = ['load', 'popstate', 'beforeunload', 'unload'];
+	// A list of events for which we don't want to retarget listeners as these events are dispatched in the iframe.
+	const iframeEvents = ['load', 'popstate', 'beforeunload', 'unload'];
 
 	// Redirect event listeners (except for the events listed above)
 	// from the iframe window or document to the main window or shadow root respectively.
@@ -422,7 +419,7 @@ export function initializeIFrameContext(
 			const modifiedArgumentsList = [eventName, listener, { ...options, signal }];
 
 			// redirect event listeners added to window and document unless the event is allowlisted
-			if (!nonRedirectedEvents.includes(eventName)) {
+			if (!iframeEvents.includes(eventName)) {
 				if (thisArg === iframeWindow) {
 					thisArg = mainWindow;
 				} else if (thisArg === iframeDocument) {
@@ -439,7 +436,7 @@ export function initializeIFrameContext(
 			const [eventName] = argumentsList as Parameters<typeof target>;
 
 			// redirect event listener removal unless the event is allowlisted
-			if (!nonRedirectedEvents.includes(eventName)) {
+			if (!iframeEvents.includes(eventName)) {
 				if (thisArg === iframeWindow) {
 					thisArg = mainWindow;
 				} else if (thisArg === iframeDocument) {
