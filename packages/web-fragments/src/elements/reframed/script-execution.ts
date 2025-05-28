@@ -13,7 +13,7 @@ export function reframedDomInsertion<T extends Node>(
 
 	// if the child's prototype is directly HTMLElement, then check if this is a HTML/BODY/HEAD element and rewrite it
 	if (Object.getPrototypeOf(nodeToInsert) === HTMLElement.prototype) {
-		rewriteTagName(nodeToInsert);
+		patchSpecialHtmlElement(nodeToInsert, iframeDocument);
 	}
 
 	// if the child is a script, then append and execute it in a reframed context
@@ -49,12 +49,14 @@ export function reframedDomInsertion<T extends Node>(
 }
 
 export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: HTMLIFrameElement) {
-	// In addition to executing scripts, we also need to patch wf- tags if they are present so that the scripts see them
-	// without the prefix.
-	[...shadowRoot.querySelectorAll('wf-html, wf-body, wf-head')].forEach(rewriteTagName);
-
 	const iframeDocument = iframe.contentDocument;
 	assert(iframeDocument !== null, 'iframe.contentDocument is not defined');
+
+	// In addition to executing scripts, we also need to patch wf- tags if they are present so that the scripts see them
+	// without the prefix.
+	[...shadowRoot.querySelectorAll('wf-html, wf-body, wf-head')].forEach((element) =>
+		patchSpecialHtmlElement(element, iframeDocument),
+	);
 
 	const scripts = [...shadowRoot.querySelectorAll('script')];
 
@@ -204,7 +206,7 @@ const WF_CUSTOM_ELEMENTS = new Map([
 	['WF-HEAD', document.head],
 	['WF-BODY', document.body],
 ]);
-function rewriteTagName(node: Element) {
+function patchSpecialHtmlElement(node: Element, iframeDocument: Document) {
 	const originalTagName = node.tagName;
 	const mappedElement = WF_CUSTOM_ELEMENTS.get(originalTagName);
 	if (mappedElement) {
@@ -230,5 +232,14 @@ function rewriteTagName(node: Element) {
 				},
 			},
 		});
+
+		// if the node is WF-HEAD, we are done
+		if (node.tagName === 'HEAD') {
+			return;
+		}
+
+		// otherwise we need to patch addEventListener and removeEventListener to support retargeting to main <html> and <body> elements
+		node.addEventListener = iframeDocument.addEventListener;
+		node.removeEventListener = iframeDocument.removeEventListener;
 	}
 }
