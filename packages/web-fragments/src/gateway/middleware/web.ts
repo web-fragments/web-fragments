@@ -292,7 +292,7 @@ export function getWebMiddleware(
 			let fragmentPierced = false;
 			const fragmentStream = asReadableStream`
 			<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true">
-				<template shadowrootmode="open">${fragmentResponse.body ?? ''}</template>
+				<template shadowrootmode="open"><wf-document>${fragmentResponse.body ?? ''}</wf-document></template>
 			</web-fragment-host>`;
 
 			return new HTMLRewriter()
@@ -338,7 +338,7 @@ export function getWebMiddleware(
 						if (element.getAttribute('fragment-id') !== fragmentId) return;
 
 						element.append(
-							`<template shadowrootmode="open"><web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${fragmentContent}</template></web-fragment-host></template>`,
+							`<template shadowrootmode="open"><web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open"><wf-document>${fragmentContent}</wf-document></template></web-fragment-host></template>`,
 							{ html: true },
 						);
 						fragmentPierced = true;
@@ -350,7 +350,7 @@ export function getWebMiddleware(
 							if (fragmentPierced) return;
 
 							endTag.before(
-								`<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open">${fragmentContent}</template></web-fragment-host>`,
+								`<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open"><wf-document>${fragmentContent}</wf-document></template></web-fragment-host>`,
 								{ html: true },
 							);
 						});

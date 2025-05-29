@@ -6,6 +6,7 @@ import { executeScriptsInPiercedFragment } from './script-execution';
 type ReframedOptions = {
 	pierced: boolean;
 	shadowRoot: ShadowRoot;
+	wfDocumentElement: HTMLElement;
 	bound: boolean;
 	headers?: HeadersInit;
 	name: string;
@@ -30,6 +31,8 @@ export function reframed(
 	ready: Promise<void>;
 } {
 	initializeMainContext(options.bound);
+
+	const wfDocumentElement = options.wfDocumentElement;
 
 	import.meta.env.DEV && console.debug('web-fragment init', { source: reframedSrc, pierced: options.pierced });
 
@@ -90,7 +93,7 @@ export function reframed(
 		}
 		alreadyLoaded = true;
 
-		initializeIFrameContext(iframe, reframedShadowRoot, options.bound);
+		initializeIFrameContext(iframe, reframedShadowRoot, wfDocumentElement, options.bound);
 		resolveIframeReady(iframe);
 	});
 
@@ -99,24 +102,44 @@ export function reframed(
 	if (options.pierced) {
 		reframingDone = reframeFromTarget(reframedShadowRoot, iframeReady);
 	} else {
-		reframingDone = reframeWithFetch(reframedSrc, reframedShadowRoot, options, iframeReady);
+		reframingDone = reframeWithFetch(reframedSrc, options, iframeReady);
 	}
 
 	const ready = reframingDone.then(async () => {
 		reframedShadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'interactive';
-		reframedShadowRoot.dispatchEvent(new Event('readystatechange'));
-		reframedShadowRoot.dispatchEvent(new Event('DOMContentLoaded'));
+		wfDocumentElement.dispatchEvent(
+			new Event('readystatechange', {
+				bubbles: false,
+				cancelable: false,
+			}),
+		);
+		wfDocumentElement.dispatchEvent(
+			new Event('DOMContentLoaded', {
+				bubbles: true,
+				cancelable: false,
+			}),
+		);
 
 		// In order to fire window.load event we need to wait for all the images to load.
 		// By now all styles and scripts have loaded, so images are the main kind of resources to wait for.
 		// Other kind of resources should be rare, and we can add them as we discover them causing the event to fire too early.
-		await allImagesLoaded(reframedShadowRoot);
+		await allImagesLoaded(wfDocumentElement);
 
 		// Wrap the event into a task so we don't execute too early in case there are no images.
 		setTimeout(() => {
 			reframedShadowRoot[reframedMetadataSymbol].iframeDocumentReadyState = 'complete';
-			reframedShadowRoot.dispatchEvent(new Event('readystatechange'));
-			iframe.contentWindow?.dispatchEvent(new Event('load'));
+			wfDocumentElement.dispatchEvent(
+				new Event('readystatechange', {
+					bubbles: false,
+					cancelable: false,
+				}),
+			);
+			iframe.contentWindow?.dispatchEvent(
+				new Event('load', {
+					bubbles: false,
+					cancelable: false,
+				}),
+			);
 
 			import.meta.env.DEV &&
 				console.debug('web-fragment loaded', {
@@ -134,7 +157,6 @@ export function reframed(
 
 async function reframeWithFetch(
 	reframedSrc: string,
-	shadowRoot: ShadowRoot,
 	options: ReframedOptions,
 	iframeReady: Promise<HTMLIFrameElement>,
 ): Promise<void> {
@@ -156,7 +178,7 @@ async function reframeWithFetch(
 	iframeReady.then(() => {
 		reframedHtmlStream
 			.pipeThrough(new TextDecoderStream())
-			.pipeTo(new WritableDOMStream(shadowRoot))
+			.pipeTo(new WritableDOMStream(options.wfDocumentElement))
 			.finally(() => {
 				resolve();
 			});
@@ -208,8 +230,8 @@ export type ReframedShadowRoot = ShadowRoot & {
 /**
  * Returns a promise indicated when all images in the shadow root have loaded.
  */
-function allImagesLoaded(shadowRoot: ShadowRoot): Promise<void> {
-	const images = shadowRoot.querySelectorAll('img');
+function allImagesLoaded(wfDocumentElement: HTMLElement): Promise<void> {
+	const images = wfDocumentElement.querySelectorAll('img');
 	if (images.length === 0) {
 		return Promise.resolve();
 	}

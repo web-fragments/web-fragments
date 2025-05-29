@@ -9,7 +9,8 @@ import { rewriteQuerySelector } from './utils/selector-helpers';
  */
 export function initializeIFrameContext(
 	iframe: HTMLIFrameElement,
-	shadowRoot: ReframedShadowRoot,
+	reframedShadowRoot: ReframedShadowRoot,
+	wfDocumentElement: HTMLElement,
 	boundNavigation: boolean,
 ) {
 	assert(
@@ -27,7 +28,7 @@ export function initializeIFrameContext(
 		return;
 	}
 
-	const mainDocument = shadowRoot.host.ownerDocument;
+	const mainDocument = reframedShadowRoot.host.ownerDocument;
 	const mainWindow = mainDocument.defaultView!;
 
 	const globalConstructors: Function[] = Object.entries(Object.getOwnPropertyDescriptors(iframeWindow)).flatMap(
@@ -67,7 +68,7 @@ export function initializeIFrameContext(
 				return (
 					updatedIframeTitle ??
 					// https://html.spec.whatwg.org/multipage/dom.html#document.title
-					shadowRoot.querySelector('title')?.textContent?.trim() ??
+					wfDocumentElement.querySelector('title')?.textContent?.trim() ??
 					'[reframed document]'
 				);
 			},
@@ -78,7 +79,7 @@ export function initializeIFrameContext(
 
 		readyState: {
 			get() {
-				return shadowRoot[reframedMetadataSymbol].iframeDocumentReadyState;
+				return reframedShadowRoot[reframedMetadataSymbol].iframeDocumentReadyState;
 			},
 		},
 
@@ -92,25 +93,25 @@ export function initializeIFrameContext(
 		// redirect getElementById to be a scoped reframedContainer.querySelector query
 		getElementById: {
 			value(id: string) {
-				return shadowRoot.querySelector(`[id="${id}"]`);
+				return wfDocumentElement.querySelector(`[id="${id}"]`);
 			},
 		},
 
 		getElementsByClassName: {
 			value(names: string) {
-				return shadowRoot.firstElementChild?.getElementsByClassName(names);
+				return wfDocumentElement.getElementsByClassName(names);
 			},
 		},
 
 		getElementsByName: {
 			value(name: string) {
-				return shadowRoot.querySelector(`[name="${name}"]`);
+				return wfDocumentElement.querySelector(`[name="${name}"]`);
 			},
 		},
 
 		getElementsByTagNameNS: {
 			value(namespaceURI: string | null, name: string) {
-				return shadowRoot.firstElementChild?.getElementsByTagNameNS(namespaceURI, name);
+				return wfDocumentElement.getElementsByTagNameNS(namespaceURI, name);
 			},
 		},
 
@@ -118,68 +119,63 @@ export function initializeIFrameContext(
 		activeElement: {
 			get: () => {
 				return (
-					shadowRoot.activeElement ?? (mainDocument.activeElement === mainDocument.body ? iframeDocument.body : null)
+					reframedShadowRoot.activeElement ??
+					(mainDocument.activeElement === mainDocument.body ? iframeDocument.body : null)
 				);
 			},
 		},
 
 		styleSheets: {
 			get: () => {
-				return shadowRoot.styleSheets;
+				return reframedShadowRoot.styleSheets;
 			},
 		},
 
 		dispatchEvent: {
 			value(event: Event) {
-				return shadowRoot.dispatchEvent(event);
+				return wfDocumentElement.dispatchEvent(event);
 			},
 		},
 
 		childElementCount: {
 			get() {
-				return shadowRoot.childElementCount;
+				return wfDocumentElement.childElementCount;
 			},
 		},
 
 		hasChildNodes: {
 			value(id: string) {
-				return shadowRoot.hasChildNodes();
+				return wfDocumentElement.hasChildNodes();
 			},
 		},
 
 		children: {
 			get() {
-				return shadowRoot.children;
+				return wfDocumentElement.children;
 			},
 		},
 
 		firstElementChild: {
 			get() {
-				return shadowRoot.firstElementChild;
+				return wfDocumentElement.firstElementChild;
 			},
 		},
 
 		firstChild: {
 			get() {
-				return shadowRoot.firstChild;
+				return wfDocumentElement.firstChild;
 			},
 		},
 
 		lastElementChild: {
 			get() {
-				return shadowRoot.lastElementChild;
+				return wfDocumentElement.lastElementChild;
 			},
 		},
 
 		lastChild: {
 			get() {
-				return shadowRoot.lastChild;
-			},
-		},
-
-		rootElement: {
-			get() {
-				return shadowRoot.firstChild;
+				return wfDocumentElement.lastChild;
 			},
 		},
 	} satisfies Partial<Record<keyof Document, any>>);
@@ -199,12 +195,12 @@ export function initializeIFrameContext(
 	Object.defineProperties(iframeDocument, {
 		querySelector: {
 			value(selector: string) {
-				return shadowRoot.querySelector(rewriteQuerySelector(selector));
+				return wfDocumentElement.querySelector(rewriteQuerySelector(selector));
 			},
 		},
 		querySelectorAll: {
 			value(selector: string) {
-				return shadowRoot.querySelectorAll(rewriteQuerySelector(selector));
+				return wfDocumentElement.querySelectorAll(rewriteQuerySelector(selector));
 			},
 		},
 		getElementsByTagName: {
@@ -212,22 +208,22 @@ export function initializeIFrameContext(
 				// The shadowRoot node itself does not have a getElementsByTagName method.
 				// For html, head, and body, rely on the patched querySelectorAll method on iframeDocument.
 				// This will return a NodeList instead of an HTMLCollection, which will suffice for most use cases.
-				return shadowRoot.querySelectorAll(rewriteQuerySelector(tagName));
+				return wfDocumentElement.querySelectorAll(rewriteQuerySelector(tagName));
 			},
 		},
 		documentElement: {
 			get() {
-				return shadowRoot.querySelector('wf-html') ?? shadowRoot.firstElementChild;
+				return wfDocumentElement.querySelector('wf-html') ?? wfDocumentElement.firstElementChild;
 			},
 		},
 		head: {
 			get() {
-				return shadowRoot.querySelector('wf-head') ?? shadowRoot.firstElementChild;
+				return wfDocumentElement.querySelector('wf-head') ?? wfDocumentElement.firstElementChild;
 			},
 		},
 		body: {
 			get() {
-				return shadowRoot.querySelector('wf-body') ?? shadowRoot.firstElementChild;
+				return wfDocumentElement.querySelector('wf-body') ?? wfDocumentElement.firstElementChild;
 			},
 		},
 	});
@@ -407,8 +403,12 @@ export function initializeIFrameContext(
 			return iframeWindow;
 		}
 
-		if (target === iframeWindow || target === iframeDocument) {
-			return shadowRoot;
+		if (target === iframeWindow) {
+			return reframedShadowRoot;
+		}
+
+		if (target === iframeDocument) {
+			return wfDocumentElement;
 		}
 
 		return target;
@@ -460,8 +460,8 @@ export function initializeIFrameContext(
 					// rewrite the composedPath by removing any references to the main or reframed objects
 					const reframedComposedPath = [...originalEventProps.composedPath];
 					reframedComposedPath.splice(
-						// remove everything above the shadow root, inclusive of the shadow root
-						originalEventProps.composedPath.indexOf(shadowRoot),
+						// remove wfDocumentElement and everything above it
+						originalEventProps.composedPath.indexOf(wfDocumentElement),
 						Infinity,
 						// and add the iframeDocument and iframeWindow to the list
 						iframeDocument,
