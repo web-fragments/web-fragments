@@ -79,7 +79,7 @@ for (const environment of environments) {
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(
-					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></web-fragment-host></body></html>`,
+					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><p>foo fragment</p></wf-document></template></web-fragment-host></body></html>`,
 				);
 				expect(response.headers.get('content-type')).toBe('text/html');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
@@ -97,7 +97,7 @@ for (const environment of environments) {
 
 				expect(response2.status).toBe(200);
 				expect(await response2.text()).toBe(
-					`<html><body>legacy host content<web-fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><p>bar fragment</p></template></web-fragment-host></body></html>`,
+					`<html><body>legacy host content<web-fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><wf-document><p>bar fragment</p></wf-document></template></web-fragment-host></body></html>`,
 				);
 				expect(response2.headers.get('x-web-fragment-id')).toBe('fragmentBar');
 
@@ -111,7 +111,7 @@ for (const environment of environments) {
 
 				expect(response3.status).toBe(200);
 				expect(await response3.text()).toBe(
-					`<html><body>legacy host content<web-fragment-host class="baz" fragment-id="fragmentBazFetcher" data-piercing="true"><template shadowrootmode="open">baz fetcher response to (GET /baz)</template></web-fragment-host></body></html>`,
+					`<html><body>legacy host content<web-fragment-host class="baz" fragment-id="fragmentBazFetcher" data-piercing="true"><template shadowrootmode="open"><wf-document>baz fetcher response to (GET /baz)</wf-document></template></web-fragment-host></body></html>`,
 				);
 				expect(response3.headers.get('x-web-fragment-id')).toBe('fragmentBazFetcher');
 			});
@@ -131,7 +131,7 @@ for (const environment of environments) {
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(
-					`<html><body>legacy host content<web-fragment fragment-id="fragmentFoo"><template shadowrootmode="open"><web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></web-fragment-host></template></web-fragment></body></html>`,
+					`<html><body>legacy host content<web-fragment fragment-id="fragmentFoo"><template shadowrootmode="open"><web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><p>foo fragment</p></wf-document></template></web-fragment-host></template></web-fragment></body></html>`,
 				);
 				expect(response.headers.get('content-type')).toBe('text/html');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
@@ -171,7 +171,7 @@ for (const environment of environments) {
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(
-					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-html><wf-head><title>test</title></wf-head><wf-body>hello</wf-body></wf-html></template></web-fragment-host></body></html>`,
+					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><wf-html><wf-head><title>test</title></wf-head><wf-body>hello</wf-body></wf-html></wf-document></template></web-fragment-host></body></html>`,
 				);
 				expect(response.headers.get('content-type')).toBe('text/html');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
@@ -196,7 +196,7 @@ for (const environment of environments) {
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(
-					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-html lang="en-US"><wf-head data-foo="bar"><meta>some head content</meta></wf-head><wf-body class="foo"><p>foo fragment</p></wf-body></wf-html></template></web-fragment-host></body></html>`,
+					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><wf-html lang="en-US"><wf-head data-foo="bar"><meta>some head content</meta></wf-head><wf-body class="foo"><p>foo fragment</p></wf-body></wf-html></wf-document></template></web-fragment-host></body></html>`,
 				);
 				expect(response.headers.get('content-type')).toBe('text/html');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
@@ -229,7 +229,7 @@ for (const environment of environments) {
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(
-					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></web-fragment-host></body></html>`,
+					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><p>foo fragment</p></wf-document></template></web-fragment-host></body></html>`,
 				);
 			});
 
@@ -293,7 +293,7 @@ for (const environment of environments) {
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(
-					`<html><body>app shell<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>foo fragment</p></template></web-fragment-host></body></html>`,
+					`<html><body>app shell<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><p>foo fragment</p></wf-document></template></web-fragment-host></body></html>`,
 				);
 				expect(response.headers.get('set-cookie')?.replace(/\s/g, '')).toBe('c1=val1;httpOnly,c2=val2,c3=val3');
 			});
@@ -320,14 +320,14 @@ for (const environment of environments) {
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(
-					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open">${
+					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document>${
 						'<script type="inert">console.log("regular inline script")</script>' +
 						'<script async type="inert">console.log("async inline script")</script>' +
 						'<script deferred type="inert">console.log("deferred inline script")</script>' +
 						'<script type="inert" data-script-type="module">console.log("regular inline module script")</script>' +
 						'<script src="_fragments/foo/test.js" type="inert"></script>' +
 						'<script type="inert" src="_fragments/foo/test.js" data-script-type="module"></script>'
-					}</template></web-fragment-host></body></html>`,
+					}</wf-document></template></web-fragment-host></body></html>`,
 				);
 			});
 
@@ -365,10 +365,10 @@ for (const environment of environments) {
 
 					expect(response.status).toBe(200);
 					expect(stripMultipleSpaces(await response.text())).toBe(
-						stripMultipleSpaces(`<html><body>app shell 🙂<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>Failed to fetch fragment!<br>
+						stripMultipleSpaces(`<html><body>app shell 🙂<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><p>Failed to fetch fragment!<br>
 								Endpoint: http://foo.test:1234<br>
 								Request: GET http://localhost${server ? ':' + server.address()!.port : ''}/foo<br>
-								Response: HTTP 500 <br> fragment failed to render 🙈 </p></template></web-fragment-host></body></html>`),
+								Response: HTTP 500 <br> fragment failed to render 🙈 </p></wf-document></template></web-fragment-host></body></html>`),
 					);
 				});
 
@@ -402,7 +402,7 @@ for (const environment of environments) {
 					// but the response should contain a custom error message from the fragment gateway
 					expect(stripMultipleSpaces(await response.text())).toBe(
 						stripMultipleSpaces(
-							`<html><body>app shell 🙂<web-fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><p>custom error: Fetching Bar fragment failed!<br>url: http://localhost${server ? ':' + server.address()!.port : ''}/bar<br>error: fragment failed to render 🙈</p></template></web-fragment-host></body></html>`,
+							`<html><body>app shell 🙂<web-fragment-host class="bar" fragment-id="fragmentBar" data-piercing="true"><template shadowrootmode="open"><wf-document><p>custom error: Fetching Bar fragment failed!<br>url: http://localhost${server ? ':' + server.address()!.port : ''}/bar<br>error: fragment failed to render 🙈</p></wf-document></template></web-fragment-host></body></html>`,
 						),
 					);
 				});
@@ -499,7 +499,7 @@ for (const environment of environments) {
 
 				expect(hardNavResponse.status).toBe(200);
 				expect(await hardNavResponse.text()).toBe(
-					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>hello foo world!</p></template></web-fragment-host></body></html>`,
+					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><p>hello foo world!</p></wf-document></template></web-fragment-host></body></html>`,
 				);
 				expect(hardNavResponse.headers.get('content-type')).toBe('text/html');
 				expect(hardNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
@@ -541,7 +541,7 @@ for (const environment of environments) {
 
 				expect(hardNavResponse.status).toBe(200);
 				expect(await hardNavResponse.text()).toBe(
-					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><p>hello foo world!</p></template></web-fragment-host></body></html>`,
+					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><p>hello foo world!</p></wf-document></template></web-fragment-host></body></html>`,
 				);
 				expect(hardNavResponse.headers.get('content-type')).toBe('text/html');
 				expect(hardNavResponse.headers.get('vary')).toBe('sec-fetch-dest');

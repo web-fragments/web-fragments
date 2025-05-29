@@ -22,9 +22,31 @@ export class WebFragmentHost extends HTMLElement {
 				throw new Error('The <web-fragment-host> is missing fragment-id attribute!');
 			}
 
+			const pierced = this.shadowRoot !== null;
+
+			/**
+			 * The main purpose of wfDocumentElement is to act as a dedicated EventTarget within the DOM tree for all listeners that were meant to be registered on a Document object.
+			 */
+			let wfDocumentElement: HTMLElement;
+			let reframedShadowRoot: ShadowRoot;
+
+			if (!pierced) {
+				wfDocumentElement = document.createElement('wf-document');
+				reframedShadowRoot = this.attachShadow({ mode: 'open' });
+				reframedShadowRoot.appendChild(wfDocumentElement);
+			} else {
+				reframedShadowRoot = this.shadowRoot;
+				wfDocumentElement = reframedShadowRoot.querySelector('wf-document')!;
+
+				if (!wfDocumentElement) {
+					throw new Error(`Can't find <wf-document> in the shadow root of <web-fragment-host>!`);
+				}
+			}
+
 			const { iframe, ready } = reframed(fragmentSrc ?? locationSrc, {
-				pierced: this.shadowRoot !== null,
-				shadowRoot: this.shadowRoot ?? this.attachShadow({ mode: 'open' }),
+				pierced,
+				shadowRoot: reframedShadowRoot,
+				wfDocumentElement: wfDocumentElement,
 				headers: { 'x-fragment-mode': 'embedded' },
 				bound: !fragmentSrc,
 				name: fragmentId,
