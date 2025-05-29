@@ -117,7 +117,9 @@ export function initializeIFrameContext(
 		// redirect to mainDocument
 		activeElement: {
 			get: () => {
-				return shadowRoot.activeElement;
+				return (
+					shadowRoot.activeElement ?? (mainDocument.activeElement === mainDocument.body ? iframeDocument.body : null)
+				);
 			},
 		},
 
