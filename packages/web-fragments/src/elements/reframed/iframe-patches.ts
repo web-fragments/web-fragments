@@ -31,6 +31,19 @@ export function initializeIFrameContext(
 	const mainDocument = reframedShadowRoot.host.ownerDocument;
 	const mainWindow = mainDocument.defaultView!;
 
+	// Create an abort controller we'll use to remove any event listeners when the fragment is destroyed
+	const fragmentAbortController = new AbortController();
+
+	// cleanup event listeners attached to the window when the iframe gets destroyed.
+	// TODO: using the "pagehide" event would be preferred over the discouraged "unload" event,
+	// but we'd need to figure out how to restore the previously attached event if the page is resumed from the bfcache
+	iframeWindow.addEventListener('unload', () => fragmentAbortController.abort());
+
+	/** ---------------------------------------------- Window Patches ------------------------------------------------ */
+
+	/**
+	 * START> WINDOW: GLOBAL CONSTRUCTORS PATCHES
+	 */
 	const globalConstructors: Function[] = Object.entries(Object.getOwnPropertyDescriptors(iframeWindow)).flatMap(
 		([property, descriptor]) =>
 			/^[A-Z]/.test(property) && typeof descriptor.value === 'function' ? descriptor.value : [],
@@ -52,7 +65,153 @@ export function initializeIFrameContext(
 			value: hasInstance,
 		});
 	});
+	// END> WINDOW: GLOBAL CONSTRUCTORS PATCHES
 
+	/**
+	 * START> WINDOW: MISC PATCHES
+	 */
+	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
+	iframeWindow.MutationObserver = mainWindow.MutationObserver;
+	iframeWindow.ResizeObserver = mainWindow.ResizeObserver;
+
+	const windowSizeProperties: (keyof Pick<
+		Window,
+		'innerHeight' | 'innerWidth' | 'outerHeight' | 'outerWidth' | 'visualViewport'
+	>)[] = ['innerHeight', 'innerWidth', 'outerHeight', 'outerWidth', 'visualViewport'];
+	for (const windowSizeProperty of windowSizeProperties) {
+		Object.defineProperty(iframeWindow, windowSizeProperty, {
+			get: function reframedWindowSizeGetter() {
+				return mainWindow[windowSizeProperty];
+			},
+		});
+	}
+	// END> WINDOW: MISC PATCHES
+
+	/**
+	 * START> WINDOW: HISTORY PATCHES
+	 */
+
+	// WARNING: Be sure this class stays declared inside of this function!
+	// We rely on each reframed context having its own instance of this constructor
+	// so we can use an instanceof check to avoid double-handling the event inside
+	// the same context it was dispatched from.
+	class SyntheticPopStateEvent extends PopStateEvent {}
+
+	if (boundNavigation) {
+		setInternalReference(iframeWindow, 'history');
+
+		const historyProxy = new Proxy(mainWindow.history, {
+			get(target, property, receiver) {
+				if (typeof Object.getOwnPropertyDescriptor(History.prototype, property)?.value === 'function') {
+					return function (this: unknown, ...args: unknown[]) {
+						const result = Reflect.apply(
+							History.prototype[property as keyof History],
+							this === receiver ? target : this,
+							args,
+						);
+
+						// dispatch a popstate event on the main window to inform listeners of a location change
+						mainWindow.dispatchEvent(new SyntheticPopStateEvent('popstate'));
+						return result;
+					};
+				}
+
+				return Reflect.get(target, property, target);
+			},
+			set(target, property, receiver) {
+				return Reflect.set(target, property, receiver);
+			},
+		});
+
+		Object.defineProperties(iframeWindow, {
+			history: {
+				get() {
+					return historyProxy;
+				},
+			},
+		});
+	} else {
+		const standaloneHistoryStack: Array<{ state: any; title: string; url: string | null }> = [
+			{ state: iframeWindow.history.state, title: iframeDocument.title, url: iframeWindow.location.href },
+		];
+		let standaloneHistoryCursor = 0;
+
+		// for standalone fragments we should always use replaceState instead of pushState so that we don't create unexpected history entries
+		// in order for back() and forward() to work correctly, we need to implement our own history stack with the behavior similar to window.history
+		Object.defineProperties(iframeWindow.history, {
+			pushState: {
+				value: function reframedStandalonePushState(state: any, title: string, url?: string | null) {
+					if (standaloneHistoryCursor !== standaloneHistoryStack.length - 1) {
+						standaloneHistoryStack.splice(standaloneHistoryCursor + 1);
+					}
+					standaloneHistoryStack.push({ state, title, url: url ?? null });
+					standaloneHistoryCursor++;
+					iframeWindow.history.replaceState(state, title, url);
+				},
+			},
+
+			back: {
+				value: function reframedStandaloneBack() {
+					if (standaloneHistoryCursor === 0) return;
+
+					standaloneHistoryCursor--;
+
+					let { state, title, url } = standaloneHistoryStack[standaloneHistoryCursor];
+					iframeWindow.history.replaceState(state, title, url);
+				},
+			},
+
+			forward: {
+				value: function reframedStandaloneForward() {
+					if (standaloneHistoryCursor === standaloneHistoryStack.length - 1) return;
+
+					standaloneHistoryCursor++;
+
+					let { state, title, url } = standaloneHistoryStack[standaloneHistoryCursor];
+					iframeWindow.history.replaceState(state, title, url);
+				},
+			},
+
+			length: {
+				get() {
+					return standaloneHistoryStack.length;
+				},
+			},
+		});
+	}
+
+	if (boundNavigation) {
+		// When a navigation event occurs on the main window, either programmatically through the History API or by the back/forward button,
+		// we need to reflect those changes onto the iframe's location via history.replaceState().
+		// Finally, dispatch a PopStateEvent so that fragments that are listening to popstate event are
+		// made aware of a location change and retrigger their render updates.
+		const handleNavigate = (e: Event) => {
+			getInternalReference(iframeWindow, 'history').replaceState(window.history.state, '', window.location.href);
+
+			if (e instanceof SyntheticPopStateEvent) {
+				return;
+			}
+
+			iframeWindow.dispatchEvent(new PopStateEvent('popstate', e instanceof PopStateEvent ? e : undefined));
+		};
+
+		// reframed:navigate event is triggered by the patched main window.history methods
+		window.addEventListener('reframed:navigate', handleNavigate, {
+			signal: fragmentAbortController.signal,
+		});
+
+		// Forward the popstate event triggered on the main window to every registered iframe window
+		window.addEventListener('popstate', handleNavigate, {
+			signal: fragmentAbortController.signal,
+		});
+	}
+	// END> WINDOW: HISTORY PATCHES
+
+	/** ---------------------------------------------- Document Patches ------------------------------------------------ */
+
+	/**
+	 * START> DOCUMENT PATCHES
+	 */
 	let updatedIframeTitle: string | undefined = undefined;
 
 	setInternalReference(iframeDocument, 'body');
@@ -178,21 +337,19 @@ export function initializeIFrameContext(
 				return wfDocumentElement.lastChild;
 			},
 		},
-	} satisfies Partial<Record<keyof Document, any>>);
 
-	/**
-	 * These properties are references to special elements in a Document (html, head, body).
-	 * The browser does not allow multiple instances of these elements within a Document,
-	 * so we cannot render true <html>, <head>, <body> elements within the shadowroot of a fragment.
-	 *
-	 * Instead, render custom elements (wf-html, wf-head, wf-body) that act like the html, head, and body.
-	 * The tagName and nodeName properties of these custom elements are then
-	 * patched to return "HTML", "HEAD", and "BODY", respectively.
-	 *
-	 * iframeDocument query methods must be patched for custom wf-html, wf-head, and wf-body elements.
-	 * CSS Selector queries that contain html,head,body tag selectors are rewritten to the custom elements
-	 */
-	Object.defineProperties(iframeDocument, {
+		/**
+		 * The following properties are references to special elements in a Document (html, head, body).
+		 * The browser does not allow multiple instances of these elements within a Document,
+		 * so we cannot render true <html>, <head>, <body> elements within the shadow root of a fragment.
+		 *
+		 * Instead, render custom elements (wf-html, wf-head, wf-body) that act like the html, head, and body.
+		 * The tagName and nodeName properties of these custom elements are then
+		 * patched to return "HTML", "HEAD", and "BODY", respectively.
+		 *
+		 * iframeDocument query methods must also be patched for custom wf-html, wf-head, and wf-body elements.
+		 * CSS Selector queries that contain html,head,body tag selectors are rewritten to the custom elements
+		 */
 		querySelector: {
 			value(selector: string) {
 				return wfDocumentElement.querySelector(rewriteQuerySelector(selector));
@@ -226,114 +383,9 @@ export function initializeIFrameContext(
 				return wfDocumentElement.querySelector('wf-body') ?? wfDocumentElement.firstElementChild;
 			},
 		},
-	});
+	} satisfies Partial<Record<keyof Document, any>>);
 
-	// WARNING: Be sure this class stays declared inside of this function!
-	// We rely on each reframed context having its own instance of this constructor
-	// so we can use an instanceof check to avoid double-handling the event inside
-	// the same context it was dispatched from.
-	class SyntheticPopStateEvent extends PopStateEvent {}
-
-	if (boundNavigation) {
-		// iframe window patches
-		setInternalReference(iframeWindow, 'history');
-
-		const historyProxy = new Proxy(mainWindow.history, {
-			get(target, property, receiver) {
-				if (typeof Object.getOwnPropertyDescriptor(History.prototype, property)?.value === 'function') {
-					return function (this: unknown, ...args: unknown[]) {
-						const result = Reflect.apply(
-							History.prototype[property as keyof History],
-							this === receiver ? target : this,
-							args,
-						);
-
-						// dispatch a popstate event on the main window to inform listeners of a location change
-						mainWindow.dispatchEvent(new SyntheticPopStateEvent('popstate'));
-						return result;
-					};
-				}
-
-				return Reflect.get(target, property, target);
-			},
-			set(target, property, receiver) {
-				return Reflect.set(target, property, receiver);
-			},
-		});
-
-		Object.defineProperties(iframeWindow, {
-			history: {
-				get() {
-					return historyProxy;
-				},
-			},
-		});
-	} else {
-		const standaloneHistoryStack: Array<{ state: any; title: string; url: string | null }> = [
-			{ state: iframeWindow.history.state, title: iframeDocument.title, url: iframeWindow.location.href },
-		];
-		let standaloneHistoryCursor = 0;
-
-		// for standalone fragments we should always use replaceState instead of pushState so that we don't create unexpected history entries
-		// in order for back() and forward() to work correctly, we need to implement our own history stack with the behavior similar to window.history
-		Object.defineProperties(iframeWindow.history, {
-			pushState: {
-				value: function reframedStandalonePushState(state: any, title: string, url?: string | null) {
-					if (standaloneHistoryCursor !== standaloneHistoryStack.length - 1) {
-						standaloneHistoryStack.splice(standaloneHistoryCursor + 1);
-					}
-					standaloneHistoryStack.push({ state, title, url: url ?? null });
-					standaloneHistoryCursor++;
-					iframeWindow.history.replaceState(state, title, url);
-				},
-			},
-
-			back: {
-				value: function reframedStandaloneBack() {
-					if (standaloneHistoryCursor === 0) return;
-
-					standaloneHistoryCursor--;
-
-					let { state, title, url } = standaloneHistoryStack[standaloneHistoryCursor];
-					iframeWindow.history.replaceState(state, title, url);
-				},
-			},
-
-			forward: {
-				value: function reframedStandaloneForward() {
-					if (standaloneHistoryCursor === standaloneHistoryStack.length - 1) return;
-
-					standaloneHistoryCursor++;
-
-					let { state, title, url } = standaloneHistoryStack[standaloneHistoryCursor];
-					iframeWindow.history.replaceState(state, title, url);
-				},
-			},
-
-			length: {
-				get() {
-					return standaloneHistoryStack.length;
-				},
-			},
-		});
-	}
-
-	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
-	iframeWindow.MutationObserver = mainWindow.MutationObserver;
-	iframeWindow.ResizeObserver = mainWindow.ResizeObserver;
-
-	const windowSizeProperties: (keyof Pick<
-		Window,
-		'innerHeight' | 'innerWidth' | 'outerHeight' | 'outerWidth' | 'visualViewport'
-	>)[] = ['innerHeight', 'innerWidth', 'outerHeight', 'outerWidth', 'visualViewport'];
-	for (const windowSizeProperty of windowSizeProperties) {
-		Object.defineProperty(iframeWindow, windowSizeProperty, {
-			get: function reframedWindowSizeGetter() {
-				return mainWindow[windowSizeProperty];
-			},
-		});
-	}
-
+	// document.createElement & friends patches
 	const domCreateProperties: (keyof Pick<
 		Document,
 		| 'createAttributeNS'
@@ -375,6 +427,7 @@ export function initializeIFrameContext(
 		createElement: {
 			value: function createElement(...[tagName]: Parameters<Document['createElement']>) {
 				return Document.prototype.createElement.apply(
+					// create the element within iframeDocument if it contains a dash as it could be a custom element defined only in the iframe context
 					tagName.includes('-') ? iframeDocument : mainDocument,
 					arguments as any,
 				);
@@ -383,15 +436,20 @@ export function initializeIFrameContext(
 		createElementNS: {
 			value: function createElementNS(...[namespaceURI, tagName]: Parameters<Document['createElementNS']>) {
 				return Document.prototype.createElementNS.apply(
+					// create the element within iframeDocument if it contains a dash as it could be a custom element defined only in the iframe context
 					namespaceURI === 'http://www.w3.org/1999/xhtml' && tagName.includes('-') ? iframeDocument : mainDocument,
 					arguments as any,
 				);
 			},
 		},
 	});
+	// END> DOCUMENT PATCHES
 
-	// Create an abort controller we'll use to remove event listeners when the iframe is destroyed
-	const controller = new AbortController();
+	/** ---------------------------------------------- Event System Patches ------------------------------------------------ */
+
+	/**
+	 * START> EVENT SYSTEM PATCHES
+	 */
 
 	// A list of events for which we don't want to retarget listeners as these events are dispatched in the iframe.
 	const iframeEvents = ['load', 'popstate', 'beforeunload', 'unload'];
@@ -673,36 +731,7 @@ export function initializeIFrameContext(
 	iframeWindow.addEventListener = iframeDocument.addEventListener = reframedAddEventListener;
 	iframeWindow.removeEventListener = iframeDocument.removeEventListener = reframedRemoveEventListener;
 
-	if (boundNavigation) {
-		// When a navigation event occurs on the main window, either programmatically through the History API or by the back/forward button,
-		// we need to reflect those changes onto the iframe's location via history.replaceState().
-		// Finally, dispatch a PopStateEvent so that fragments that are listening to popstate event are
-		// made aware of a location change and retrigger their render updates.
-		const handleNavigate = (e: Event) => {
-			getInternalReference(iframeWindow, 'history').replaceState(window.history.state, '', window.location.href);
-
-			if (e instanceof SyntheticPopStateEvent) {
-				return;
-			}
-
-			iframeWindow.dispatchEvent(new PopStateEvent('popstate', e instanceof PopStateEvent ? e : undefined));
-		};
-
-		// reframed:navigate event is triggered by the patched main window.history methods
-		window.addEventListener('reframed:navigate', handleNavigate, {
-			signal: controller.signal,
-		});
-
-		// Forward the popstate event triggered on the main window to every registered iframe window
-		window.addEventListener('popstate', handleNavigate, {
-			signal: controller.signal,
-		});
-	}
-
-	// cleanup event listeners attached to the window when the iframe gets destroyed.
-	// TODO: using the "pagehide" event would be preferred over the discouraged "unload" event,
-	// but we'd need to figure out how to restore the previously attached event if the page is resumed from the bfcache
-	iframeWindow.addEventListener('unload', () => controller.abort());
+	// END: EVENT SYSTEM PATCHES
 }
 
 const reframedReferencesSymbol = Symbol('reframed:references');
