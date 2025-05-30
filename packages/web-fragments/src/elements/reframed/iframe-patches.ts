@@ -397,36 +397,79 @@ export function initializeIFrameContext(
 	const iframeEvents = ['load', 'popstate', 'beforeunload', 'unload'];
 
 	// Maps iframe EventTargets (window and document) to a target in the main context
-	const iframeTargetToReframedTarget = (target: EventTarget, eventName: string): EventTarget => {
-		// redirect event listeners added to window and document unless the event is allowlisted
-		if (target === iframeWindow && iframeEvents.includes(eventName)) {
-			return iframeWindow;
+	const iframeTargetToReframedTarget = (target: EventTarget): EventTarget => {
+		switch (target) {
+			case iframeWindow:
+				return reframedShadowRoot;
+			case iframeDocument:
+				return wfDocumentElement;
+			default:
+				return target;
 		}
+	};
 
-		if (target === iframeWindow) {
-			return reframedShadowRoot;
+	const mainTargetToReframedTarget = (target: EventTarget): EventTarget => {
+		switch (target) {
+			case mainWindow:
+				return iframeWindow;
+			case mainDocument:
+				return iframeDocument;
+			case mainDocument.documentElement:
+				return iframeDocument.documentElement;
+			case mainDocument.body:
+				return iframeDocument.body;
+			default:
+				throw new Error('Unknown main context target: ' + target);
 		}
+	};
 
-		if (target === iframeDocument) {
-			return wfDocumentElement;
+	const reframedTargetToMainTarget = (target: EventTarget): EventTarget => {
+		switch (target) {
+			case reframedShadowRoot:
+				return mainWindow;
+			case wfDocumentElement:
+				return mainDocument;
+			case iframeDocument.documentElement:
+				return mainDocument.documentElement;
+			case iframeDocument.body:
+				return mainDocument.body;
+			default:
+				throw new Error('Unknown reframed context target: ' + target);
 		}
-
-		return target;
 	};
 
 	// Weak map that maps app provided listeners to listeners actually registered with the DOM.
 	// The main purpose of this map is to facilitate deregistration of event listeners
-	const appToReframedListenerMap = new WeakMap<EventListener, EventListener>();
+	const appToReframedListenerMap = new WeakMap<
+		EventListener,
+		{ reframedListener: EventListener; mainShadowListener: EventListener }
+	>();
 
 	// Redirect event listeners (except for the events listed above)
 	// from the iframe window or document to the shadow root.
 	// We also inject an abort signal into the provided options
 	// to handle cleanup of these listeners when the iframe is destroyed.
 	const reframedAddEventListener = new Proxy(iframeWindow.EventTarget.prototype.addEventListener, {
-		apply(originalAddEventListener, originalListenerTarget, argumentsList) {
-			const [eventName, appListenerOrObject, optionsOrCapture] = argumentsList as Parameters<
-				typeof originalAddEventListener
-			>;
+		apply(
+			originalAddEventListener,
+			originalListenerTarget,
+			argumentsList: Parameters<typeof iframeWindow.EventTarget.prototype.addEventListener>,
+		) {
+			const [eventName, appListenerOrObject, optionsOrCapture] = argumentsList;
+
+			// if the app didn't pass a listener, ignore the call
+			if (!appListenerOrObject) return;
+
+			if (!originalListenerTarget) {
+				// addEventListener call be call unbound, in which case the target is the iframe window
+				originalListenerTarget = iframeWindow;
+			}
+
+			// if the event is an iframe event, then skip everything and register the listener directly on the iframe window
+			if (iframeEvents.includes(eventName) && originalListenerTarget === iframeWindow) {
+				originalAddEventListener.call(iframeWindow, eventName, appListenerOrObject, optionsOrCapture);
+				return;
+			}
 
 			// normalize the options object
 			const options =
@@ -436,19 +479,16 @@ export function initializeIFrameContext(
 						? optionsOrCapture
 						: {};
 
-			// if the app didn't pass a listener, ignore the call
-			if (!appListenerOrObject) return;
-
 			// normalize appListener
 			const appListener =
 				typeof appListenerOrObject === 'object' ? appListenerOrObject?.handleEvent : appListenerOrObject;
 
-			// create a wrapper around the appListener that will patch the event to make it look an event the app receives in a standalone mode.
-			const reframedListener =
-				// if a wrapper for this listener exists, reuse it
-				appToReframedListenerMap.get(appListener) ??
-				// otherwise create a new one
-				function reframedListener(event: Event) {
+			// reuse or create if needed a wrapper around the appListener that will patch the event to make it look an event the app receives in a standalone mode.
+			let { reframedListener, mainShadowListener } = appToReframedListenerMap.get(appListener) ?? {};
+
+			if (!reframedListener || !mainShadowListener) {
+				// create the reframed listener
+				reframedListener = function reframedListener(event: Event) {
 					// capture properties of the original event
 					const originalEventProps = {
 						target: event.target,
@@ -506,29 +546,127 @@ export function initializeIFrameContext(
 						Object.setPrototypeOf(event, originalEventPrototype);
 					}
 				};
-			appToReframedListenerMap.set(appListener, reframedListener);
 
-			// if needed, modify the registration target
-			const reframedListenerTarget = iframeTargetToReframedTarget(originalListenerTarget, eventName);
+				// create the main shadow listener
+				mainShadowListener = function reframedShadowListener(event) {
+					if (
+						event.target !== mainWindow &&
+						event.target !== mainDocument &&
+						event.target !== mainDocument.documentElement &&
+						event.target !== mainDocument.body
+					) {
+						// if the event doesn't target any of the main top level EvenTargets then we can ignore it
+						// it is either not relevant for us or it targets an element in the reframed DOM and we'll handle it once it trickles down there
+						// TODO: Do we want to allow list a few events such as click, pointerdown, mousedown, etc. and pass those along if they target an element outside of the fragment?
+						// 			 This would allow us to handle modal dialog dismissals, without full page overlays.
+						return;
+					}
+
+					// capture properties of the original event
+					const originalEventProps = {
+						target: event.target,
+						currentTarget: event.currentTarget,
+					};
+
+					// rewrite the composedPath by removing any references to the main or reframed objects
+					const reframedComposedPath = event.composedPath().map(mainTargetToReframedTarget);
+
+					// patch the event
+					const originalEventPrototype = Object.getPrototypeOf(event);
+					const eventPatch = Object.create(originalEventPrototype, {
+						currentTarget: {
+							get() {
+								return originalListenerTarget;
+							},
+						},
+
+						target: {
+							get() {
+								return mainTargetToReframedTarget(originalEventProps.target);
+							},
+						},
+
+						composedPath: {
+							value: () => {
+								return reframedComposedPath;
+							},
+						},
+					});
+
+					if (event instanceof UIEvent) {
+						Object.defineProperty(eventPatch, 'view', {
+							get() {
+								return iframeWindow;
+							},
+						});
+					}
+
+					// splice the patched event object into the prototype chain, this ensures that:
+					// - the instanceof checks keep on working
+					// - the isTrusted property is preserved
+					// - the properties need to patch get overshadowed in the prototypical lookup with our patched version
+					// - unpatching the event is as simple as re-splicing the prototype chain later and removing this object
+					Object.setPrototypeOf(event, eventPatch);
+
+					try {
+						appListener.call(originalListenerTarget, event);
+					} finally {
+						// unpatch the event
+						Object.setPrototypeOf(event, originalEventPrototype);
+					}
+				};
+
+				appToReframedListenerMap.set(appListener, {
+					reframedListener,
+					mainShadowListener,
+				});
+			}
+
+			// determine the actual registration target within the reframed DOM tree
+			const reframedListenerTarget = iframeTargetToReframedTarget(originalListenerTarget);
 			const modifiedArgumentsList = [eventName, reframedListener, options];
-			return Reflect.apply(originalAddEventListener, reframedListenerTarget, modifiedArgumentsList);
+			Reflect.apply(originalAddEventListener, reframedListenerTarget, modifiedArgumentsList);
+
+			if (eventName === 'DOMContentLoaded' || eventName === 'readystatechange') {
+				// DOMContentLoaded and readystatechange events is special in that it doesn't require shadow listeners
+				// we dispatch them ourselves on the iframe document
+				return;
+			}
+
+			// and now let's register the shadow listener onto the main window
+			const mainShadowListenerTarget = reframedTargetToMainTarget(reframedListenerTarget);
+			mainShadowListenerTarget.addEventListener(eventName, mainShadowListener, options);
 		},
 	});
 
 	const reframedRemoveEventListener = new Proxy(iframeWindow.EventTarget.prototype.removeEventListener, {
 		apply(originalRemoveEventListener, originalListenerTarget, argumentsList) {
-			const [eventName, appListenerOrObject, options] = argumentsList as Parameters<typeof originalRemoveEventListener>;
+			const [eventName, appListenerOrObject, optionsOrCapture] = argumentsList as Parameters<
+				typeof originalRemoveEventListener
+			>;
 
 			if (!appListenerOrObject) return;
+
+			if (!originalListenerTarget) {
+				// removeEventListener call be call unbound, in which case the target is the iframe window
+				originalListenerTarget = iframeWindow;
+			}
+
+			// if the event is an iframe event, then skip everything and register the listener directly on the iframe window
+			if (iframeEvents.includes(eventName) && originalListenerTarget === iframeWindow) {
+				originalRemoveEventListener.call(iframeWindow, eventName, appListenerOrObject, optionsOrCapture);
+				return;
+			}
 
 			const appListener =
 				typeof appListenerOrObject === 'object' ? appListenerOrObject?.handleEvent : appListenerOrObject;
 
-			const reframedListenerTarget = iframeTargetToReframedTarget(originalListenerTarget, eventName);
-			const reframedListener = appToReframedListenerMap.get(appListener);
-			const modifiedArgumentsList = [eventName, reframedListener, options];
+			const reframedListenerTarget = iframeTargetToReframedTarget(originalListenerTarget);
+			const { reframedListener, mainShadowListener } = appToReframedListenerMap.get(appListener)!;
+			const modifiedArgumentsList = [eventName, reframedListener, optionsOrCapture];
 
-			return Reflect.apply(originalRemoveEventListener, reframedListenerTarget, modifiedArgumentsList);
+			Reflect.apply(originalRemoveEventListener, reframedListenerTarget, modifiedArgumentsList);
+			mainWindow.removeEventListener(eventName, mainShadowListener, optionsOrCapture);
 		},
 	});
 
