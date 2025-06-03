@@ -71,12 +71,16 @@ Depending on the event type, event target, and target of the listener registrati
 
 Special retargeting proxy listener should work as follows:
 
-- [x] register a new listener on one of the main `window`, `document`, `<html>`, or `<body` elements, passing along all the original registration options, this listener should behave as follows
+- [x] register a new listener on one of the main `window`, `document`, `<html>`, or `<body` elements as follows:
 
-  - [x] ignore any events that don't target one of `window`, `document`, `<html>`, or `<body` — these events will either not make it into the fragment and thus the fragment should not know about them, or will target an element within the fragment, and the listener registered on the `shadowRoot` or `<wf-*>` elements will handle them
-  - [x] otherwise patch the event object by overwriting the `currentTarget`, `target`, `composedPath`, and in case of `UIEvent` instances also the `view` property
-  - [x] call the original listener registered by the fragment application with the patched event
-  - [x] after the listener is invoked, restore the event object to the original shape from before we patched it
+  - [x] passing along all the original registration options
+  - [x] add splice in an abort signal so that the listener is removed when the fragment is destroyed (otherwise we'd leak memory!)
+  - [x] the listener should behave as follows
+
+    - [x] ignore any events that don't target one of `window`, `document`, `<html>`, or `<body` — these events will either not make it into the fragment and thus the fragment should not know about them, or will target an element within the fragment, and the listener registered on the `shadowRoot` or `<wf-*>` elements will handle them
+    - [x] otherwise patch the event object by overwriting the `currentTarget`, `target`, `composedPath`, and in case of `UIEvent` instances also the `view` property
+    - [x] call the original listener registered by the fragment application with the patched event
+    - [x] after the listener is invoked, restore the event object to the original shape from before we patched it
 
 ## `document.activeElement` handling
 
