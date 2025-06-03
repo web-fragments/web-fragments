@@ -500,7 +500,7 @@ export function initializeIFrameContext(
 	// The main purpose of this map is to facilitate deregistration of event listeners
 	const appToReframedListenerMap = new WeakMap<
 		EventListener,
-		{ reframedListener: EventListener; mainShadowListener: EventListener }
+		{ reframedListener: EventListener; mainProxyListener: EventListener }
 	>();
 
 	// Redirect event listeners (except for the events listed above)
@@ -542,9 +542,9 @@ export function initializeIFrameContext(
 				typeof appListenerOrObject === 'object' ? appListenerOrObject?.handleEvent : appListenerOrObject;
 
 			// reuse or create if needed a wrapper around the appListener that will patch the event to make it look an event the app receives in a standalone mode.
-			let { reframedListener, mainShadowListener } = appToReframedListenerMap.get(appListener) ?? {};
+			let { reframedListener, mainProxyListener } = appToReframedListenerMap.get(appListener) ?? {};
 
-			if (!reframedListener || !mainShadowListener) {
+			if (!reframedListener || !mainProxyListener) {
 				// create the reframed listener
 				reframedListener = function reframedListener(event: Event) {
 					// capture properties of the original event
@@ -605,8 +605,8 @@ export function initializeIFrameContext(
 					}
 				};
 
-				// create the main shadow listener
-				mainShadowListener = function reframedShadowListener(event) {
+				// create the proxy listener retargeting the events from the main context
+				mainProxyListener = function reframedProxyListener(event) {
 					if (
 						event.target !== mainWindow &&
 						event.target !== mainDocument &&
@@ -676,7 +676,7 @@ export function initializeIFrameContext(
 
 				appToReframedListenerMap.set(appListener, {
 					reframedListener,
-					mainShadowListener,
+					mainProxyListener,
 				});
 			}
 
@@ -692,8 +692,8 @@ export function initializeIFrameContext(
 			}
 
 			// and now let's register the shadow listener onto the main window
-			const mainShadowListenerTarget = reframedTargetToMainTarget(reframedListenerTarget);
-			mainShadowListenerTarget.addEventListener(eventName, mainShadowListener, options);
+			const mainProxyListenerTarget = reframedTargetToMainTarget(reframedListenerTarget);
+			mainProxyListenerTarget.addEventListener(eventName, mainProxyListener, options);
 		},
 	});
 
@@ -720,11 +720,11 @@ export function initializeIFrameContext(
 				typeof appListenerOrObject === 'object' ? appListenerOrObject?.handleEvent : appListenerOrObject;
 
 			const reframedListenerTarget = iframeTargetToReframedTarget(originalListenerTarget);
-			const { reframedListener, mainShadowListener } = appToReframedListenerMap.get(appListener)!;
+			const { reframedListener, mainProxyListener } = appToReframedListenerMap.get(appListener)!;
 			const modifiedArgumentsList = [eventName, reframedListener, optionsOrCapture];
 
 			Reflect.apply(originalRemoveEventListener, reframedListenerTarget, modifiedArgumentsList);
-			mainWindow.removeEventListener(eventName, mainShadowListener, optionsOrCapture);
+			mainWindow.removeEventListener(eventName, mainProxyListener, optionsOrCapture);
 		},
 	});
 
