@@ -27,7 +27,7 @@ test('reframed: init events', async ({ page }) => {
 	//3 in shell app, 3 in fragment
 	expect(checkboxes.length).toBe(6);
 
-	checkboxes.forEach(async (checkbox) => {
+	for (const checkbox of checkboxes) {
 		await expect(checkbox).toBeChecked();
-	});
+	}
 });
