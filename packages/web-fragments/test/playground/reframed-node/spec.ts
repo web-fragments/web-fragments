@@ -27,7 +27,7 @@ test('reframed: node.ownerDocument', async ({ page }) => {
 	//7 in shell app, 4 in fragment
 	expect(checkboxes.length).toBe(11);
 
-	checkboxes.forEach(async (checkbox) => {
+	for (const checkbox of checkboxes) {
 		await expect(checkbox).toBeChecked();
-	});
+	}
 });
