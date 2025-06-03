@@ -446,6 +446,7 @@ export function initializeIFrameContext(
 	// END> DOCUMENT PATCHES
 
 	/** ---------------------------------------------- Event System Patches ------------------------------------------------ */
+	/**	 						spec: packages/web-fragments/test/playground/reframed-event-registration/spec.md 												 */
 
 	/**
 	 * START> EVENT SYSTEM PATCHES
@@ -503,10 +504,8 @@ export function initializeIFrameContext(
 		{ reframedListener: EventListener; mainProxyListener: EventListener }
 	>();
 
-	// Redirect event listeners (except for the events listed above)
+	// Redirect event listeners (except for `iframeEvents` defined above)
 	// from the iframe window or document to the shadow root.
-	// We also inject an abort signal into the provided options
-	// to handle cleanup of these listeners when the iframe is destroyed.
 	const reframedAddEventListener = new Proxy(iframeWindow.EventTarget.prototype.addEventListener, {
 		apply(
 			originalAddEventListener,
@@ -700,7 +699,18 @@ export function initializeIFrameContext(
 
 			// and now let's register the shadow listener onto the main window
 			const mainProxyListenerTarget = reframedTargetToMainTarget(reframedListenerTarget);
-			mainProxyListenerTarget.addEventListener(eventName, mainProxyListener, options);
+
+			// coalesce any provided signal with the one from our abort controller so that we can remove this listener when the fragment is destroyed
+			const mainProxyListenerAbortSignal = AbortSignal.any(
+				[fragmentAbortController.signal, options?.signal].filter((signal) => signal != null),
+			);
+			const mainProxyListenerOptions = {
+				...options,
+				signal: mainProxyListenerAbortSignal,
+			} as AddEventListenerOptions;
+
+			// register the listener on the main window, document, <html>, or <body> target
+			mainProxyListenerTarget.addEventListener(eventName, mainProxyListener, mainProxyListenerOptions);
 		},
 	});
 
@@ -734,7 +744,14 @@ export function initializeIFrameContext(
 			}
 
 			const reframedListenerTarget = iframeTargetToReframedTarget(originalListenerTarget);
-			const { reframedListener, mainProxyListener } = appToReframedListenerMap.get(appListener)!;
+			const reframedListeners = appToReframedListenerMap.get(appListener);
+
+			if (!reframedListeners) {
+				// we never added this listener, so it likely isn't registered, pass it through just in case
+				Reflect.apply(originalRemoveEventListener, originalListenerTarget, argumentsList);
+				return;
+			}
+			const { reframedListener, mainProxyListener } = reframedListeners;
 			const modifiedArgumentsList = [eventName, reframedListener, optionsOrCapture];
 
 			Reflect.apply(originalRemoveEventListener, reframedListenerTarget, modifiedArgumentsList);

@@ -31,10 +31,10 @@ export function reframedDomInsertion<T extends Node>(
 		return nodeToInsert;
 	}
 
-	const nestedScripts = nodeToInsert.querySelectorAll('script') ?? [];
+	const nestedScripts = nodeToInsert.querySelectorAll('script');
 
 	// if the child doesn't contains nested scripts, then just append it
-	if (!nestedScripts) {
+	if (nestedScripts.length === 0) {
 		return doInsertTheNode();
 	}
 
