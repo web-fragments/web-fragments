@@ -541,6 +541,13 @@ export function initializeIFrameContext(
 			const appListener =
 				typeof appListenerOrObject === 'object' ? appListenerOrObject?.handleEvent : appListenerOrObject;
 
+			if (!appListener) {
+				// this is some kind of unknown listener, possibly feature detection for passive event support like the one performed by react
+				// https://github.com/facebook/react/blob/4a1f29079ccc61659e026bbcf205bc8d53780927/packages/react-dom-bindings/src/events/checkPassiveEvents.js#L26-L27
+				Reflect.apply(originalAddEventListener, originalListenerTarget, argumentsList);
+				return;
+			}
+
 			// reuse or create if needed a wrapper around the appListener that will patch the event to make it look an event the app receives in a standalone mode.
 			let { reframedListener, mainProxyListener } = appToReframedListenerMap.get(appListener) ?? {};
 
@@ -718,6 +725,13 @@ export function initializeIFrameContext(
 
 			const appListener =
 				typeof appListenerOrObject === 'object' ? appListenerOrObject?.handleEvent : appListenerOrObject;
+
+			if (!appListener) {
+				// this is some kind of unknown listener, possibly feature detection for passive event support like the one performed by react
+				// https://github.com/facebook/react/blob/4a1f29079ccc61659e026bbcf205bc8d53780927/packages/react-dom-bindings/src/events/checkPassiveEvents.js#L26-L27
+				Reflect.apply(originalRemoveEventListener, originalListenerTarget, argumentsList);
+				return;
+			}
 
 			const reframedListenerTarget = iframeTargetToReframedTarget(originalListenerTarget);
 			const { reframedListener, mainProxyListener } = appToReframedListenerMap.get(appListener)!;
