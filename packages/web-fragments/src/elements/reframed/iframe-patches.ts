@@ -478,7 +478,8 @@ export function initializeIFrameContext(
 			case mainDocument.body:
 				return iframeDocument.body;
 			default:
-				throw new Error('Unknown main context target: ' + target);
+				console.warn('reframed events: Unknown main context target: ', target);
+				return target;
 		}
 	};
 
@@ -493,7 +494,8 @@ export function initializeIFrameContext(
 			case iframeDocument.body:
 				return mainDocument.body;
 			default:
-				throw new Error('Unknown reframed context target: ' + target);
+				console.warn('reframed events: Unknown reframed context target: ', target);
+				return target;
 		}
 	};
 
