@@ -30,7 +30,9 @@ export function getWebMiddleware(
 		 * If this request doesn't match any fragment routes, then send it to the legacy app by calling the next() middleware function.
 		 */
 		if (!matchedFragment) {
-			const appShellResponse = (await next()).clone();
+			// Fetch the app shell response from the origin and clone it so we can modify it
+			const originalNextResponse = await next();
+			const appShellResponse = new Response(originalNextResponse.body, originalNextResponse);
 			appShellResponse.headers.append('x-web-fragment-id', '<app-shell>');
 			return appShellResponse;
 		}
@@ -73,8 +75,9 @@ export function getWebMiddleware(
 		 * For hard navigations we need to combine the appShell response with fragment response.
 		 */
 		if (requestSecFetchDest === 'document') {
-			// Fetch the app shell response from the origin
-			const appShellResponse = await next();
+			// Fetch the app shell response from the origin and clone it so we can modify it
+			const originalNextResponse = await next();
+			const appShellResponse = new Response(originalNextResponse.body, originalNextResponse);
 
 			const isHTMLResponse = appShellResponse.headers.get('content-type')?.startsWith('text/html');
 
