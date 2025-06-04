@@ -256,7 +256,9 @@ export function getWebMiddleware(
 			fragmentReq.headers.set('Accept-Encoding', 'gzip');
 		}
 
-		return fragmentFetch(fragmentReq);
+		// make the request, and follow any redirects returned by the fragment endpoint
+		// TODO: is it always safe to follow redirects?
+		return fragmentFetch(fragmentReq, { redirect: 'follow' });
 
 		// TODO: add timeout handling
 		// return fetch(fragmentReq, { signal: abortController.signal }).finally(
