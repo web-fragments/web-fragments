@@ -1,5 +1,15 @@
 # web-fragments
 
+## 0.6.1
+
+### Patch Changes
+
+- [#204](https://github.com/web-fragments/web-fragments/pull/204) [`f405ab9`](https://github.com/web-fragments/web-fragments/commit/f405ab9faf2472832237e4e15b9a13d0d6c75dae) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: don't blow up on unknown elements during event retargeting
+
+  We noticed that for example view transition pseudo elements can trigger
+  a mapping error, which currently throws as a safeguard, but this prevents apps from working.
+  So until we figure out how to handle this properly we now just warn rather than throw.
+
 ## 0.6.0
 
 ### Minor Changes
