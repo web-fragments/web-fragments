@@ -27,7 +27,7 @@ export class WebFragment extends HTMLElement {
 
 		// Since fragments will most likely contain other block elements, they should be blocks themselves by default
 		const blockSheet = new CSSStyleSheet();
-		blockSheet.insertRule(':host { display: block; position: relative; }');
+		blockSheet.insertRule(':host { display: block; }');
 		this.shadowRoot?.adoptedStyleSheets.push(blockSheet);
 
 		if (settledFragmentHost) {

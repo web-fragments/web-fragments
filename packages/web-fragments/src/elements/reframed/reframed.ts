@@ -61,7 +61,7 @@ export function reframed(
 
 	// Since fragments will most likely contain other block elements, they should be blocks themselves by default
 	const blockSheet = new CSSStyleSheet();
-	blockSheet.insertRule(':host, wf-html, wf-body { display: block; position: relative; }');
+	blockSheet.insertRule(':host, wf-document, wf-html, wf-body { display: block; }');
 	blockSheet.insertRule('wf-head { display: none;}');
 	reframedShadowRoot.adoptedStyleSheets.push(blockSheet);
 
@@ -161,7 +161,7 @@ async function reframeWithFetch(
 	iframeReady: Promise<HTMLIFrameElement>,
 ): Promise<void> {
 	const reframedHtmlResponse = await fetch(reframedSrc, {
-		headers: options.headers,
+		headers: { accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', ...options.headers },
 	});
 
 	const reframedHtmlStream =
