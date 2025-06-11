@@ -54,7 +54,7 @@ export class FragmentGateway {
 		// create a reverse mapping of route patterns to fragment configs
 		// used for lookup when finding a route match.
 		fragmentConfig.routePatterns.forEach((routePattern) => {
-			const [pathnamePattern, searchPattern = ''] = routePattern.split('?');
+			const [pathnamePattern, searchPattern] = routePattern.split('?');
 
 			const pathMatcher = match(pathnamePattern, {
 				decode: globalThis.decodeURIComponent,
