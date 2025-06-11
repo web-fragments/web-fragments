@@ -7,7 +7,7 @@
  * (?=[\s>+~),:.#[\]]|$) - lookahead to only match when followed by start of string or combinators
  */
 export const rewriteQuerySelector = (selector: string) =>
-	selector.replace(
-		/(?<=^|[\s>+~,(])\b(body|head|html)\b(?=[\s>+~),:.#[\]]|$)/gi,
-		(match) => `wf-${match.toLowerCase()}`,
-	);
+	selector
+		?.toString()
+		.replace(/(?<=^|[\s>+~,(])\b(body|head|html)\b(?=[\s>+~),:.#[\]]|$)/gi, (match) => `wf-${match.toLowerCase()}`) ??
+	selector;

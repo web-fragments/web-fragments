@@ -63,4 +63,8 @@ describe('rewriteQuerySelector()', () => {
 	test('Valid wf-(html|head|body) selectors are preserved', () => {
 		expect(rewriteQuerySelector('wf-html, wf-head + wf-body')).toBe('wf-html, wf-head + wf-body');
 	});
+
+	test('Support array as an argument and stringify it', () => {
+		expect(rewriteQuerySelector(['p', 'span'] as any)).toBe('p,span');
+	});
 });
