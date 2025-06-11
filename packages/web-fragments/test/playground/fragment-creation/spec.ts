@@ -37,21 +37,25 @@ test('fragment creation', async ({ page }) => {
 test('fragment initialization', async ({ page }) => {
 	await page.goto('/fragment-creation/');
 
-	await step('web-fragments should render good css defaults: display:block and position:relative', async () => {
+	await step('web-fragments should render good css defaults: display:block and position:static', async () => {
 		const fragment = page.locator('web-fragment[fragment-id=fragment-creation]');
 		await expect(fragment).toHaveCSS('display', 'block');
-		await expect(fragment).toHaveCSS('position', 'relative');
+		await expect(fragment).toHaveCSS('position', 'static');
+
+		const wfDocument = page.locator('web-fragment[fragment-id=fragment-creation] wf-document');
+		await expect(wfDocument).toHaveCSS('display', 'block');
+		await expect(wfDocument).toHaveCSS('position', 'static');
 
 		const wfHtml = page.locator('web-fragment[fragment-id=fragment-creation] wf-html');
 		await expect(wfHtml).toHaveCSS('display', 'block');
-		await expect(wfHtml).toHaveCSS('position', 'relative');
+		await expect(wfHtml).toHaveCSS('position', 'static');
 
 		const wfHead = page.locator('web-fragment[fragment-id=fragment-creation] wf-head');
 		await expect(wfHead).toHaveCSS('display', 'none');
 
 		const wfBody = page.locator('web-fragment[fragment-id=fragment-creation] wf-body');
 		await expect(wfBody).toHaveCSS('display', 'block');
-		await expect(wfBody).toHaveCSS('position', 'relative');
+		await expect(wfBody).toHaveCSS('position', 'static');
 	});
 
 	await step('fragment should have a shadow root which contains fragment host', async () => {
