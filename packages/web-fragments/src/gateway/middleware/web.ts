@@ -138,14 +138,9 @@ export function getWebMiddleware(
 		 *
 		 * Simply pass through the fragment response.
 		 */
-		return new Response(fragmentResponse.body, {
-			status: fragmentResponse.status,
-			statusText: fragmentResponse.statusText,
-			headers: {
-				'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
-				'x-web-fragment-id': matchedFragment.fragmentId,
-			},
-		});
+		const fragmentAssetResponse = new Response(fragmentResponse.body, fragmentResponse);
+		fragmentAssetResponse.headers.append('x-web-fragment-id', matchedFragment.fragmentId);
+		return fragmentAssetResponse;
 
 		async function handleFetchErrors(fragmentResponseOrError: Response | Error) {
 			const { endpoint, onSsrFetchError = defaultOnSsrFetchError } = matchedFragment!;
