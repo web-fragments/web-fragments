@@ -25,27 +25,62 @@ export function reframedDomInsertion<T extends Node>(
 		}
 
 		setInertScriptType(nodeToInsert);
-		doInsertTheNode();
+		const returnVal = doInsertTheNode();
 		restoreScriptType(nodeToInsert);
 		executeInertScript(nodeToInsert, iframeDocument);
-		return nodeToInsert;
+		return returnVal;
 	}
 
-	const nestedScripts = nodeToInsert.querySelectorAll('script');
+	// if it's a preload or prefetch link for a script then append it to the iframe and leave an inert node in the reframed DOM
+	if (
+		nodeToInsert instanceof HTMLLinkElement &&
+		(nodeToInsert.rel === 'preload' || nodeToInsert.rel === 'prefetch' || nodeToInsert.rel === 'modulepreload')
+	) {
+		setInertLinkRel(nodeToInsert);
+		const returnVal = doInsertTheNode();
+		executeInertPreloadLink(nodeToInsert, iframeDocument);
+		return returnVal;
+	}
 
-	// if the child doesn't contains nested scripts, then just append it
-	if (nestedScripts.length === 0) {
+	const nestedScriptsAndLinks: NodeListOf<HTMLScriptElement | HTMLLinkElement> = nodeToInsert.querySelectorAll?.(
+		'script,link[rel=preload],link[rel=prefetch],link[rel=modulepreload]',
+	);
+
+	// if the child doesn't contains nested scripts or links, then just append it
+	if (nestedScriptsAndLinks.length === 0) {
 		return doInsertTheNode();
 	}
 
 	// otherwise, append the child and execute all nested scripts in a reframed context
-	nestedScripts.forEach((nestedScript) => setInertScriptType(nestedScript));
-	doInsertTheNode();
-	nestedScripts.forEach((nestedScript) => restoreScriptType(nestedScript));
+	nestedScriptsAndLinks.forEach((element) => makeElementInert(element));
+	const returnVal = doInsertTheNode();
+	nestedScriptsAndLinks.forEach((element) => restoreElement(element));
+	nestedScriptsAndLinks.forEach((element) => executeElement(element, iframeDocument));
+	return returnVal;
+}
 
-	nestedScripts.forEach((nestedScript) => executeInertScript(nestedScript, iframeDocument));
+function makeElementInert(element: HTMLScriptElement | HTMLLinkElement) {
+	if (element instanceof HTMLScriptElement) {
+		setInertScriptType(element);
+	} else {
+		setInertLinkRel(element);
+	}
+}
 
-	return nodeToInsert;
+function restoreElement(element: HTMLScriptElement | HTMLLinkElement) {
+	if (element instanceof HTMLScriptElement) {
+		restoreScriptType(element);
+	} else {
+		// don't restore links as we currently don't have another way of keeping them inert
+	}
+}
+
+function executeElement(element: HTMLScriptElement | HTMLLinkElement, iframeDocument: Document) {
+	if (element instanceof HTMLScriptElement) {
+		executeInertScript(element, iframeDocument);
+	} else {
+		executeInertPreloadLink(element, iframeDocument);
+	}
 }
 
 export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: HTMLIFrameElement) {
@@ -58,11 +93,19 @@ export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: 
 		patchSpecialHtmlElement(element, iframeDocument),
 	);
 
-	const scripts = [...shadowRoot.querySelectorAll('script')];
+	const scriptsAndLinks = [
+		...shadowRoot.querySelectorAll(
+			'link[rel=inert-preload],link[rel=inert-prefetch],link[rel=inert-modulepreload],script',
+		),
+	] as (HTMLLinkElement | HTMLScriptElement)[];
 
-	scripts.forEach((inertScript) => {
-		restoreScriptType(inertScript);
-		executeInertScript(inertScript, iframeDocument);
+	scriptsAndLinks.forEach((inertElement) => {
+		if (inertElement instanceof HTMLLinkElement) {
+			executeInertPreloadLink(inertElement, iframeDocument);
+		} else {
+			restoreScriptType(inertElement);
+			executeInertScript(inertElement, iframeDocument);
+		}
 	});
 }
 
@@ -70,7 +113,7 @@ export function executeScriptsInPiercedFragment(shadowRoot: ShadowRoot, iframe: 
  * Weak map of scripts running in the iframe to their inert clones in the reframed DOM.
  */
 export const execToInertScriptMap = new WeakMap<HTMLScriptElement, HTMLScriptElement>();
-export const alreadyExecutedScripts = new WeakSet<HTMLScriptElement>();
+export const alreadyExecutedScriptsAndLinks = new WeakSet<HTMLScriptElement | HTMLLinkElement>();
 
 /**
  * Executes a script in a reframed JS context.
@@ -79,9 +122,9 @@ export const alreadyExecutedScripts = new WeakSet<HTMLScriptElement>();
  * @returns true if the script executed, false if it was ignored
  */
 export function executeInertScript(inertScript: HTMLScriptElement, iframeDocument: Document): boolean {
-	// If the inert script has already been evaluated but later re-added to the DOM
-	// via any DOM insertion method (i.e insertBefore() and appendChild()), do not evaluate the script again,
-	if (alreadyExecutedScripts.has(inertScript)) {
+	// If the inert script has already been evaluated but later re-added to the DOM via any DOM insertion method
+	// (i.e insertBefore() and appendChild()), do not evaluate the script again
+	if (alreadyExecutedScriptsAndLinks.has(inertScript)) {
 		return false;
 	}
 
@@ -95,6 +138,38 @@ export function executeInertScript(inertScript: HTMLScriptElement, iframeDocumen
 	assert(!!(inertScript.src || inertScript.textContent), `Can't execute script without src or textContent!`);
 
 	attachScriptsToIframe({ inertScript, iframeDocument });
+
+	return true;
+}
+
+export function executeInertPreloadLink(inertLink: HTMLLinkElement, iframeDocument: Document): boolean {
+	// If the inert link has already been evaluated but later re-added to the DOM via any DOM insertion method
+	// (i.e insertBefore() and appendChild()), do not evaluate the link again
+	if (alreadyExecutedScriptsAndLinks.has(inertLink)) {
+		return false;
+	}
+
+	// If the link does not have a valid href attribute then skip
+	if (!inertLink.href) return false;
+
+	const execLink = iframeDocument.importNode(inertLink, true);
+	restoreLinkRel(execLink);
+
+	// Grab the Event constructor from the iframe
+	const Event = iframeDocument.defaultView!.Event;
+
+	// Redispatch the load event onto the inert link in the reframed dom
+	execLink.addEventListener('load', () => {
+		inertLink.dispatchEvent(new Event('load', { cancelable: false }));
+	});
+
+	// Redispatch the error event onto the inert link in the reframed dom
+	execLink.addEventListener('error', () => {
+		inertLink.dispatchEvent(new Event('error', { cancelable: false }));
+	});
+
+	getInternalReference(iframeDocument, 'body').appendChild(execLink);
+	alreadyExecutedScriptsAndLinks.add(inertLink);
 
 	return true;
 }
@@ -122,8 +197,19 @@ export function attachScriptsToIframe({
 	// - inline scripts (script with textContent) will be executed synchronously when attached
 	// - external scripts (with src attribute) will execute once the current turn of the event loop unwinds
 	execToInertScriptMap.set(execScript, inertScript);
+
+	// redispatch the load event onto the inert script in the reframed dom
+	execScript.addEventListener('load', () => {
+		inertScript.dispatchEvent(new Event('load', { cancelable: false }));
+	});
+
+	// redispatch the error event onto the inert script in the reframed dom
+	execScript.addEventListener('error', () => {
+		inertScript.dispatchEvent(new Event('error', { cancelable: false }));
+	});
+
 	getInternalReference(iframeDocument, 'body').appendChild(execScript);
-	alreadyExecutedScripts.add(inertScript);
+	alreadyExecutedScriptsAndLinks.add(inertScript);
 }
 
 /**
@@ -133,7 +219,7 @@ export function attachScriptsToIframe({
  *
  * @param script
  */
-export function setInertScriptType(script: HTMLScriptElement) {
+function setInertScriptType(script: HTMLScriptElement) {
 	const scriptType = script.type;
 	if (scriptType) {
 		script.setAttribute('data-script-type', scriptType);
@@ -146,12 +232,40 @@ export function setInertScriptType(script: HTMLScriptElement) {
  *
  * @param script
  */
-export function restoreScriptType(script: HTMLScriptElement) {
+function restoreScriptType(script: HTMLScriptElement) {
 	const scriptType = script.getAttribute('data-script-type');
 	script.removeAttribute('data-script-type');
 	script.removeAttribute('type');
 	if (scriptType) {
 		script.setAttribute('type', scriptType);
+	}
+}
+
+/**
+ * Neutralizes the original link, so that it doesn't result in a duplicate network call
+ *
+ * TODO: This neutralization method cause hydration errors.
+ *       Is it possible to make the link inert without exposing that information to the application?
+ *
+ * @param link The preload/prefetch link
+ */
+function setInertLinkRel(link: HTMLLinkElement) {
+	const linkRel = link.rel;
+	if (linkRel) {
+		link.rel = 'inert-' + linkRel;
+	}
+}
+
+/**
+ * Reverses the `setInertLinkRel` operation.
+ *
+ * @param link The preload/prefetch link
+ */
+function restoreLinkRel(link: HTMLLinkElement) {
+	const linkRel = link.rel;
+	if (linkRel && linkRel.startsWith('inert-')) {
+		// strip the 'inert-' prefix
+		link.rel = linkRel.slice(6);
 	}
 }
 

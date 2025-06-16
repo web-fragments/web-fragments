@@ -79,8 +79,54 @@
 				and <code>document.currentScript</code> is set
 				<input id="external-child-script-sync-currentScript" type="checkbox" />
 			</li>
+			<li>
+				Link preload loaded
+				<input id="link-preload-loaded" type="checkbox" />
+				in a reframed JS context
+				<input id="link-preload-reframed" type="checkbox" />
+				and original link remained inert
+				<input id="link-preload-inert" type="checkbox" checked />
+			</li>
+			<li>
+				Link prefetch loaded
+				<input id="link-prefetch-loaded" type="checkbox" />
+				in a reframed JS context
+				<input id="link-prefetch-reframed" type="checkbox" />
+				and original link remained inert
+				<input id="link-prefetch-inert" type="checkbox" checked />
+			</li>
+			<li>
+				Link modulepreload loaded
+				<input id="link-modulepreload-loaded" type="checkbox" />
+				in a reframed JS context
+				<input id="link-modulepreload-reframed" type="checkbox" />
+				and original link remained inert
+				<input id="link-modulepreload-inert" type="checkbox" checked />
+			</li>
+			<li>
+				Dynamic (append) link preload loaded
+				<input id="link-dynamic-append-loaded" type="checkbox" />
+				in a reframed JS context
+				<input id="link-dynamic-append-reframed" type="checkbox" />
+				and original link remained inert
+				<input id="link-dynamic-append-inert" type="checkbox" checked />
+			</li>
+			<li>
+				Dynamic (insertAdjacentElement) link preload loaded
+				<input id="link-dynamic-insertAdjacent-loaded" type="checkbox" />
+				in a reframed JS context
+				<input id="link-dynamic-insertAdjacent-reframed" type="checkbox" />
+				and original link remained inert
+				<input id="link-dynamic-insertAdjacent-inert" type="checkbox" checked />
+			</li>
 		</ul>
-		<script id="inline-script-sync">
+
+		<!--
+			Use vite-ignore here so that Vite doesn't bundle or otherwise interfere with these scripts.
+			
+			The external scripts are stored under public/fragments/script-loading/ so that they are served without any processing.
+		-->
+		<script id="inline-script-sync" vite-ignore>
 			document.getElementById('inline-script-sync-running').checked = true;
 
 			if (window.name === 'wf:script-loading') {
@@ -94,7 +140,7 @@
 			window.SCRIPT_COUNTER = 1;
 		</script>
 
-		<script async id="inline-script-async">
+		<script async id="inline-script-async" vite-ignore>
 			document.getElementById('inline-script-async-running').checked = true;
 
 			if (window.name === 'wf:script-loading') {
@@ -117,11 +163,117 @@
 			window.SCRIPT_COUNTER++;
 		</script>
 
-		<!--
-			Use vite-ignore here so that Vite doesn't bundle or otherwise interfere with these scripts.
-			
-			The scripts themselves are stored under public/fragments/script-loading/ so that they are served without any processing.
-		-->
+		<link vite-ignore rel="preload" href="/script-loading/script-async.js" as="script" id="link-preload" />
+		<link vite-ignore rel="prefetch" href="/script-loading/script-defer.js" as="script" id="link-prefetch" />
+		<link vite-ignore rel="modulepreload" href="/script-loading/script-module.js" as="script" id="link-modulepreload" />
+
+		<script type="module" vite-ignore>
+			const mainEvent = parent.Event;
+
+			let linkPreloadCount = 0;
+			document.getElementById('link-preload').addEventListener('load', (e) => {
+				document.getElementById('link-preload-loaded').checked = true;
+
+				if (e.constructor === Event) {
+					document.getElementById('link-preload-reframed').checked = true;
+				}
+
+				// This is a native event, indicating that the original link is not inert
+				if (e.constructor === mainEvent) {
+					document.getElementById('link-preload-inert').checked = false;
+				}
+
+				// If the load event fired twice, then it's likely that the original link is not inert
+				if (++linkPreloadCount === 2) {
+					document.getElementById('link-preload-inert').checked = false;
+				}
+			});
+
+			let linkPrefetchCount = 0;
+			document.getElementById('link-prefetch').addEventListener('load', (e) => {
+				document.getElementById('link-prefetch-loaded').checked = true;
+
+				if (e.constructor === Event) {
+					document.getElementById('link-prefetch-reframed').checked = true;
+				}
+
+				// This is a native event, indicating that the original link is not inert
+				if (e.constructor === mainEvent) {
+					document.getElementById('link-prefetch-inert').checked = false;
+				}
+
+				// If the load event fired twice, then it's likely that the original link is not inert
+				if (++linkPrefetchCount === 2) {
+					document.getElementById('link-prefetch-inert').checked = false;
+				}
+			});
+
+			let linkModulepreloadCount = 0;
+			document.getElementById('link-modulepreload').addEventListener('load', (e) => {
+				document.getElementById('link-modulepreload-loaded').checked = true;
+
+				if (e.constructor === Event) {
+					document.getElementById('link-modulepreload-reframed').checked = true;
+				}
+
+				// This is a native event, indicating that the original link is not inert
+				if (e.constructor === mainEvent) {
+					document.getElementById('link-modulepreload-inert').checked = false;
+				}
+
+				// If the load event fired twice, then it's likely that the original link is not inert
+				if (++linkModulepreloadCount === 2) {
+					document.getElementById('link-modulepreload-inert').checked = false;
+				}
+			});
+
+			let linkDynamicAppendCount = 0;
+			let dynamicAppendPreloadLink = document.createElement('link');
+			dynamicAppendPreloadLink.rel = 'modulepreload';
+			dynamicAppendPreloadLink.href = '/script-loading/script-with-child-scripts.js';
+			dynamicAppendPreloadLink.onload = (e) => {
+				document.getElementById('link-dynamic-append-loaded').checked = true;
+
+				if (e.constructor === Event) {
+					document.getElementById('link-dynamic-append-reframed').checked = true;
+				}
+
+				// This is a native event, indicating that the original link is not inert
+				if (e.constructor === mainEvent) {
+					document.getElementById('link-dynamic-append-inert').checked = false;
+				}
+
+				// If the load event fired twice, then it's likely that the original link is not inert
+				if (++linkDynamicAppendCount === 2) {
+					document.getElementById('link-dynamic-append-inert').checked = false;
+				}
+			};
+			document.body.append(dynamicAppendPreloadLink);
+
+			let linkDynamicInsertAdjacentCount = 0;
+			let dynamicInsertAdjacentPreloadLink = document.createElement('link');
+			dynamicInsertAdjacentPreloadLink.rel = 'preload';
+			dynamicInsertAdjacentPreloadLink.as = 'script';
+			dynamicInsertAdjacentPreloadLink.href = '/script-loading/script-sync.js';
+			dynamicInsertAdjacentPreloadLink.onload = (e) => {
+				document.getElementById('link-dynamic-insertAdjacent-loaded').checked = true;
+
+				if (e.constructor === Event) {
+					document.getElementById('link-dynamic-insertAdjacent-reframed').checked = true;
+				}
+
+				// This is a native event, indicating that the original link is not inert
+				if (e.constructor === mainEvent) {
+					document.getElementById('link-dynamic-insertAdjacent-inert').checked = false;
+				}
+
+				// If the load event fired twice, then it's likely that the original link is not inert
+				if (++linkDynamicInsertAdjacentCount === 2) {
+					document.getElementById('link-dynamic-insertAdjacent-inert').checked = false;
+				}
+			};
+			dynamicAppendPreloadLink.insertAdjacentElement('afterend', dynamicInsertAdjacentPreloadLink);
+		</script>
 
 		<script vite-ignore async src="/script-loading/script-async.js" id="external-script-async"></script>
 		<script vite-ignore defer src="/script-loading/script-defer.js" id="external-script-defer"></script>
