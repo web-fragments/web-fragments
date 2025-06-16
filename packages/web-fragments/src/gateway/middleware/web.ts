@@ -125,17 +125,11 @@ export function getWebMiddleware(
 		 * Simply pass through the fragment response but append the vary header to prevent BFCache issues.
 		 */
 		if (requestSecFetchDest === 'empty') {
-			return prefixHtmlHeadBody(
-				new Response(fragmentResponse.body, {
-					status: fragmentResponse.status,
-					statusText: fragmentResponse.statusText,
-					headers: {
-						'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
-						vary: 'sec-fetch-dest',
-						'x-web-fragment-id': matchedFragment.fragmentId,
-					},
-				}),
-			);
+			const fragmentSoftNavResponse = new Response(fragmentResponse.body, fragmentResponse);
+			fragmentSoftNavResponse.headers.append('vary', 'sec-fetch-dest');
+			fragmentSoftNavResponse.headers.append('x-web-fragment-id', matchedFragment.fragmentId);
+
+			return prefixHtmlHeadBody(fragmentSoftNavResponse);
 		}
 
 		/**
