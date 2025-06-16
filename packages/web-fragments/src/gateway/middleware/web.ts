@@ -140,6 +140,19 @@ export function getWebMiddleware(
 		 */
 		const fragmentAssetResponse = new Response(fragmentResponse.body, fragmentResponse);
 		fragmentAssetResponse.headers.append('x-web-fragment-id', matchedFragment.fragmentId);
+
+		if (mode === 'development' && ['gzip', 'br'].includes(fragmentAssetResponse.headers.get('content-encoding')!)) {
+			// Due to a bug in miniflare which doesn't pass through compressed responses correctly,
+			// we need to set the content-encoding to identity in development mode which somehow makes
+			// miniflare pass this responses via chunked encoding which prevents the content-length from being
+			// mismatched and the response being cut off abruptly.
+			//  https://github.com/cloudflare/workers-sdk/issues/6577
+			//  https://github.com/cloudflare/workers-sdk/issues/8004
+			//  https://github.com/opennextjs/opennextjs-aws/pull/718/files#diff-1102925bd511dd8915dbfd18689c1a3351c17ceef436f0027a3caa0548edbc74R56-R61
+			//  https://github.com/wakujs/waku/issues/1237
+			fragmentAssetResponse.headers.set('Content-Encoding', 'identity');
+		}
+
 		return fragmentAssetResponse;
 
 		async function handleFetchErrors(fragmentResponseOrError: Response | Error) {
