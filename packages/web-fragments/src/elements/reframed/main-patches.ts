@@ -1,5 +1,5 @@
 import { ReframedShadowRoot, reframedMetadataSymbol } from './reframed';
-import { reframedDomInsertion, setInertScriptType, restoreScriptType, executeInertScript } from './script-execution';
+import { reframedDomInsertion } from './script-execution';
 
 export function initializeMainContext(patchHistory: boolean) {
 	if (!(reframedInitializedSymbol in window)) {
@@ -77,52 +77,40 @@ function monkeyPatchDOMInsertionMethods() {
 		return oldChildNode;
 	};
 
+	Element.prototype.insertAdjacentElement = function after<T extends Element>(
+		this: Element,
+		where: InsertPosition,
+		element: T,
+	): T | null {
+		const doInsertTheNode = () => unpatchedElementProto.insertAdjacentElement.apply(this, arguments as any) as T;
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+		return reframedDomInsertion(element, doInsertTheNode, iframeDocument);
+	} satisfies typeof Element.prototype.insertAdjacentElement;
+
 	(['append', 'prepend', 'replaceChildren', 'replaceWith'] as const).forEach((elementInsertionMethod) => {
 		Element.prototype[elementInsertionMethod] = function patchedElementInsertion(...nodes) {
+			let insertionCountdown = nodes.length;
+			// this method must be called `nodes.length` times before it actually executes
+			// this way we defer the insertion until all nodes are preprocessed
+			const doInsertTheNodes = () => {
+				if (--insertionCountdown === 0) {
+					unpatchedElementProto[elementInsertionMethod].apply(this, arguments as any);
+				}
+			};
 			const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
 
-			if (!iframeDocument) {
-				return unpatchedElementProto[elementInsertionMethod].apply(this, arguments as any);
-			}
-
-			const scripts: HTMLScriptElement[] = [];
-
 			nodes.forEach((node) => {
-				if (node instanceof HTMLScriptElement) {
-					scripts.push(node);
-				} else if (node instanceof Element) {
-					scripts.push(...node.querySelectorAll?.('script'));
+				if (typeof node === 'string') {
+					console.warn(
+						'reframed: string arguments to append/prepend/replaceChildren/replaceWith are not supported and could result in incorrect script execution. Inserted string: ',
+						node,
+					);
+					node = document.createTextNode('');
 				}
+				reframedDomInsertion(node, doInsertTheNodes, iframeDocument);
 			});
-
-			scripts.forEach((script) => setInertScriptType(script));
-			unpatchedElementProto[elementInsertionMethod].apply(this, arguments as any);
-			scripts.forEach((script) => restoreScriptType(script));
-			scripts.forEach((script) => executeInertScript(script, iframeDocument));
 		};
 	});
-
-	Element.prototype.insertAdjacentElement = function after(this: Element, where: InsertPosition, element: Element) {
-		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
-
-		if (!iframeDocument) {
-			return unpatchedElementProto.insertAdjacentElement.apply(this, arguments as any);
-		}
-
-		const scripts: HTMLScriptElement[] = [];
-
-		if (element instanceof HTMLScriptElement) {
-			scripts.push(element);
-		} else {
-			scripts.push(...element.querySelectorAll?.('script'));
-		}
-
-		scripts.forEach((script) => setInertScriptType(script));
-		const returnVal = unpatchedElementProto.insertAdjacentElement.apply(this, arguments as any);
-		scripts.forEach((script) => restoreScriptType(script));
-		scripts.forEach((script) => executeInertScript(script, iframeDocument));
-		return returnVal;
-	} satisfies typeof Element.prototype.insertAdjacentElement;
 }
 
 function monkeyPatchMiscNodeMethods() {

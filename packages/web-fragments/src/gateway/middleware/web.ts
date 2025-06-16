@@ -97,7 +97,7 @@ export function getWebMiddleware(
 				.catch(handleFetchErrors)
 				.then(stripDoctype)
 				.then(prefixHtmlHeadBody)
-				.then(neutralizeScriptTags)
+				.then(neutralizeScriptAndLinkTags)
 				.then((fragmentResponse) =>
 					embedFragmentIntoShellApp({
 						appShellResponse,
@@ -432,13 +432,21 @@ export function prefixHtmlHeadBody(fragmentResponse: Response): Response {
 }
 
 /**
- * Rewrites html so that any script tags remain inert and don't execute.
+ * Rewrites html so that any script tags and script preload/prefetch links become inert and don't execute.
  *
  * @param {Response} fragmentResponse response to rewrite
  * @returns {Response} rewritten response
  */
-export function neutralizeScriptTags(fragmentResponse: Response): Response {
+export function neutralizeScriptAndLinkTags(fragmentResponse: Response): Response {
 	return new HTMLRewriter()
+		.on('link', {
+			element(element: any) {
+				const linkType = element.getAttribute('rel');
+				if (linkType && (linkType === 'preload' || linkType === 'prefetch' || linkType === 'modulepreload')) {
+					element.setAttribute('rel', 'inert-' + linkType);
+				}
+			},
+		})
 		.on('script', {
 			element(element: any) {
 				const scriptType = element.getAttribute('type');

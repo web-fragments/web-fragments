@@ -298,14 +298,17 @@ for (const environment of environments) {
 				expect(response.headers.get('set-cookie')?.replace(/\s/g, '')).toBe('c1=val1;httpOnly,c2=val2,c3=val3');
 			});
 
-			it(`should make all script tags in pierced fragment's shadow root inert`, async () => {
+			it(`should make all script tags and preload links in pierced fragment's shadow root inert`, async () => {
 				mockShellAppResponse(
 					new Response('<html><body>legacy host content</body></html>', { headers: { 'content-type': 'text/html' } }),
 				);
 				mockFragmentFooResponse(
 					'/foo',
 					new Response(
-						'<script>console.log("regular inline script")</script>' +
+						'<link rel="preload" href="_fragments/foo/preload.js" as="script">' +
+							'<link rel="prefetch" href="_fragments/foo/prefetch.js" as="script">' +
+							'<link rel="modulepreload" href="_fragments/foo/modulepreload.js" as="script">' +
+							'<script>console.log("regular inline script")</script>' +
 							'<script async>console.log("async inline script")</script>' +
 							'<script deferred>console.log("deferred inline script")</script>' +
 							'<script type="module">console.log("regular inline module script")</script>' +
@@ -321,6 +324,9 @@ for (const environment of environments) {
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(
 					`<html><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document>${
+						'<link rel="inert-preload" href="_fragments/foo/preload.js" as="script">' +
+						'<link rel="inert-prefetch" href="_fragments/foo/prefetch.js" as="script">' +
+						'<link rel="inert-modulepreload" href="_fragments/foo/modulepreload.js" as="script">' +
 						'<script type="inert">console.log("regular inline script")</script>' +
 						'<script async type="inert">console.log("async inline script")</script>' +
 						'<script deferred type="inert">console.log("deferred inline script")</script>' +
