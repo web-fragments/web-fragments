@@ -445,7 +445,7 @@ for (const environment of environments) {
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(`<!doctype html><title>`);
-				expect(response.headers.get('content-type')).toBe('text/html');
+				expect(response.headers.get('content-type')).toBe('text/html;charset=UTF-8');
 				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
 				expect(response.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
 				expect(response.headers.get('cache-control')).toBe('max-age=3600, public, stale-while-revalidate=31536000');
@@ -462,7 +462,7 @@ for (const environment of environments) {
 
 				expect(response2.status).toBe(200);
 				expect(await response2.text()).toBe(`<!doctype html><title>`);
-				expect(response2.headers.get('content-type')).toBe('text/html');
+				expect(response2.headers.get('content-type')).toBe('text/html;charset=UTF-8');
 				expect(response2.headers.get('vary')).toBe('sec-fetch-dest');
 			});
 		});

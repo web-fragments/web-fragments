@@ -52,7 +52,7 @@ export function getWebMiddleware(
 		if (requestSecFetchDest === 'iframe') {
 			return new Response('<!doctype html><title>', {
 				headers: {
-					'Content-Type': 'text/html',
+					'Content-Type': 'text/html;charset=UTF-8',
 					vary: 'sec-fetch-dest',
 					'x-web-fragment-id': matchedFragment.fragmentId,
 					// cache the response for 1 hour and then revalidate in the background just in case we need to make some changes to the served content in the future
