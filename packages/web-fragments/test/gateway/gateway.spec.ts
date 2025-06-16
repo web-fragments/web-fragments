@@ -477,7 +477,9 @@ for (const environment of environments) {
 			it(`should serve a fragment soft navigation request`, async () => {
 				mockFragmentFooResponse(
 					'/foo/some/path',
-					new Response('<p>hello foo world!</p>', { headers: { 'content-type': 'text/html' } }),
+					new Response('<p>hello foo world!</p>', {
+						headers: { 'content-type': 'text/html', 'cache-control': 'max-age=333', 'custom-header': 'my value' },
+					}),
 				);
 
 				const softNavResponse = await testRequest(
@@ -489,6 +491,9 @@ for (const environment of environments) {
 				expect(softNavResponse.headers.get('content-type')).toBe('text/html');
 				expect(softNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
 				expect(softNavResponse.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
+				// pass through all custom headers
+				expect(softNavResponse.headers.get('cache-control')).toBe('max-age=333');
+				expect(softNavResponse.headers.get('custom-header')).toBe('my value');
 
 				// let's make one more request to the same path but this time with sec-fetch-dest=document to simulate hard navigation
 				mockFragmentFooResponse(
@@ -609,7 +614,9 @@ for (const environment of environments) {
 				// fetch an image from the fooFragment
 				mockFragmentFooResponse(
 					'/_fragment/foo/image.jpg',
-					new Response('lol cat img', { headers: { 'content-type': 'image/jpeg' } }),
+					new Response('lol cat img', {
+						headers: { 'content-type': 'image/jpeg', 'cache-control': 'max-age=333', 'custom-header': 'my value' },
+					}),
 				);
 
 				const imgResponse = await testRequest(new Request('http://localhost/_fragment/foo/image.jpg'));
@@ -617,6 +624,10 @@ for (const environment of environments) {
 				expect(imgResponse.status).toBe(200);
 				expect(await imgResponse.text()).toBe(`lol cat img`);
 				expect(imgResponse.headers.get('content-type')).toBe('image/jpeg');
+				// pass through all custom headers
+				expect(imgResponse.headers.get('cache-control')).toBe('max-age=333');
+
+				expect(imgResponse.headers.get('custom-header')).toBe('my value');
 
 				// fetch a js file from the fooFragment
 				mockFragmentFooResponse(
