@@ -254,11 +254,11 @@ export function getWebMiddleware(
 		// Add a header for signaling embedded mode
 		fragmentReq.headers.set('x-fragment-mode', 'embedded');
 
-		if (mode === 'development') {
-			// brotli is not currently supported during local development (with `wrangler (pages) dev`)
-			// so we set the accept-encoding to gzip to avoid problems with it
-			// TODO: we should likely move this to additionalHeaders or something similar as it is wrangler/application specific.
-			fragmentReq.headers.set('Accept-Encoding', 'gzip');
+		if (mode === 'development' && fragmentReq.headers.get('accept-encoding')?.includes('zstd')) {
+			// zstd is not currently supported during local development (with miniflare)
+			// https://github.com/cloudflare/workers-sdk/issues/9522
+			// so we set the accept-encoding to gzip and brotli
+			fragmentReq.headers.set('Accept-Encoding', 'gzip, br');
 		}
 
 		// make the request, and follow any redirects returned by the fragment endpoint
