@@ -3,13 +3,13 @@ import { initializeIFrameContext } from './iframe-patches';
 import { initializeMainContext } from './main-patches';
 import { executeScriptsInPiercedFragment } from './script-execution';
 
-type ReframedOptions = {
+export type ReframedOptions = {
 	pierced: boolean;
 	shadowRoot: ShadowRoot;
 	wfDocumentElement: HTMLElement;
-	bound: boolean;
+	boundNavigation: boolean;
 	headers?: HeadersInit;
-	name: string;
+	fragmentId: string;
 };
 
 /**
@@ -30,7 +30,7 @@ export function reframed(
 	iframe: HTMLIFrameElement;
 	ready: Promise<void>;
 } {
-	initializeMainContext(options.bound);
+	initializeMainContext(options.boundNavigation);
 
 	const wfDocumentElement = options.wfDocumentElement;
 
@@ -44,7 +44,7 @@ export function reframed(
 	const iframe = document.createElement('iframe');
 	iframe.hidden = true;
 	iframe.src = reframedSrc;
-	iframe.name = `wf:${options.name}`;
+	iframe.name = `wf:${options.fragmentId}`;
 	// We can append the iframe to the main document only once the iframe[src] is set.
 	// This is especially the case in Firefox where an extra history record is created for iframes
 	// appended for at least one turn of the event loop (a task), which then have their src is set.
@@ -78,7 +78,7 @@ export function reframed(
 		if (alreadyLoaded) {
 			// iframe reload detected!
 
-			if (options.bound) {
+			if (options.boundNavigation) {
 				// let's update the main location.href
 				location.href = iframe?.contentWindow?.location.href!;
 			} else {
@@ -93,7 +93,7 @@ export function reframed(
 		}
 		alreadyLoaded = true;
 
-		initializeIFrameContext(iframe, reframedShadowRoot, wfDocumentElement, options.bound);
+		initializeIFrameContext(iframe, options);
 		resolveIframeReady(iframe);
 	});
 
