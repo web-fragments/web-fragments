@@ -21,7 +21,16 @@ export function getWebMiddleware(
 
 	return async (request: Request, next: () => Promise<Response>): Promise<Response> => {
 		const { pathname, search = '' } = new URL(request.url);
-		const matchedFragment = gateway.matchRequestToFragment(`${pathname}${search}`);
+		const requestFragmentId = request.headers.get('x-web-fragment-id') ?? undefined;
+		const requestType = identifyRequestType(
+			request.headers.get('sec-fetch-dest'),
+			request.headers.get('x-fragment-mode'),
+		);
+		const matchedFragment = gateway.matchRequestToFragment(`${pathname}${search}`, requestType, requestFragmentId);
+
+		if ((!matchedFragment && requestFragmentId) || (matchedFragment && !requestFragmentId)) {
+			return new Response('Invalid request!', { status: 404 });
+		}
 
 		/**
 		 * Handle app shell (legacy app) requests
@@ -52,7 +61,7 @@ export function getWebMiddleware(
 		if (requestSecFetchDest === 'iframe') {
 			return new Response('<!doctype html><title>', {
 				headers: {
-					'Content-Type': 'text/html',
+					'Content-Type': 'text/html;charset=UTF-8',
 					vary: 'sec-fetch-dest',
 					'x-web-fragment-id': matchedFragment.fragmentId,
 					// cache the response for 1 hour and then revalidate in the background just in case we need to make some changes to the served content in the future
@@ -97,7 +106,7 @@ export function getWebMiddleware(
 				.catch(handleFetchErrors)
 				.then(stripDoctype)
 				.then(prefixHtmlHeadBody)
-				.then(neutralizeScriptTags)
+				.then(neutralizeScriptAndLinkTags)
 				.then((fragmentResponse) =>
 					embedFragmentIntoShellApp({
 						appShellResponse,
@@ -125,17 +134,11 @@ export function getWebMiddleware(
 		 * Simply pass through the fragment response but append the vary header to prevent BFCache issues.
 		 */
 		if (requestSecFetchDest === 'empty') {
-			return prefixHtmlHeadBody(
-				new Response(fragmentResponse.body, {
-					status: fragmentResponse.status,
-					statusText: fragmentResponse.statusText,
-					headers: {
-						'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
-						vary: 'sec-fetch-dest',
-						'x-web-fragment-id': matchedFragment.fragmentId,
-					},
-				}),
-			);
+			const fragmentSoftNavResponse = new Response(fragmentResponse.body, fragmentResponse);
+			fragmentSoftNavResponse.headers.append('vary', 'sec-fetch-dest');
+			fragmentSoftNavResponse.headers.append('x-web-fragment-id', matchedFragment.fragmentId);
+
+			return prefixHtmlHeadBody(fragmentSoftNavResponse);
 		}
 
 		/**
@@ -144,14 +147,22 @@ export function getWebMiddleware(
 		 *
 		 * Simply pass through the fragment response.
 		 */
-		return new Response(fragmentResponse.body, {
-			status: fragmentResponse.status,
-			statusText: fragmentResponse.statusText,
-			headers: {
-				'content-type': fragmentResponse.headers.get('content-type') ?? 'text/plain',
-				'x-web-fragment-id': matchedFragment.fragmentId,
-			},
-		});
+		const fragmentAssetResponse = new Response(fragmentResponse.body, fragmentResponse);
+		fragmentAssetResponse.headers.append('x-web-fragment-id', matchedFragment.fragmentId);
+
+		if (mode === 'development' && ['gzip', 'br'].includes(fragmentAssetResponse.headers.get('content-encoding')!)) {
+			// Due to a bug in miniflare which doesn't pass through compressed responses correctly,
+			// we need to set the content-encoding to identity in development mode which somehow makes
+			// miniflare pass this responses via chunked encoding which prevents the content-length from being
+			// mismatched and the response being cut off abruptly.
+			//  https://github.com/cloudflare/workers-sdk/issues/6577
+			//  https://github.com/cloudflare/workers-sdk/issues/8004
+			//  https://github.com/opennextjs/opennextjs-aws/pull/718/files#diff-1102925bd511dd8915dbfd18689c1a3351c17ceef436f0027a3caa0548edbc74R56-R61
+			//  https://github.com/wakujs/waku/issues/1237
+			fragmentAssetResponse.headers.set('Content-Encoding', 'identity');
+		}
+
+		return fragmentAssetResponse;
 
 		async function handleFetchErrors(fragmentResponseOrError: Response | Error) {
 			const { endpoint, onSsrFetchError = defaultOnSsrFetchError } = matchedFragment!;
@@ -252,11 +263,11 @@ export function getWebMiddleware(
 		// Add a header for signaling embedded mode
 		fragmentReq.headers.set('x-fragment-mode', 'embedded');
 
-		if (mode === 'development') {
-			// brotli is not currently supported during local development (with `wrangler (pages) dev`)
-			// so we set the accept-encoding to gzip to avoid problems with it
-			// TODO: we should likely move this to additionalHeaders or something similar as it is wrangler/application specific.
-			fragmentReq.headers.set('Accept-Encoding', 'gzip');
+		if (mode === 'development' && fragmentReq.headers.get('accept-encoding')?.includes('zstd')) {
+			// zstd is not currently supported during local development (with miniflare)
+			// https://github.com/cloudflare/workers-sdk/issues/9522
+			// so we set the accept-encoding to gzip and brotli
+			fragmentReq.headers.set('Accept-Encoding', 'gzip, br');
 		}
 
 		// make the request, and follow any redirects returned by the fragment endpoint
@@ -432,13 +443,22 @@ export function prefixHtmlHeadBody(fragmentResponse: Response): Response {
 }
 
 /**
- * Rewrites html so that any script tags remain inert and don't execute.
+ * Rewrites html so that any script tags and script preload/prefetch links become inert and don't execute.
  *
  * @param {Response} fragmentResponse response to rewrite
  * @returns {Response} rewritten response
  */
-export function neutralizeScriptTags(fragmentResponse: Response): Response {
+export function neutralizeScriptAndLinkTags(fragmentResponse: Response): Response {
 	return new HTMLRewriter()
+		.on('link', {
+			element(element: any) {
+				const linkType = element.getAttribute('rel');
+				if (linkType && (linkType === 'preload' || linkType === 'prefetch' || linkType === 'modulepreload')) {
+					element.setAttribute('data-link-rel', linkType);
+				}
+				element.setAttribute('rel', 'inert');
+			},
+		})
 		.on('script', {
 			element(element: any) {
 				const scriptType = element.getAttribute('type');
@@ -528,4 +548,20 @@ export function asReadableStream(strings: TemplateStringsArray, ...values: Array
 			controller.close();
 		},
 	});
+}
+
+export function identifyRequestType(
+	secFetchDest: string | null,
+	xFragmentMode: string | null,
+): 'hardNav' | 'softNav' | 'data' | 'asset' | 'iframe' {
+	switch (secFetchDest) {
+		case 'document':
+			return 'hardNav';
+		case 'iframe':
+			return 'iframe';
+		case 'empty':
+			return xFragmentMode === 'embedded' ? 'softNav' : 'data';
+		default:
+			return 'asset';
+	}
 }

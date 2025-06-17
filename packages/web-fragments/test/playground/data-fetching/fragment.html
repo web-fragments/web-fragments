@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>data-fetching fragment</title>
+		<style>
+			#response {
+				white-space: pre-wrap;
+			}
+		</style>
+	</head>
+	<body>
+		<h2>data-fetching fragment</h2>
+		<button id="fetchButton">Fetch Data</button>
+		<hr />
+		<h3>Response:</h3>
+		<div id="response"></div>
+
+		<script type="module">
+			const fetchButton = document.getElementById('fetchButton');
+			const responseDiv = document.getElementById('response');
+
+			fetchButton.addEventListener('click', async () => {
+				try {
+					const response = await fetch('/data-fetching/api', {
+						method: 'GET',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+					});
+
+					if (!response.ok) {
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
+
+					const data = await response.json();
+					responseDiv.textContent = JSON.stringify(data, null, 2);
+				} catch (error) {
+					responseDiv.textContent = `Error: ${error.message}`;
+				}
+			});
+		</script>
+	</body>
+</html>
