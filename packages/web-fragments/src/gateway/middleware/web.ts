@@ -21,7 +21,8 @@ export function getWebMiddleware(
 
 	return async (request: Request, next: () => Promise<Response>): Promise<Response> => {
 		const { pathname, search = '' } = new URL(request.url);
-		const matchedFragment = gateway.matchRequestToFragment(`${pathname}${search}`);
+		const requestFragmentId = request.headers.get('x-web-fragment-id') ?? undefined;
+		const matchedFragment = gateway.matchRequestToFragment(`${pathname}${search}`, requestFragmentId);
 
 		/**
 		 * Handle app shell (legacy app) requests

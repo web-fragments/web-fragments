@@ -517,6 +517,54 @@ for (const environment of environments) {
 				expect(hardNavResponse.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
 			});
 
+			it(`should disambiguate and serve a fragment soft navigation request`, async () => {
+				// vitest-fetch-mock does not support mocking out multiple backends,
+				// so this is a very clumsy workaround.
+				fetchMock.doMockIf(
+					() => true,
+					(request) => {
+						switch (request.url.toString()) {
+							case 'http://dupe-a.test:1234/dupe/':
+								return new Response('<p>Dupe A!</p>', { headers: { 'content-type': 'text/html' } });
+							case 'http://dupe-b.test:1234/dupe/':
+								return new Response('<p>Dupe B!</p>', { headers: { 'content-type': 'text/html' } });
+							default:
+								throw new Error(`Unexpected request to ${request.url}`);
+						}
+					},
+				);
+
+				const softNavResponse = await testRequest(
+					new Request('http://localhost/dupe/', {
+						headers: { 'sec-fetch-dest': 'empty' },
+					}),
+				);
+
+				// if ambiguous default to the first registered fragment
+				expect(await softNavResponse.text()).toBe(`<p>Dupe A!</p>`);
+				expect(softNavResponse.headers.get('x-web-fragment-id')).toBe('dupeFragmentA');
+
+				// if requested return dupeB
+				const softNavResponseB = await testRequest(
+					new Request('http://localhost/dupe/', {
+						headers: { 'sec-fetch-dest': 'empty', 'x-web-fragment-id': 'dupeFragmentB' },
+					}),
+				);
+
+				expect(await softNavResponseB.text()).toBe(`<p>Dupe B!</p>`);
+				expect(softNavResponseB.headers.get('x-web-fragment-id')).toBe('dupeFragmentB');
+
+				// if requested return dupeA
+				const softNavResponseA = await testRequest(
+					new Request('http://localhost/dupe/', {
+						headers: { 'sec-fetch-dest': 'empty', 'x-web-fragment-id': 'dupeFragmentA' },
+					}),
+				);
+
+				expect(await softNavResponseA.text()).toBe(`<p>Dupe A!</p>`);
+				expect(softNavResponseA.headers.get('x-web-fragment-id')).toBe('dupeFragmentA');
+			});
+
 			it(`should rewrite any <html>, <head>, or <body> tags in the served a fragment soft navigation response`, async () => {
 				mockFragmentFooResponse(
 					'/foo/some/path',
@@ -753,6 +801,18 @@ for (const environment of environments) {
 				routePatterns: ['/unpierced/:_*', '/_fragment/unpierced/:_*'],
 				endpoint: 'http://unpierced.test:1234',
 				upstream: 'http://unpierced.test:1234',
+			});
+
+			fragmentGateway.registerFragment({
+				fragmentId: 'dupeFragmentA',
+				routePatterns: ['/dupe/'],
+				endpoint: 'http://dupe-a.test:1234',
+			});
+
+			fragmentGateway.registerFragment({
+				fragmentId: 'dupeFragmentB',
+				routePatterns: ['/dupe/'],
+				endpoint: 'http://dupe-b.test:1234',
 			});
 
 			switch (environment) {
