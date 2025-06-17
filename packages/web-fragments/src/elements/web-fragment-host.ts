@@ -47,7 +47,11 @@ export class WebFragmentHost extends HTMLElement {
 				pierced,
 				shadowRoot: reframedShadowRoot,
 				wfDocumentElement: wfDocumentElement,
-				headers: { 'x-fragment-mode': 'embedded' },
+				headers: {
+					'X-Web-Fragment-Id': fragmentId,
+					// TODO: rename to X-Web-Fragment-Mode
+					'x-fragment-mode': 'embedded',
+				},
 				bound: !fragmentSrc,
 				name: fragmentId,
 			});
