@@ -111,7 +111,7 @@ export class FragmentGateway {
 		});
 	}
 
-	matchRequestToFragment(urlPath: string, requestFragmentId?: string) {
+	matchRequestToFragment(urlPath: string, requestType: string, requestFragmentId?: string): FragmentConfig | boolean {
 		// TODO: path matching needs to take pattern specificity into account
 		// such that more specific patterns are matched before less specific ones
 		//   e.g. given route patterns `['/:accountId', '/:accountId/workers']` and a request path of `/abc123/workers/foo`,
@@ -119,14 +119,16 @@ export class FragmentGateway {
 		const matches = [...this.routeMap.keys()].filter((matcher) => matcher(urlPath));
 
 		for (const match of matches) {
-			const fragmentConfig = this.routeMap.get(match) ?? null;
+			const fragmentConfig = this.routeMap.get(match)!;
 
-			if (!requestFragmentId) {
+			// asset is the only request type that we can match without a fragmentId specified
+			// this is because assets are often requested by the browser natively and these requests don't contain the fragmentId header
+			if (requestType === 'asset' && !requestFragmentId) {
 				// if no fragmentId was not specified in the request, return the first matching fragment config
 				return fragmentConfig;
 			}
 
-			if (requestFragmentId === fragmentConfig?.fragmentId) {
+			if (requestFragmentId === fragmentConfig.fragmentId) {
 				return fragmentConfig;
 			}
 		}

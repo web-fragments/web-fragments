@@ -897,6 +897,105 @@ for (const environment of environments) {
 			});
 		});
 
+		describe(`fragment data requests`, () => {
+			it(`should respond to a fragment data request`, async () => {
+				// fetch an image from the fooFragment
+				mockFragmentFooResponse(
+					'/foo/api',
+					new Response('{"data": "ok"}', {
+						headers: {
+							'content-type': 'application/json',
+						},
+					}),
+				);
+
+				const dataResponse = await testRequest(
+					new Request('http://localhost/foo/api', {
+						headers: { 'X-Web-Fragment-Id': 'fragmentFoo' },
+					}),
+				);
+
+				expect(dataResponse.status).toBe(200);
+				expect(await dataResponse.json()).toStrictEqual({ data: 'ok' });
+				expect(dataResponse.headers.get('content-type')).toBe('application/json');
+				expect(dataResponse.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
+			});
+
+			it(`should not respond to a fragment data request if request path is not registered with the fragment`, async () => {
+				const dataResponse = await testRequest(
+					new Request('http://localhost/bar/api', {
+						// let's also set the sec-fetch-dest as the browser would
+						headers: {
+							'sec-fetch-dest': 'empty',
+							'x-web-fragment-id': 'fragmentFoo',
+						},
+					}),
+				);
+				expect(dataResponse.status).toBe(404);
+				expect(await dataResponse.text()).toBe(`Invalid request!`);
+				expect(dataResponse.headers.get('content-type')).toBe('text/plain;charset=UTF-8');
+				expect(dataResponse.headers.get('x-web-fragment-id')).toBeNull();
+			});
+
+			it(`should not respond to a fragment data request if the x-web-fragment-id header is missing`, async () => {
+				const dataResponse = await testRequest(
+					new Request('http://localhost/bar/api', {
+						// let's also set the sec-fetch-dest as the browser would
+						headers: {
+							'sec-fetch-dest': 'empty',
+						},
+					}),
+				);
+				expect(dataResponse.status).toBe(404);
+				expect(await dataResponse.text()).toBe(`Invalid request!`);
+				expect(dataResponse.headers.get('content-type')).toBe('text/plain;charset=UTF-8');
+				expect(dataResponse.headers.get('x-web-fragment-id')).toBeNull();
+			});
+
+			it(`should handle 304 responses`, async () => {
+				mockFragmentFooResponse('/foo/api', new Response(null, { status: 304 }));
+
+				// fetch data from the fooFragment
+				const imgResponse = await testRequest(
+					new Request('http://localhost/foo/api', {
+						headers: {
+							'if-modified-since': 'Mon, 10 Mar 2025 23:55:13 GMT',
+							'if-none-match': 'W/"a2fd-195827be9b2"',
+							'sec-fetch-dest': 'empty',
+							'x-web-fragment-id': 'fragmentFoo',
+						},
+					}),
+				);
+
+				expect(imgResponse.status).toBe(304);
+				expect(imgResponse.body).toBe(null);
+			});
+
+			it(`should append x-forwarded-host and x-forwarded-proto headers to the data request`, async () => {
+				fetchMock.doMockIf(
+					(request) => {
+						if (request.url.toString() === 'http://foo.test:1234/foo/api') {
+							expect(request.headers.get('x-forwarded-host')).toBe(
+								`localhost${server ? ':' + server.address()!.port : ''}`,
+							);
+							expect(request.headers.get('x-forwarded-proto')).toBe('http');
+							return true;
+						}
+						return false;
+					},
+					new Response('{"data": "ok"}', { headers: { 'content-type': 'application/json' } }),
+				);
+
+				const dataResponse = await testRequest(
+					new Request('http://localhost/foo/api', {
+						headers: { 'sec-fetch-dest': 'empty', 'x-web-fragment-id': 'fragmentFoo' },
+					}),
+				);
+
+				expect(dataResponse.status).toBe(200);
+			});
+		});
+
 		let server: http.Server;
 
 		beforeEach(async () => {

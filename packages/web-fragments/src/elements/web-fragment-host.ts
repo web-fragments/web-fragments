@@ -56,8 +56,8 @@ export class WebFragmentHost extends HTMLElement {
 					// TODO: rename to X-Web-Fragment-Mode
 					'x-fragment-mode': 'embedded',
 				},
-				bound: !fragmentSrc,
-				name: fragmentId,
+				boundNavigation: !fragmentSrc,
+				fragmentId,
 			});
 
 			this.#iframe = iframe;

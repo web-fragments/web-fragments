@@ -22,7 +22,15 @@ export function getWebMiddleware(
 	return async (request: Request, next: () => Promise<Response>): Promise<Response> => {
 		const { pathname, search = '' } = new URL(request.url);
 		const requestFragmentId = request.headers.get('x-web-fragment-id') ?? undefined;
-		const matchedFragment = gateway.matchRequestToFragment(`${pathname}${search}`, requestFragmentId);
+		const requestType = identifyRequestType(
+			request.headers.get('sec-fetch-dest'),
+			request.headers.get('x-fragment-mode'),
+		);
+		const matchedFragment = gateway.matchRequestToFragment(`${pathname}${search}`, requestType, requestFragmentId);
+
+		if ((!matchedFragment && requestFragmentId) || (matchedFragment && !requestFragmentId)) {
+			return new Response('Invalid request!', { status: 404 });
+		}
 
 		/**
 		 * Handle app shell (legacy app) requests
@@ -561,4 +569,20 @@ export function asReadableStream(strings: TemplateStringsArray, ...values: Array
 			controller.close();
 		},
 	});
+}
+
+export function identifyRequestType(
+	secFetchDest: string | null,
+	xFragmentMode: string | null,
+): 'hardNav' | 'softNav' | 'data' | 'asset' | 'iframe' {
+	switch (secFetchDest) {
+		case 'document':
+			return 'hardNav';
+		case 'iframe':
+			return 'iframe';
+		case 'empty':
+			return xFragmentMode === 'embedded' ? 'softNav' : 'data';
+		default:
+			return 'asset';
+	}
 }
