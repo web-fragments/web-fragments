@@ -92,16 +92,33 @@ export class FragmentGateway {
 		});
 	}
 
-	matchRequestToFragment(urlPath: string) {
+	matchRequestToFragment(urlPath: string, requestFragmentId?: string) {
 		// TODO: path matching needs to take pattern specificity into account
 		// such that more specific patterns are matched before less specific ones
 		//   e.g. given route patterns `['/:accountId', '/:accountId/workers']` and a request path of `/abc123/workers/foo`,
 		//   the matched pattern should be `/:accountId/workers` since it is the more specific pattern.
-		const match = [...this.routeMap.keys()].find((matcher) => matcher(urlPath));
+		const matches = [...this.routeMap.keys()].filter((matcher) => matcher(urlPath));
 
-		if (match) {
-			return this.routeMap.get(match) ?? null;
-		} else return null;
+		for (const match of matches) {
+			const fragmentConfig = this.routeMap.get(match) ?? null;
+
+			if (!requestFragmentId) {
+				// if no fragmentId was not specified in the request, return the first matching fragment config
+				return fragmentConfig;
+			}
+
+			if (requestFragmentId === fragmentConfig?.fragmentId) {
+				return fragmentConfig;
+			}
+		}
+
+		// for backwards compatibility if we have a path match, but fragment id doesn't match any of the routes, return the first match
+		// TODO: remove this to increase security and resiliency once we have better request type identification
+		if (matches.length) {
+			return this.routeMap.get(matches[0]);
+		}
+
+		return null;
 	}
 }
 
