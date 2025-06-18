@@ -533,8 +533,24 @@ export function initializeIFrameContext(
 				typeof optionsOrCapture === 'boolean'
 					? { capture: optionsOrCapture }
 					: typeof optionsOrCapture === 'object'
-						? optionsOrCapture
+						? optionsOrCapture ?? {}
 						: {};
+
+			// browsers default to passive events for the following events
+			// https://dom.spec.whatwg.org/#default-passive-value
+			if (
+				!('passive' in options) &&
+				(eventName === 'mousewheel' ||
+					eventName === 'touchstart' ||
+					eventName === 'touchmove' ||
+					eventName === 'wheel') &&
+				(originalListenerTarget === iframeWindow ||
+					originalListenerTarget === iframeDocument ||
+					originalListenerTarget === iframeDocument.documentElement ||
+					originalListenerTarget === iframeDocument.body)
+			) {
+				options.passive = true;
+			}
 
 			// normalize appListener
 			const appListener =
