@@ -1,5 +1,49 @@
 # web-fragments
 
+## 0.7.0
+
+### Minor Changes
+
+- [#206](https://github.com/web-fragments/web-fragments/pull/206) [`f5b7702`](https://github.com/web-fragments/web-fragments/commit/f5b7702c6c96c16713d61502fa264a11bfde978d) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat: support soft navigation to fragments with conflicting urls
+
+  The web-fragment element now appends `X-Web-Fragment-Id` header to all requests it makes to initiate a fragment.
+
+  This header is then used by the gateway to enforce that a fragment match is made only if both the fragment ID and the request url match the information provided in the fragment configuration at registration time.
+
+  If two or more fragments match current request's url, the gateway will route the request to the fragment with matching fragment ID.
+
+### Patch Changes
+
+- [#206](https://github.com/web-fragments/web-fragments/pull/206) [`0692192`](https://github.com/web-fragments/web-fragments/commit/06921928e3709c20fa48a2b1fb730925a8207425) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): workaround miniflare issue with decompressing zstd responses
+
+  Works around https://github.com/cloudflare/workers-sdk/issues/9522
+
+- [#206](https://github.com/web-fragments/web-fragments/pull/206) [`a9f38b8`](https://github.com/web-fragments/web-fragments/commit/a9f38b8d6f8217b17ebfb61a9280fe525332e6ed) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat: add support for preload/prefetch/modulepreload links in web fragments
+
+  These links need to execute in the reframed fragment context (iframe) and not in the main context, similar to how scripts execute.
+
+  Without this fix, browsers might warn that preloaded scripts were not utilized by the application.
+  This is because browsers don't understand that the scripts were actually executed in fragment's iframe.
+
+- [#206](https://github.com/web-fragments/web-fragments/pull/206) [`7d9b350`](https://github.com/web-fragments/web-fragments/commit/7d9b350c51ab9779ae78967366d637867b0e39ea) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): workaround miniflare issue impacting compresed responses to subreqeusts
+
+  Workaround for https://github.com/cloudflare/workers-sdk/issues/8004 which impacts only dev mode with miniflare.
+
+- [#206](https://github.com/web-fragments/web-fragments/pull/206) [`df338f4`](https://github.com/web-fragments/web-fragments/commit/df338f4e9afa4d6f1de52075581144d7381f53e9) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): preserve response headers for soft nav and asset coming from a fragment endpoint
+
+  Previously we mistakingly stripped them and returned a response with minimalistic response head and original body, which resulted in many useful headers missing.
+  Most importantly this issue resulted in caching headers not being correctly relayed to the client.
+
+- [#206](https://github.com/web-fragments/web-fragments/pull/206) [`c6ae1c6`](https://github.com/web-fragments/web-fragments/commit/c6ae1c65d7642f3b0162a089986ac32110ba8ee8) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): clone response before modifying it to prevent immutable response crashes
+
+- [#206](https://github.com/web-fragments/web-fragments/pull/206) [`701dc2e`](https://github.com/web-fragments/web-fragments/commit/701dc2e3d9807b5a4fc311f75507baaeefba6d12) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: reframed iframe should have charset set to utf-8 by default
+
+  We might want to make this configurable in the future but utf-8 is a good default as it's the most common.
+
+- [#206](https://github.com/web-fragments/web-fragments/pull/206) [`1eaddff`](https://github.com/web-fragments/web-fragments/commit/1eaddff290b94b68640b47134095421f8ddcc496) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: default to passive event listeners for scroll-related events
+
+  See https://dom.spec.whatwg.org/#default-passive-value
+
 ## 0.6.1
 
 ### Patch Changes
