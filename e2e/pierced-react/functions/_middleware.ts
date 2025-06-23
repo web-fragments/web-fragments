@@ -18,7 +18,7 @@ gateway.registerFragment({
 	routePatterns: ['/remix-page/:_*', '/_fragment/remix/:_*'],
 	endpoint: 'http://localhost:3000',
 	onSsrFetchError: () => ({
-		response: new Response('<p>Remix fragment not found</p>', {
+		response: new Response('<p>Remix fragment failed to load</p>', {
 			headers: { 'content-type': 'text/html' },
 		}),
 	}),
@@ -31,7 +31,20 @@ gateway.registerFragment({
 	endpoint: 'http://localhost:8123',
 	forwardFragmentHeaders: ['x-fragment-name'],
 	onSsrFetchError: () => ({
-		response: new Response('<p>Qwik fragment not found</p>', {
+		response: new Response('<p>Qwik fragment failed to load</p>', {
+			headers: { 'content-type': 'text/html' },
+		}),
+	}),
+});
+
+gateway.registerFragment({
+	fragmentId: 'react-router',
+	piercingClassNames: ['react-router'],
+	routePatterns: ['/react-router/:_*', '/_fragment/react-router/:_*', '/__manifest?p=/react-router/:_*'],
+	endpoint: 'http://localhost:3000',
+	forwardFragmentHeaders: ['x-fragment-name'],
+	onSsrFetchError: () => ({
+		response: new Response('<p>React Router fragment failed to load</p>', {
 			headers: { 'content-type': 'text/html' },
 		}),
 	}),
