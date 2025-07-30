@@ -2,6 +2,7 @@ import WritableDOMStream from 'writable-dom';
 import { initializeIFrameContext } from './iframe-patches';
 import { initializeMainContext } from './main-patches';
 import { executeScriptsInPiercedFragment } from './script-execution';
+import { WebFragmentError } from './utils/web-fragment-error';
 
 type ReframedOptions = {
 	pierced: boolean;
@@ -75,6 +76,12 @@ export function reframed(
 	let alreadyLoaded = false;
 
 	iframe.addEventListener('load', () => {
+		if (iframe.contentDocument?.head.childNodes.length !== 1 && iframe.contentDocument?.body.childNodes.length !== 0) {
+			throw new WebFragmentError(
+				`Reframed IFrame init error!\nIFrame loaded unexpected content from ${iframe.src}!\nEnsure that Web Fragment gateway contains a fragment registration with a path matching: ${new URL(iframe.src).pathname}`,
+			);
+		}
+
 		if (alreadyLoaded) {
 			// iframe reload detected!
 

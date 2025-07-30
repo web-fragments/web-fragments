@@ -11,6 +11,9 @@ export default function globalSetup({ webServer }: { webServer: { command: strin
 export function failOnBrowserErrors({ page }: { page: Page }) {
 	// Abort a test if an exception in the browser is detected
 	page.on('pageerror', async (error) => {
+		// ignore errors for tests that test error handling
+		if ((await page.title()) === 'WF Playground: fragment-infinite-recursion-breaker') return;
+
 		// prefix error with [browser] so that it's easier to distinguish from Playwright/Node.js errors
 		error.message = `[browser]: ${error.message}`;
 		// rewrite stack trace to align it with the filesystem path to make stack frames easier to navigate
