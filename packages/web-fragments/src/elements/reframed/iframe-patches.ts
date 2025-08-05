@@ -73,6 +73,7 @@ export function initializeIFrameContext(
 	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
 	iframeWindow.MutationObserver = mainWindow.MutationObserver;
 	iframeWindow.ResizeObserver = mainWindow.ResizeObserver;
+	iframeWindow.matchMedia = mainWindow.matchMedia.bind(mainWindow); // needs to be bound to mainWindow otherwise operates on the iframe window
 
 	const windowSizeProperties: (keyof Pick<
 		Window,

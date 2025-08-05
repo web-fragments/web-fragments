@@ -51,3 +51,9 @@ test('Node, Document, Element be from the to the main context', async ({ page })
 	expect(await fragmentContext.evaluate(`document.querySelector('h2') instanceof Element`)).toBe(true);
 	expect(await fragmentContext.evaluate(`document.querySelector('h2').firstChild instanceof Text`)).toBe(true);
 });
+
+//window.matchMedia('(max-width: 755px)')
+test('matchMedia should delegate to the main context', async ({ page }) => {
+	// the iframe window/document have 0px width so '(max-width: 755px)' returns false unless patched
+	expect(await fragmentContext.evaluate(`window.matchMedia('(max-width: 755px)').matches`)).toBe(false);
+});
