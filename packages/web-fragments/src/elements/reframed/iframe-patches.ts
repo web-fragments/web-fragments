@@ -213,8 +213,6 @@ export function initializeIFrameContext(
 	/**
 	 * START> DOCUMENT PATCHES
 	 */
-	let updatedIframeTitle: string | undefined = undefined;
-
 	setInternalReference(iframeDocument, 'body');
 
 	const getUnpatchedIframeDocumentCurrentScript = Object.getOwnPropertyDescriptor(
@@ -226,14 +224,18 @@ export function initializeIFrameContext(
 		title: {
 			get: function () {
 				return (
-					updatedIframeTitle ??
 					// https://html.spec.whatwg.org/multipage/dom.html#document.title
-					wfDocumentElement.querySelector('title')?.textContent?.trim() ??
-					'[reframed document]'
+					wfDocumentElement.querySelector('title')?.textContent?.trim() ?? '[reframed document]'
 				);
 			},
 			set: function (newTitle: string) {
-				updatedIframeTitle = newTitle;
+				const titleElement = wfDocumentElement.querySelector('title');
+				if (titleElement) {
+					titleElement.textContent = newTitle;
+				}
+				if (boundNavigation) {
+					mainDocument.title = newTitle;
+				}
 			},
 		},
 
