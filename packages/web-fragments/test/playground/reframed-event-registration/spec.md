@@ -64,6 +64,7 @@ Depending on the event type, event target, and target of the listener registrati
   - [x] if the `eventType` is `load`, `unload`, `onbeforeunload`, or `popstate` register the listener on `iframeWindow`
   - [x] register a native listener on web-fragment-host's `shadowRoot` (passing along all the registration options) — this ensures that any capturing or bubbling events dispatched within the fragment pass through the listener
   - [x] register a special retargeting proxy listener (described below), on main `window`
+  - [x] additionally, also monkey patch `window.dispatchEvent` in the iframe to dispatch events on the shadowRoot instead of the iframe window
 
 - [x] for all listener wrappers or retargeting proxy listeners, ensure that listener unregistration works correctly for both capturing and bubbling listeners
 

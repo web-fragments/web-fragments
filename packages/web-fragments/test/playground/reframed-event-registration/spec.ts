@@ -674,4 +674,18 @@ describe('reframed: event registration', () => {
 			['keydown',	3,	'main window',		'main window',		'web-fragment',	'web-fragment',	true,			'input > section > body > html > wf-document > [object ShadowRoot] > web-fragment-host > [object ShadowRoot] > web-fragment > main body > main html > main document > main window']
 		]);
 	});
+
+	test('custom event window dispatch', async ({ page }) => {
+		let eventLog = await page.evaluate(() => window.eventLog);
+		expect(eventLog.length).toBe(0);
+
+		await fragmentContext.evaluate(() => window.dispatchEvent(new CustomEvent('myCustomEvent')));
+
+		eventLog = await page.evaluate(() => window.eventLog);
+		expect(eventLog.length).toBe(2);
+		expect(eventLog).toEqual([
+			['myCustomEvent', 2, 'wf window', 'wf window', 'wf window', 'wf body', false, 'wf window'],
+			['myCustomEvent', 2, 'wf window', 'wf window', 'wf window', 'wf body', false, 'wf window'],
+		]);
+	});
 });
