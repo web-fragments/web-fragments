@@ -1,5 +1,23 @@
 # web-fragments
 
+## 0.7.1
+
+### Patch Changes
+
+- [#216](https://github.com/web-fragments/web-fragments/pull/216) [`584688b`](https://github.com/web-fragments/web-fragments/commit/584688bec4b0d2ad4425cd8163e6c00888590623) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: correctly update document.title
+
+  Setting document.title should actually update the `<title>` element within the `<head>` of the fragment.
+
+  And bound fragments should also update parent's document.title — for bound fragments the title is a shared state, just like window.location and history.
+
+- [#215](https://github.com/web-fragments/web-fragments/pull/215) [`b2471fc`](https://github.com/web-fragments/web-fragments/commit/b2471fc74dc000fcd9db7a51a6b6f35f272ae6b9) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: correctly dispatch window.dispatchEvent on in the reframed context
+
+  Since we register any window listeners onto the reframed shadowRoot, we also need to monkey patch the dispatchEvent method on the iframe window to dispatch events on the shadowRoot instead of the iframe window.
+
+- [#213](https://github.com/web-fragments/web-fragments/pull/213) [`e7acc33`](https://github.com/web-fragments/web-fragments/commit/e7acc339748612ec747f7391b1ce933f14561d56) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: fix window.matchMedia to operate on the visible window/document
+
+  By default they operate on the iframe, which returns non-sense values.
+
 ## 0.7.0
 
 ### Minor Changes
