@@ -78,6 +78,8 @@
 			registerLogListener('focusout', document.documentElement);
 			registerLogListener('focusout', document.body);
 
+			registerLogListener('myCustomEvent', window);
+
 			function registerLogListener(eventType, target) {
 				target.addEventListener(
 					eventType,

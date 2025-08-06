@@ -75,6 +75,16 @@ export function initializeIFrameContext(
 	iframeWindow.ResizeObserver = mainWindow.ResizeObserver;
 	iframeWindow.matchMedia = mainWindow.matchMedia.bind(mainWindow); // needs to be bound to mainWindow otherwise operates on the iframe window
 
+	// dispatch events onto the shadowRoot if the event is not one of the special iframe events
+	const originalDispatchEvent = iframeWindow.dispatchEvent.bind(iframeWindow);
+	iframeWindow.dispatchEvent = function reframedDispatchEvent(event: Event): boolean {
+		if (iframeEvents.includes(event?.type)) {
+			return originalDispatchEvent(event);
+		} else {
+			return reframedShadowRoot.dispatchEvent(event);
+		}
+	};
+
 	const windowSizeProperties: (keyof Pick<
 		Window,
 		'innerHeight' | 'innerWidth' | 'outerHeight' | 'outerWidth' | 'visualViewport'
@@ -583,15 +593,20 @@ export function initializeIFrameContext(
 					};
 
 					// rewrite the composedPath by removing any references to the main or reframed objects
-					const reframedComposedPath = [...originalEventProps.composedPath];
-					reframedComposedPath.splice(
-						// remove wfDocumentElement and everything above it
-						originalEventProps.composedPath.indexOf(wfDocumentElement),
-						Infinity,
-						// and add the iframeDocument and iframeWindow to the list
-						iframeDocument,
-						iframeWindow,
-					);
+					let reframedComposedPath = [...originalEventProps.composedPath];
+
+					if (reframedComposedPath.length === 1 && reframedComposedPath[0] === reframedShadowRoot) {
+						reframedComposedPath = [iframeWindow];
+					} else {
+						reframedComposedPath.splice(
+							// remove wfDocumentElement and everything above it
+							originalEventProps.composedPath.indexOf(wfDocumentElement),
+							Infinity,
+							// and add the iframeDocument and iframeWindow to the list
+							iframeDocument,
+							iframeWindow,
+						);
+					}
 
 					// patch the event
 					const originalEventPrototype = Object.getPrototypeOf(event);
@@ -605,6 +620,12 @@ export function initializeIFrameContext(
 						composedPath: {
 							value: () => {
 								return reframedComposedPath;
+							},
+						},
+
+						target: {
+							get() {
+								return originalEventProps.target === reframedShadowRoot ? iframeWindow : originalEventProps.target;
 							},
 						},
 					});
