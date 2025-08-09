@@ -123,7 +123,7 @@ export class WebFragmentHost extends HTMLElement {
 	#preserveStylesheets() {
 		if (this.shadowRoot) {
 			this.shadowRoot.adoptedStyleSheets = Array.from(this.shadowRoot.styleSheets, (sheet) => {
-				const clone = new CSSStyleSheet();
+				const clone = new CSSStyleSheet({ media: sheet.media.mediaText, disabled: sheet.disabled });
 
 				try {
 					// CSSStyleSheet.insertRule() prepends CSS rules to the top of the stylesheet by default.
