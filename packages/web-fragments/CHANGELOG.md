@@ -1,5 +1,11 @@
 # web-fragments
 
+## 0.7.2
+
+### Patch Changes
+
+- [#217](https://github.com/web-fragments/web-fragments/pull/217) [`10d948a`](https://github.com/web-fragments/web-fragments/commit/10d948a993b9efcf9502e8e38b01acdfafa83680) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: support media queries when preserving style sheets during piercing
+
 ## 0.7.1
 
 ### Patch Changes
