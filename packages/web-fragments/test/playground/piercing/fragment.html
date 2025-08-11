@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>hello fragment</title>
+		<style>
+			li:nth-child(1)::after {
+				content: '1️⃣';
+			}
+		</style>
+		<style id="constructed-style-sheet"></style>
+		<link rel="stylesheet" href="./external-style.css" />
+	</head>
+	<body>
+		<h2>hello</h2>
+		<ol>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+		</ol>
+		<script>
+			const name = new URL(location.href).searchParams.get('name') ?? 'world';
+			document.querySelector('h2').textContent += ` ${name}!`;
+
+			const constructedSheet = document.getElementById('constructed-style-sheet').sheet;
+			constructedSheet.insertRule('li:nth-child(3)::after { content: "3️⃣"; }', 0);
+			constructedSheet.insertRule('li:nth-child(4)::after { content: "⏳"; }', 0);
+			setTimeout(() => {
+				constructedSheet.insertRule('li:nth-child(4)::after { content: "4️⃣"; }', 0);
+			}, 1000);
+		</script>
+	</body>
+</html>

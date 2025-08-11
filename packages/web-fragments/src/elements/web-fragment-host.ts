@@ -7,6 +7,7 @@ export class WebFragmentHost extends HTMLElement {
 	isPortaling = false;
 
 	async connectedCallback() {
+		console.log('connectedCallback', arguments);
 		/**
 		 * Because we move the entire fragment host to the web fragment,
 		 * we don't need to run this connectedCallback again. Only run once the first time the element is added to the document.
@@ -62,6 +63,7 @@ export class WebFragmentHost extends HTMLElement {
 	}
 
 	async disconnectedCallback() {
+		console.log('disconnectedCallback', arguments);
 		if (this.isPortaling) {
 			this.isPortaling = false;
 			return;
@@ -73,16 +75,31 @@ export class WebFragmentHost extends HTMLElement {
 		}
 	}
 
+	async connectedMoveCallback() {
+		console.log('connectedMoveCallback', arguments);
+		if (this.isPortaling) {
+			this.isPortaling = false;
+			return;
+		}
+	}
+
 	async portalHost(targetShadowRoot: ShadowRoot) {
 		// Wait until reframed() has signaled that the new iframe context is ready.
 		await this.#ready;
 
+		// Preserve the existing stylesheets to avoid a FOUC when reinserting this element into the DOM
+		this.#preserveStylesheets();
+
+		if (targetShadowRoot.moveBefore) {
+			this.isPortaling = true;
+			targetShadowRoot.moveBefore(this, null);
+			this.removeAttribute('data-piercing');
+			return;
+		}
+
 		// Any script tags injected into the <web-fragment-host> via reframe have already been made inert through writeable-dom.
 		// We need to do the same when we move <web-fragment-host> into <web-fragment> to avoid re-executing scripts.
 		this.#neutralizeScriptTags();
-
-		// Preserve the existing stylesheets to avoid a FOUC when reinserting this element into the DOM
-		this.#preserveStylesheets();
 
 		const activeElement = this.shadowRoot?.activeElement;
 		const selectionRange = this.#getSelectionRange();
@@ -122,27 +139,37 @@ export class WebFragmentHost extends HTMLElement {
 	// this is probably the best way we can deal with the FOUC.
 	#preserveStylesheets() {
 		if (this.shadowRoot) {
-			this.shadowRoot.adoptedStyleSheets = Array.from(this.shadowRoot.styleSheets, (sheet) => {
-				const clone = new CSSStyleSheet({ media: sheet.media.mediaText, disabled: sheet.disabled });
+			this.shadowRoot.adoptedStyleSheets = Array.from(this.shadowRoot.styleSheets, (originalSheet) => {
+				const clonedSheet = new CSSStyleSheet({
+					media: originalSheet.media.mediaText,
+					disabled: originalSheet.disabled,
+				});
 
-				try {
-					// CSSStyleSheet.insertRule() prepends CSS rules to the top of the stylesheet by default.
-					// We need to set the index to sheet.cssRules.length in order to append the rule and maintain specificity.
-					[...sheet.cssRules].forEach((rule) => {
-						// @import directives are not allowed in Constructed Stylesheets
-						if (!(rule instanceof CSSImportRule)) {
-							clone.insertRule(rule.cssText, clone.cssRules.length);
+				// CSSStyleSheet.insertRule() prepends CSS rules to the top of the stylesheet by default.
+				// We need to set the index to sheet.cssRules.length in order to append the rule and maintain specificity.
+				for (const rule of originalSheet.cssRules) {
+					// @import directives are not allowed in Constructed Stylesheets
+					if (!(rule instanceof CSSImportRule)) {
+						try {
+							clonedSheet.insertRule(rule.cssText, clone.cssRules.length);
+						} catch (e: any) {
+							// let's log if this is not a security error
+							// security error is usually cors related errors — most likely due to 3rd party fonts
+							// see: https://stackoverflow.com/questions/49993633/uncaught-domexception-failed-to-read-the-cssrules-property
+							if (e.name !== 'SecurityError') {
+								console.debug(e);
+							}
 						}
-					});
-				} catch (e: any) {
-					// let's log if this is not a security error
-					// security error is usually cors related errors — most likely due to 3rd party fonts
-					// see: https://stackoverflow.com/questions/49993633/uncaught-domexception-failed-to-read-the-cssrules-property
-					if (e.name !== 'SecurityError') {
-						console.debug(e);
 					}
 				}
-				return clone;
+
+				for (const prop of ['insertRule', 'deleteRule', 'replace', 'replaceSync', 'addRule', 'deleteRule']) {
+					originalSheet[prop] = function reframedStyleSheetMutator() {
+						return clonedSheet[prop].apply(clonedSheet, arguments);
+					};
+				}
+
+				return clonedSheet;
 			});
 		}
 	}

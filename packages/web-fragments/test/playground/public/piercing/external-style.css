@@ -1,0 +1,3 @@
+li:nth-child(2)::after {
+	content: '2️⃣';
+}

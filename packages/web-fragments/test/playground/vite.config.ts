@@ -120,6 +120,7 @@ async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 			fragmentId: fragmentId,
 			piercing: process.env.PIERCING === 'false' ? false : true,
 			routePatterns: [`/${fragmentId}/:_*`],
+			//routePatterns: [`/${fragmentId}`],
 			get endpoint() {
 				return getServerUrl();
 			},
