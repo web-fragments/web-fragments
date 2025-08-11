@@ -90,8 +90,10 @@ export class WebFragmentHost extends HTMLElement {
 		// Preserve the existing stylesheets to avoid a FOUC when reinserting this element into the DOM
 		this.#preserveStylesheets();
 
+		// @ts-expect-error moveBefore is not baselined yet
 		if (targetShadowRoot.moveBefore) {
 			this.isPortaling = true;
+			// @ts-expect-error moveBefore is not baselined yet
 			targetShadowRoot.moveBefore(this, null);
 			this.removeAttribute('data-piercing');
 			return;
