@@ -166,7 +166,9 @@ export class WebFragmentHost extends HTMLElement {
 				}
 
 				for (const prop of ['insertRule', 'deleteRule', 'replace', 'replaceSync', 'addRule', 'deleteRule']) {
+					// @ts-expect-error
 					originalSheet[prop] = function reframedStyleSheetMutator() {
+						// @ts-expect-error
 						return clonedSheet[prop].apply(clonedSheet, arguments);
 					};
 				}
