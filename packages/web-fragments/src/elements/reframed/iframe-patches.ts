@@ -83,6 +83,10 @@ export function initializeIFrameContext(
 	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
 	iframeWindow.MutationObserver = mainWindow.MutationObserver;
 	iframeWindow.ResizeObserver = mainWindow.ResizeObserver;
+
+	// CSSStyleSheet don't work across documents, so we need to use the constructor from the main context
+	iframeWindow.CSSStyleSheet = mainWindow.CSSStyleSheet;
+
 	iframeWindow.matchMedia = mainWindow.matchMedia.bind(mainWindow); // needs to be bound to mainWindow otherwise operates on the iframe window
 	// the navigator API is defined as enumerable and configurable property with a getter and an undefined setter
 	Object.defineProperty(iframeWindow, 'navigator', {
@@ -317,6 +321,15 @@ export function initializeIFrameContext(
 		styleSheets: {
 			get: () => {
 				return reframedShadowRoot.styleSheets;
+			},
+		},
+
+		adoptedStyleSheets: {
+			get() {
+				return reframedShadowRoot.adoptedStyleSheets;
+			},
+			set(value) {
+				reframedShadowRoot.adoptedStyleSheets = value;
 			},
 		},
 
