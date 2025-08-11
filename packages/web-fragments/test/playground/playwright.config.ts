@@ -6,7 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  * - if tests run from command line, run against the `pnpm preview`
  */
 const VSCODE_MODE = !!process.env.VSCODE_CWD;
-const PIERCING = process.env.PIERCING;
+const PIERCING = process.env.PIERCING || true;
 const WEBSERVER_COMMAND = VSCODE_MODE
 	? `PIERCING=${PIERCING} pnpm dev --port 4998`
 	: `PIERCING=${PIERCING} pnpm preview --port 4999`;
@@ -50,7 +50,7 @@ export default defineConfig({
 	projects: [
 		{
 			name: 'chromium',
-			use: { ...devices['Desktop Chrome'], permissions: ['clipboard-read', 'clipboard-write'] },
+			use: { ...devices['Desktop Chromium'], permissions: ['clipboard-read', 'clipboard-write'] },
 		},
 		{
 			name: 'firefox',

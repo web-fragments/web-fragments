@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>hello fragment</title>
+		<style>
+			li {
+				list-style: none;
+			}
+			li::before {
+				margin-right: 10px;
+				content: '❌';
+			}
+			li:nth-child(1)::before {
+				content: '✅';
+			}
+		</style>
+		<link rel="stylesheet" href="./external-style.css" />
+
+		<style id="inline-style"></style>
+		<link id="external-style" rel="stylesheet" href="./external-style.css" />
+	</head>
+	<body>
+		<button id="update-styles">update styles</button>
+
+		<h2>Piercing style tests</h2>
+		<ol>
+			<li>1) inline style</li>
+			<li>2) inline style with extra rules inserted before portaling</li>
+			<li>3) inline style with extra rules inserted after portaling via the original sheet reference</li>
+			<li>4) inline style with extra rules inserted after portaling via a new sheet reference</li>
+			<li>5) external style</li>
+			<li>6) external style with extra rules inserted before portaling</li>
+			<li>7) external style with extra rules inserted after portaling via the original sheet reference</li>
+			<li>8) external style with extra rules inserted after portaling via a new sheet reference</li>
+			<li>9) constructed style sheet</li>
+			<li>10) constructed style sheet with extra rules inserted after portaling via the original sheet reference</li>
+			<li>11) constructed style sheet with extra rules inserted after portaling via a new sheet reference</li>
+		</ol>
+
+		<script>
+			document.querySelector('h2').textContent += `!`;
+
+			const inlineSheet = document.getElementById('inline-style').sheet;
+			inlineSheet.insertRule('li:nth-child(2)::before { content: "✅"; }', inlineSheet.cssRules.length);
+			inlineSheet.insertRule('li:nth-child(3)::before { content: "⏳"; }', inlineSheet.cssRules.length);
+			inlineSheet.insertRule('li:nth-child(4)::before { content: "⏳"; }', inlineSheet.cssRules.length);
+
+			const externalSheet = document.getElementById('external-style').sheet;
+			externalSheet.insertRule('li:nth-child(6)::before { content: "✅"; }', externalSheet.cssRules.length);
+			externalSheet.insertRule('li:nth-child(7)::before { content: "⏳"; }', externalSheet.cssRules.length);
+			externalSheet.insertRule('li:nth-child(8)::before { content: "⏳"; }', externalSheet.cssRules.length);
+
+			const constructedSheet = new CSSStyleSheet();
+			constructedSheet.insertRule('li:nth-child(9)::before { content: "✅"; }', constructedSheet.cssRules.length);
+			constructedSheet.insertRule('li:nth-child(10)::before { content: "⏳"; }');
+			constructedSheet.insertRule('li:nth-child(11)::before { content: "⏳"; }');
+
+			document.adoptedStyleSheets = [constructedSheet];
+
+			const updateStylesButton = document.querySelector('button');
+			updateStylesButton.addEventListener('click', () => {
+				console.log('updating stylesheet');
+				inlineSheet.insertRule('li:nth-child(3)::before { content: "✅"; }', inlineSheet.cssRules.length);
+
+				const inlineSheet2 = document.getElementById('inline-style').sheet;
+				inlineSheet2.insertRule('li:nth-child(4)::before { content: "✅"; }', inlineSheet2.cssRules.length);
+
+				externalSheet.insertRule('li:nth-child(7)::before { content: "✅"; }', externalSheet.cssRules.length);
+
+				const externalSheet2 = document.getElementById('external-style').sheet;
+				externalSheet2.insertRule('li:nth-child(8)::before { content: "✅"; }', externalSheet2.cssRules.length);
+
+				constructedSheet.insertRule('li:nth-child(10)::before { content: "✅"; }', constructedSheet.cssRules.length);
+				const constructedSheet2 = document.adoptedStyleSheets.at(-1);
+				constructedSheet2.insertRule('li:nth-child(11)::before { content: "✅"; }', constructedSheet2.cssRules.length);
+			});
+		</script>
+	</body>
+</html>
