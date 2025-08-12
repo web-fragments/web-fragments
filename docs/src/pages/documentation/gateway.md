@@ -3,7 +3,7 @@ title: "Gateway"
 layout: "~/layouts/MarkdownLayout.astro"
 ---
 
-_Last updated_: March 19, 2025
+_Last updated_: April 12, 2025
 
 ## What is the Fragments Gateway
 
@@ -54,12 +54,25 @@ gateway.registerFragment({
 });
 ```
 
-## Requirements and conventions
+## Requirements and Conventions
 
-A typical fragment has two kinds of url patterns which you need to configure in `routePatterns` of a web fragment configuration:
+A typical fragment has two kinds of URL patterns that need to be configured in the `routePatterns` of a web fragment configuration:
 
-- The routable url pattern — navigating to a url matching this pattern with the browser should invoke a fragment
-- The asset url patter — a pattern which uniquely identifies static assets of a fragment belonging to a particular fragment. We recommend using `/_fragment/<fragment-id>/` prefix to ensure uniqueness.
+- **Routable URL Pattern**: Navigating to a URL matching this pattern with the browser should invoke a fragment. This is the entry point for rendering the fragment in an application.
+- **Asset URL Pattern**: A pattern that uniquely identifies static assets belonging to a particular fragment. It is recommended to use the `/_fragment/<fragment-id>/` prefix to ensure uniqueness and avoid conflicts.
+
+For example, a shopping cart fragment might use the following configuration:
+
+```javascript
+{
+  fragmentId: "cart",
+  piercingClassNames: ["cart"],
+  routePatterns: ["/_fragment/cart/:_*", "/shop/:_*"],
+  endpoint: "https://mycart.example.com",
+}
+```
+
+By adhering to these conventions, fragments can be seamlessly integrated into an application while maintaining clarity and avoiding conflicts.
 
 ---
 
