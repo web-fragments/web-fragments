@@ -12,6 +12,7 @@ on:
       - 'packages/web-fragments/src/gateway/**'
       - 'packages/web-fragments/test/gateway/**'
       - '.github/workflows/gateway-tests.yml'
+      - 'pnpm-lock.yaml'
 
 jobs:
   test:
