@@ -153,7 +153,7 @@ export class WebFragmentHost extends HTMLElement {
 					// @import directives are not allowed in Constructed Stylesheets
 					if (!(rule instanceof CSSImportRule)) {
 						try {
-							clonedSheet.insertRule(rule.cssText, clone.cssRules.length);
+							clonedSheet.insertRule(rule.cssText, clonedSheet.cssRules.length);
 						} catch (e: any) {
 							// let's log if this is not a security error
 							// security error is usually cors related errors — most likely due to 3rd party fonts
