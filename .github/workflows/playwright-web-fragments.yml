@@ -8,8 +8,9 @@ on:
     branches:
       - main
     paths:
-      - 'packages/**'
+      - 'packages/web-fragments/**'
       - '.github/workflows/playwright-web-fragments.yml'
+      - 'pnpm-lock.yaml'
 
 jobs:
   test:
