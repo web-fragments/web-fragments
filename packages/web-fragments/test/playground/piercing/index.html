@@ -11,6 +11,7 @@
 	</head>
 	<body>
 		<h1>WF Playground: piercing</h1>
+		<button>pierce!</button>
 
 		<script type="module">
 			import { initializeWebFragments, WebFragment } from 'web-fragments';
@@ -18,9 +19,12 @@
 
 			window.fragmentContext = () => document.querySelector('iframe').contentWindow;
 
-			const wf = new WebFragment();
-			wf.setAttribute('fragment-id', 'piercing');
-			document.body.appendChild(wf);
+			const button = document.querySelector('button');
+			button.addEventListener('click', () => {
+				const wf = new WebFragment();
+				wf.setAttribute('fragment-id', 'piercing');
+				document.body.appendChild(wf);
+			});
 		</script>
 	</body>
 </html>
