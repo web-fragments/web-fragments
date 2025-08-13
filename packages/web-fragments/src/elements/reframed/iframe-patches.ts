@@ -311,7 +311,7 @@ export function initializeIFrameContext(
 			get() {
 				return reframedShadowRoot.adoptedStyleSheets;
 			},
-			set(value) {
+			set(value: CSSStyleSheet[]) {
 				reframedShadowRoot.adoptedStyleSheets = value;
 			},
 		},

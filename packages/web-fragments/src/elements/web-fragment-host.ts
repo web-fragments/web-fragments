@@ -198,7 +198,7 @@ export class WebFragmentHost extends HTMLElement {
 				redirectSheetMutations(inlineSheet, newInlineSheet);
 			}
 			for (const externalSheet of clonedExternalSheets) {
-				const ownerNode = sheetToOwnerNodeMap.get(externalSheet)!;
+				const ownerNode = sheetToOwnerNodeMap.get(externalSheet)! as HTMLLinkElement;
 
 				// HTMLLinkElement doesn't fire load events when the link/sheet is reloaded
 				// so we use the PerformanceObserver to detect when the sheet is done loading
