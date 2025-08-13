@@ -439,6 +439,29 @@ for (const environment of environments) {
 					expect(await response.text()).toBe('');
 				});
 			});
+
+			describe(`web fragment styles`, () => {
+				it(`should inject default WF styles into the pierced response`, async () => {
+					mockShellAppResponse(
+						new Response(
+							'<html><head><style>.appStyle { color: red }</style></head><body>legacy host content</body></html>',
+							{
+								headers: { 'content-type': 'text/html' },
+							},
+						),
+					);
+					mockFragmentFooResponse('/foo', new Response('<p>foo fragment</p>'));
+
+					const response = await testRequest(
+						new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
+					);
+
+					expect(response.status).toBe(200);
+					expect(await response.text()).toBe(
+						`<html><head><style>web-fragment, web-fragment-host, wf-document, wf-html, wf-body { display: block; }wf-head { display: none;}</style><style>.appStyle { color: red }</style></head><body>legacy host content<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><p>foo fragment</p></wf-document></template></web-fragment-host></body></html>`,
+					);
+				});
+			});
 		});
 
 		describe(`fragment iframe requests`, () => {
