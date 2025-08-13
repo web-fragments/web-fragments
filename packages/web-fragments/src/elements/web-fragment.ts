@@ -26,6 +26,8 @@ export class WebFragment extends HTMLElement {
 		}
 
 		// Since fragments will most likely contain other block elements, they should be blocks themselves by default
+		// If the host's initial html was pierced, the html already contains the following sheet.
+		// However it is possible for piercing to be disabled or the web-fragment could be dynamically created and for these scenarios we create the sheet here again, even at risk of slight duplication.
 		const blockSheet = new CSSStyleSheet();
 		blockSheet.insertRule(':host { display: block; }');
 		this.shadowRoot?.adoptedStyleSheets.push(blockSheet);
