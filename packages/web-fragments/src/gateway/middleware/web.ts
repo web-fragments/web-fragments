@@ -309,6 +309,14 @@ export function getWebMiddleware(
 			return new HTMLRewriter()
 				.on('head', {
 					element(element) {
+						element.append(
+							// prettier-ignore
+							'<style>' +
+								'web-fragment, web-fragment-host, wf-document, wf-html, wf-body { display: block; }' +
+								'wf-head { display: none;}' +
+							'</style>',
+							{ html: true },
+						);
 						element.append(gateway.piercingStyles ?? '', { html: true });
 					},
 				})
@@ -341,6 +349,16 @@ export function getWebMiddleware(
 			return new HTMLRewriter()
 				.on('head', {
 					element(element) {
+						element.append(
+							// Inject WF stylesheet
+							// Since fragments will most likely contain other block elements, WF related elements should be blocks themselves by default
+							// prettier-ignore
+							'<style>' +
+								'web-fragment, web-fragment-host, wf-document, wf-html, wf-body { display: block; }' +
+								'wf-head { display: none;}' +
+							'</style>',
+							{ html: true },
+						);
 						element.append(gateway.piercingStyles ?? '', { html: true });
 					},
 				})
