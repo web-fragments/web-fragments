@@ -309,7 +309,7 @@ export function getWebMiddleware(
 			return new HTMLRewriter()
 				.on('head', {
 					element(element) {
-						element.append(
+						element.prepend(
 							// prettier-ignore
 							'<style>' +
 								'web-fragment, web-fragment-host, wf-document, wf-html, wf-body { display: block; }' +
@@ -349,7 +349,7 @@ export function getWebMiddleware(
 			return new HTMLRewriter()
 				.on('head', {
 					element(element) {
-						element.append(
+						element.prepend(
 							// Inject WF stylesheet
 							// Since fragments will most likely contain other block elements, WF related elements should be blocks themselves by default
 							// prettier-ignore
