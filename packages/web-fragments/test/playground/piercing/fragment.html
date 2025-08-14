@@ -39,8 +39,7 @@
 		</ol>
 
 		<script>
-			const name = new URL(location.href).searchParams.get('name') ?? 'world';
-			document.querySelector('h2').textContent += ` ${name}!`;
+			document.querySelector('h2').textContent += `!`;
 
 			const inlineSheet = document.getElementById('inline-style').sheet;
 			inlineSheet.insertRule('li:nth-child(2)::before { content: "✅"; }', inlineSheet.cssRules.length);
