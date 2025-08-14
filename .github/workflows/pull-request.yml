@@ -36,7 +36,7 @@ jobs:
 
       - name: Publish preview package via pkg.pr.new
         shell: bash
-        run: pnpm dlx pkg-pr-new publish
+        run: pnpm dlx pkg-pr-new publish ./packages/web-fragments
 
       - name: Run prettier check
         shell: bash
