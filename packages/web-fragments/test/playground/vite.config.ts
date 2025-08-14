@@ -77,7 +77,11 @@ async function configureGatewayMiddleware(server: ViteDevServer | PreviewServer)
 async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 	const fragmentGateway = new FragmentGateway();
 	(await glob('**/', { ignore: ['dist/**', 'public/**', 'node_modules/**'] })).forEach((appDir) => {
+		// ignore current dir
 		if (appDir === '.') return;
+
+		// don't register fragment for a special test that validates we don't infinitely recurse when a fragment is not registered
+		if (appDir === 'fragment-infinite-recursion-breaker') return;
 
 		const fragmentId = path.basename(appDir);
 
