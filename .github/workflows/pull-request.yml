@@ -30,6 +30,14 @@ jobs:
         shell: bash
         run: pnpm install --frozen-lockfile
 
+      - name: Build
+        shell: bash
+        run: pnpm build
+
+      - name: Publish preview package via pkg.pr.new
+        shell: bash
+        run: pnpm dlx pkg-pr-new publish ./packages/web-fragments
+
       - name: Run prettier check
         shell: bash
         run: pnpm prettier:check
