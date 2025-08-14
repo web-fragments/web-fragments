@@ -35,6 +35,9 @@ export class WebFragmentHost extends HTMLElement {
 			if (!pierced) {
 				wfDocumentElement = document.createElement('wf-document');
 				reframedShadowRoot = this.attachShadow({ mode: 'open' });
+				const wfStyleSheet = document.createElement('style');
+				wfStyleSheet.textContent = 'wf-document, wf-html, wf-body { display: block; }wf-head { display: none;}';
+				reframedShadowRoot.appendChild(wfStyleSheet);
 				reframedShadowRoot.appendChild(wfDocumentElement);
 			} else {
 				reframedShadowRoot = this.shadowRoot;
