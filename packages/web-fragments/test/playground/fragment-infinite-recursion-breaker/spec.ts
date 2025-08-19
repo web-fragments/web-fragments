@@ -19,7 +19,7 @@ test('fragment infinite recursion breaker', async ({ page }) => {
 
 	await step('fragment embedded in the initial html should init', async () => {
 		const fragment = page.locator('web-fragment[fragment-id=fragment-infinite-recursion-breaker]');
-		expect(fragment).toBeAttached();
+		await expect(fragment).toBeAttached();
 		expect(await fragment.innerHTML()).toBe('');
 		expect(lastError?.message).toBe(
 			'Reframed IFrame init error!\n' +

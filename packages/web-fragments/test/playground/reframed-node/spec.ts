@@ -7,13 +7,13 @@ beforeEach(failOnBrowserErrors);
 let fragment: Locator;
 let fragmentContext: Frame;
 
-beforeEach(async ({ page, browserName }) => {
+beforeEach(async ({ page }) => {
 	await page.goto('/reframed-node/');
-	// wait for the fragment to load
-	await page.waitForSelector('web-fragment h2');
 
 	fragment = page.locator('web-fragment');
 	fragmentContext = await getFragmentContext(fragment);
+
+	await expect(fragment.getByRole('heading')).toHaveText('reframed-node fragment');
 });
 
 test('reframed: node.ownerDocument', async ({ page }) => {

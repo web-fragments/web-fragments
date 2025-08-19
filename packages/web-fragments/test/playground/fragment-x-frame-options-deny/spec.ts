@@ -21,7 +21,7 @@ test('fragment with iframe delivered with the x-frame-options=deny response head
 
 	await step('fragment should forcefully fail when x-frame-options=deny is set', async () => {
 		const fragment = page.locator('web-fragment[fragment-id=fragment-x-frame-options-deny]');
-		expect(fragment).toBeAttached();
+		await expect(fragment).toBeAttached();
 		expect(await fragment.innerHTML()).toBe('');
 		expect(lastError?.message).toBe(
 			'Reframed IFrame init error!\n' +

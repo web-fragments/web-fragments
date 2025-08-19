@@ -9,11 +9,11 @@ let fragmentContext: Frame;
 
 beforeEach(async ({ page }) => {
 	await page.goto('/reframing/');
-	// wait for the fragment to load
-	await page.waitForSelector('web-fragment h2');
 
 	fragment = page.locator('web-fragment');
 	fragmentContext = await getFragmentContext(fragment);
+
+	await expect(fragment.getByRole('heading')).toHaveText('hello world!');
 });
 
 test('window sizing in fragment should delegate to the main context', async ({ page }) => {
@@ -65,9 +65,10 @@ test('navigator.clipboard should delegate to the main context', async ({ page, b
 	// Since navigator is shared, the clipboard should also be the same object
 	expect(await page.evaluate(`navigator.clipboard === fragmentContext().navigator.clipboard`)).toBe(true);
 
+	// playwright + webkit doesn't seem to support granting Clipboard API permissions
+	// see https://github.com/microsoft/playwright/issues/25666
+	// eslint-disable-next-line playwright/no-conditional-in-test
 	if (browserName === 'webkit') {
-		// playwright + webkit doesn't seem to support granting Clipboard API permissions
-		// see https://github.com/microsoft/playwright/issues/25666
 		return;
 	}
 

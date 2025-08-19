@@ -46,5 +46,6 @@ describe('fragment Content Security Policy (CSP)', () => {
 		const button = page.locator('button#fragment-eval-button');
 		await button.click();
 		expect(alertFired).toBe(false);
+		expect(lastError).toBeUndefined();
 	});
 });
