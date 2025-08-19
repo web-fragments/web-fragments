@@ -1,0 +1,36 @@
+// @ts-check
+
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import playwright from 'eslint-plugin-playwright';
+
+export default tseslint.config(
+	tseslint.configs.base,
+
+	// Base configuration for all files
+	//eslint.configs.recommended,
+	//tseslint.configs.recommended
+
+	// Playwright-specific configuration for test files
+	{
+		files: ['**/spec.ts'],
+		plugins: {
+			playwright,
+		},
+		rules: {
+			//...playwright.configs['flat/recommended'].rules,
+			// Playwright-specific customizations
+			// 'playwright/expect-expect': 'error',
+			// 'playwright/max-nested-describe': ['error', { max: 3 }],
+			// 'playwright/no-conditional-in-test': 'error',
+			// 'playwright/no-nested-step': 'error',
+			// 'playwright/no-networkidle': 'warn',
+			// 'playwright/no-page-pause': 'error',
+			// 'playwright/no-skipped-test': 'warn',
+			// 'playwright/no-useless-await': 'error',
+			// 'playwright/prefer-web-first-assertions': 'error',
+			// 'playwright/require-top-level-describe': 'error',
+			// 'playwright/valid-expect': 'error',
+		},
+	},
+);
