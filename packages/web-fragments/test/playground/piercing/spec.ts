@@ -4,7 +4,7 @@ import { failOnBrowserErrors, getFragmentContext } from '../playwright.utils';
 
 beforeEach(failOnBrowserErrors);
 
-let fragment: Locator;
+let fragmentHost: Locator;
 let fragmentContext: Frame;
 
 // Only run these tests if piercing is enabled
@@ -13,19 +13,20 @@ process.env.PIERCING !== 'false' &&
 	describe('piercing', () => {
 		beforeEach(async ({ page }) => {
 			await page.goto('/piercing/');
-			// wait for the fragment to load
-			// we use web-fragment-host because piercing needs to be triggered manually in this test
-			await page.waitForSelector('web-fragment-host h2');
 
 			// we use web-fragment-host because piercing needs to be triggered manually in this test
-			fragment = page.locator('web-fragment-host');
-			fragmentContext = await getFragmentContext(fragment);
+			fragmentHost = page.locator('web-fragment-host');
+
+			// wait for the fragment-host to load
+			await expect(fragmentHost.locator('h2')).toHaveText('Piercing style tests!');
+
+			fragmentContext = await getFragmentContext(fragmentHost);
 
 			expect(await fragmentContext.evaluate(`document.querySelector('h2').textContent`)).toBe('Piercing style tests!');
 		});
 
 		test('should have default WF styles before piercing', async () => {
-			expect(fragment).toHaveCSS('display', 'block');
+			await expect(fragmentHost).toHaveCSS('display', 'block');
 		});
 
 		test('should preserve styles throughout portaling', async ({ page }) => {
@@ -60,7 +61,7 @@ process.env.PIERCING !== 'false' &&
 				expect(await getLiBeforeContent(11)).toBe('⏳');
 			});
 
-			await fragment.locator('button#update-styles').click();
+			await fragmentHost.locator('button#update-styles').click();
 
 			await step('should support updating styles after portaling', async () => {
 				expect(await getLiBeforeContent(1)).toBe('✅');
@@ -80,7 +81,7 @@ process.env.PIERCING !== 'false' &&
 	});
 
 async function getLiBeforeContent(index: number) {
-	return fragment
+	return fragmentHost
 		.locator(`li:nth-child(${index})`)
 		.evaluate((el) => window.getComputedStyle(el, '::before').content.replaceAll('"', ''));
 }

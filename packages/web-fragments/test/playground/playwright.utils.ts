@@ -22,6 +22,7 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 			}
 		} catch (e) {
 			// intentionally ignore errors, they will be caught by the test
+			console.log(`caught error in playwright's failOnBrowserErrors`, e);
 		}
 
 		// prefix error with [browser] so that it's easier to distinguish from Playwright/Node.js errors

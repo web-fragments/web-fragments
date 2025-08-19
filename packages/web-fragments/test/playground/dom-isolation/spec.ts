@@ -36,7 +36,7 @@ test('dom isolation of fragments', async ({ page }) => {
 
 	await step('the fragment should have an empty light dom', async () => {
 		expect(await fragment.innerHTML()).toBe('');
-		expect(await (await fragment.locator('web-fragment-host')).innerHTML()).toBe('');
+		expect(await fragment.locator('web-fragment-host').innerHTML()).toBe('');
 	});
 
 	await step('the fragment should have an open shadow root with content', async () => {

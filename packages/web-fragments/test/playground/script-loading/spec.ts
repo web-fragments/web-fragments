@@ -16,6 +16,7 @@ describe('script loading in fragments', () => {
 		});
 		// TODO: is there a better way to wait for the fragment to load?
 		// The app has lots of async scripts, so it's unclear how to wait for them all.
+		// eslint-disable-next-line playwright/no-wait-for-timeout
 		await page.waitForTimeout(1000);
 	});
 
@@ -90,9 +91,13 @@ describe('script loading in fragments', () => {
 		await expect(fragment.locator('#link-preload-inert')).toBeChecked();
 
 		// For an unknown reason, the prefetch tests are flaky on webkit and firefox
+		// eslint-disable-next-line playwright/no-conditional-in-test
 		if (browserName !== 'webkit' && browserName !== 'firefox') {
+			// eslint-disable-next-line playwright/no-conditional-expect
 			await expect(fragment.locator('#link-prefetch-loaded')).toBeChecked();
+			// eslint-disable-next-line playwright/no-conditional-expect
 			await expect(fragment.locator('#link-prefetch-reframed')).toBeChecked();
+			// eslint-disable-next-line playwright/no-conditional-expect
 			await expect(fragment.locator('#link-prefetch-inert')).toBeChecked();
 		}
 
