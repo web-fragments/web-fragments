@@ -15,18 +15,19 @@ declare global {
 
 beforeEach(async ({ page, browserName }) => {
 	await page.goto('/reframed-event-registration/');
-	// wait for the fragment to load
-	await page.waitForSelector('web-fragment h2');
 
 	fragment = page.locator('web-fragment');
 	fragmentContext = await getFragmentContext(fragment);
+
+	// wait for the fragment to load
+	await expect(fragment.locator('h2')).toHaveText('reframed-event-registration fragment');
 
 	// reset the log as some browsers fire focus event on page load, but this is not consistent across browsers
 	await page.evaluate(() => (window.eventLog.length = 0));
 });
 
 describe('reframed: event registration', () => {
-	test('test harness init', async ({ page }) => {
+	test('harness init', async ({ page }) => {
 		await step('ensure the test harness app loaded', async () => {
 			await expect(page).toHaveTitle('WF Playground: reframed-event-registration');
 			await expect(page.locator('h1')).toHaveText('WF Playground: reframed-event-registration');
@@ -155,9 +156,11 @@ describe('reframed: event registration', () => {
 
 		eventLog = await page.evaluate(() => window.eventLog);
 
-		// for some weird reason local webkit running under playwright doesn't fire focus events
+		// for some weird reason *local* webkit running under playwright doesn't fire focus events
+		// eslint-disable-next-line playwright/no-conditional-in-test
 		if (!process.env.CI && browserName === 'webkit') {
 			// prettier-ignore
+			// eslint-disable-next-line playwright/no-conditional-expect
 			expect(eventLog).toEqual([
 				// type, phase, source, 				currentTarget, 		target, 	activeElement, isTrusted, composedPath
 				['click', 1,	'main window',		'main window',	'button',	'main body',	true,	'button > section > main body > main html > main document > main window'],
@@ -173,6 +176,7 @@ describe('reframed: event registration', () => {
 			]);
 		} else {
 			// prettier-ignore
+			// eslint-disable-next-line playwright/no-conditional-expect
 			expect(eventLog).toEqual([
 				// type, phase, source, 				currentTarget, 		target, 	activeElement, isTrusted, composedPath
 				['focus',		1,	'main window',		'main window',	'button',	'button',				true,			'button > section > main body > main html > main document > main window'],
@@ -211,8 +215,10 @@ describe('reframed: event registration', () => {
 		eventLog = await page.evaluate(() => window.eventLog);
 
 		// for some weird reason local webkit running under playwright doesn't fire focus events
+		// eslint-disable-next-line playwright/no-conditional-in-test
 		if (!process.env.CI && browserName === 'webkit') {
 			// prettier-ignore
+			// eslint-disable-next-line playwright/no-conditional-expect
 			expect(eventLog).toEqual([
 			// type, 		phase, source, 				currentTarget, 		target, 			activeElement, 	isTrusted, composedPath
 				['click',	1,	'main window',		'main window',		'web-fragment',	'main body',		true,			'button > section > body > html > wf-document > [object ShadowRoot] > web-fragment-host > [object ShadowRoot] > web-fragment > main body > main html > main document > main window'],
@@ -236,6 +242,7 @@ describe('reframed: event registration', () => {
 			]);
 		} else {
 			// prettier-ignore
+			// eslint-disable-next-line playwright/no-conditional-expect
 			expect(eventLog).toEqual([
 			// type, 	phase, 	source, 				currentTarget, 			target, 				activeElement, 		isTrusted, composedPath
 				['focus',		1,	'main window',		'main window',		'web-fragment',	'web-fragment',	true,			'button > section > body > html > wf-document > [object ShadowRoot] > web-fragment-host > [object ShadowRoot] > web-fragment > main body > main html > main document > main window'],
@@ -294,8 +301,10 @@ describe('reframed: event registration', () => {
 		eventLog = await page.evaluate(() => window.eventLog);
 
 		// for some weird reason local webkit running under playwright doesn't fire focus events
+		// eslint-disable-next-line playwright/no-conditional-in-test
 		if (!process.env.CI && browserName === 'webkit') {
 			// prettier-ignore
+			// eslint-disable-next-line playwright/no-conditional-expect
 			expect(eventLog).toEqual([
 				// type, phase, source, 				currentTarget, 		target, 	activeElement, isTrusted, composedPath
 				['click',		1,	'main window',		'main window',	'button',	'main body',		true,			'button > section > main body > main html > main document > main window'],
@@ -322,6 +331,7 @@ describe('reframed: event registration', () => {
 			]);
 		} else {
 			// prettier-ignore
+			// eslint-disable-next-line playwright/no-conditional-expect
 			expect(eventLog).toEqual([
 				// type, 	phase, 	source, 					currentTarget, 	target, 	activeElement, isTrusted, composedPath
 				['focus',			1,	'main window',		'main window',	'button',	'button',				true,			'button > section > main body > main html > main document > main window'],
@@ -383,8 +393,10 @@ describe('reframed: event registration', () => {
 		eventLog = await page.evaluate(() => window.eventLog);
 
 		// for some weird reason local webkit running under playwright doesn't fire focus events
+		// eslint-disable-next-line playwright/no-conditional-in-test
 		if (!process.env.CI && browserName === 'webkit') {
 			// prettier-ignore
+			// eslint-disable-next-line playwright/no-conditional-expect
 			expect(eventLog).toEqual([
 				// type, 		phase, source, 				currentTarget, 		target, 				activeElement, 	isTrusted, composedPath
 				['click',		1,	'main window',		'main window',		'web-fragment',	'main body',		true,			'button > section > body > html > wf-document > [object ShadowRoot] > web-fragment-host > [object ShadowRoot] > web-fragment > main body > main html > main document > main window'],
@@ -431,6 +443,7 @@ describe('reframed: event registration', () => {
 			]);
 		} else {
 			// prettier-ignore
+			// eslint-disable-next-line playwright/no-conditional-expect
 			expect(eventLog).toEqual([
 				// type, 		phase, 	source, 				currentTarget, 		target, 				activeElement, 	isTrusted, composedPath
 				['focus',			1,	'main window',		'main window',		'web-fragment',	'web-fragment',	true,			'button > section > body > html > wf-document > [object ShadowRoot] > web-fragment-host > [object ShadowRoot] > web-fragment > main body > main html > main document > main window'],
@@ -596,6 +609,7 @@ describe('reframed: event registration', () => {
 		// oddly webkit refuses to click on the input and claims that the following:
 		//   <web-fragment fragment-id="reframed-event-registration"></web-fragment> intercepts pointer events
 		// which doesn't make sense — `{force :true}` helps to overcome this issue
+		// eslint-disable-next-line playwright/no-force-option
 		await fragment.locator('#wfFocusableInput').click({ force: true });
 
 		eventLog = await page.evaluate(() => window.eventLog);

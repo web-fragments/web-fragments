@@ -9,11 +9,11 @@ let fragmentContext: Frame;
 
 beforeEach(async ({ page }) => {
 	await page.goto('/reframing/');
-	// wait for the fragment to load
-	await page.waitForSelector('web-fragment h2');
 
 	fragment = page.locator('web-fragment');
 	fragmentContext = await getFragmentContext(fragment);
+
+	await expect(fragment.getByRole('heading')).toHaveText('hello world!');
 });
 
 test('window sizing in fragment should delegate to the main context', async ({ page }) => {
