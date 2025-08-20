@@ -10,22 +10,22 @@ let unboundFragment: Locator;
 let boundContext: Frame;
 let unboundContext: Frame;
 let main: {
-	locationHref: Function;
-	historyLength: Function;
-	popstateCount: Function;
-	back: Function;
-	forward: Function;
+	locationHref: () => Promise<string>;
+	historyLength: () => Promise<number>;
+	popstateCount: () => Promise<number>;
+	back: () => Promise<void>;
+	forward: () => Promise<void>;
 	softNavToFooButton: Locator;
 	softNavToBarButton: Locator;
 	hardNavToBazButton: Locator;
 	reloadButton: Locator;
 };
 let bound: {
-	locationHref: Function;
-	historyLength: Function;
-	popstateCount: Function;
-	back: Function;
-	forward: Function;
+	locationHref: () => Promise<string>;
+	historyLength: () => Promise<number>;
+	popstateCount: () => Promise<number>;
+	back: () => Promise<void>;
+	forward: () => Promise<void>;
 	softNavToFooButton: Locator;
 	softNavToBarButton: Locator;
 	hardNavToBazButton: Locator;
@@ -33,11 +33,11 @@ let bound: {
 };
 
 let unbound: {
-	locationHref: Function;
-	historyLength: Function;
-	popstateCount: Function;
-	back: Function;
-	forward: Function;
+	locationHref: () => Promise<string>;
+	historyLength: () => Promise<number>;
+	popstateCount: () => Promise<number>;
+	back: () => Promise<void>;
+	forward: () => Promise<void>;
 	softNavToFooButton: Locator;
 	softNavToBarButton: Locator;
 	hardNavToBazButton: Locator;
@@ -243,9 +243,7 @@ test('back and forward via browser buttons or history.forward()/.back() should w
 	expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/unbound/);
 });
 
-test('history.forward()/.back() in a unbound fragment should update location and history within the fragment only', async ({
-	page,
-}) => {
+test('history.forward()/.back() in a unbound fragment should update location and history within the fragment only', async () => {
 	await unbound.softNavToFooButton.click();
 	await unbound.softNavToBarButton.click();
 
@@ -266,7 +264,6 @@ test('history.forward()/.back() in a unbound fragment should update location and
 
 test('bfcache should not cause bound fragment to be mistaken for the shell app even though they share the same url', async ({
 	page,
-	browserName,
 }) => {
 	await expect(page).toHaveURL(/http:\/\/localhost:\d+\/location-and-history\//);
 	await expect(page).toHaveTitle('WF Playground: location-and-history');
@@ -288,7 +285,7 @@ test('bfcache should not cause bound fragment to be mistaken for the shell app e
 	expect(await unbound.locationHref()).toMatch(/http:\/\/localhost:\d+\/location-and-history\/unbound/);
 });
 
-test('unbound fragment should not participate in history management', async ({ page }) => {
+test('unbound fragment should not participate in history management', async () => {
 	expect(await main.historyLength()).toBe(2);
 	expect(await bound.historyLength()).toBe(2);
 	expect(await unbound.historyLength()).toBe(1);
