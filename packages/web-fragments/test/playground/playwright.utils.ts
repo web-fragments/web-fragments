@@ -28,7 +28,7 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 		// prefix error with [browser] so that it's easier to distinguish from Playwright/Node.js errors
 		error.message = `[browser]: ${error.message}`;
 		// rewrite stack trace to align it with the filesystem path to make stack frames easier to navigate
-		error.stack = error.stack?.replace(/http:\/\/[^\/]*\//g, new URL('../src/', import.meta.url).pathname);
+		error.stack = error.stack?.replace(/http:\/\/[^/]*\//g, new URL('../src/', import.meta.url).pathname);
 		throw error;
 	});
 

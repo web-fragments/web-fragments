@@ -1,14 +1,25 @@
 // @ts-check
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import playwright from 'eslint-plugin-playwright';
 
 export default tseslint.config(
 	// Base configuration for all files
-	//eslint.configs.recommended,
+	eslint.configs.recommended,
 	tseslint.configs.recommended,
+
+	// Browser environment for JavaScript files
+	// TODO: is this the best way to go about this? should this be defined in tsconfig instead?
+	{
+		files: ['**/*.js'],
+		languageOptions: {
+			globals: {
+				document: 'readonly',
+				window: 'readonly',
+			},
+		},
+	},
 
 	// Playwright-specific configuration for test files
 	{
