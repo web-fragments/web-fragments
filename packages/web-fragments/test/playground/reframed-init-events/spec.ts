@@ -5,6 +5,7 @@ import { failOnBrowserErrors, getFragmentContext } from '../playwright.utils';
 beforeEach(failOnBrowserErrors);
 
 let fragment: Locator;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let fragmentContext: Frame;
 
 beforeEach(async ({ page }) => {

@@ -9,6 +9,7 @@ let fragmentContext: Frame;
 
 // Only run these tests if piercing is enabled
 // All of these tests assume that the host was pierced.
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 process.env.PIERCING !== 'false' &&
 	describe('piercing', () => {
 		beforeEach(async ({ page }) => {

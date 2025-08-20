@@ -34,7 +34,7 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 
 	// Abort a test if an network request fails (e.g. aborted requests)
 	page.on('requestfailed', async (request: Request) => {
-		//throw new Error(`Network request failed for: ${request.url()}` + `\n    error: ${request.failure()?.errorText})`);
+		throw new Error(`Network request failed for: ${request.url()}` + `\n    error: ${request.failure()?.errorText})`);
 	});
 
 	// Abort a test if a network request fails with HTTP status code >= 400
