@@ -13,7 +13,7 @@ declare global {
 	}
 }
 
-beforeEach(async ({ page, browserName }) => {
+beforeEach(async ({ page }) => {
 	await page.goto('/reframed-event-registration/');
 
 	fragment = page.locator('web-fragment');
@@ -37,7 +37,7 @@ describe('reframed: event registration', () => {
 		expect(eventLog.length).toBe(0);
 	});
 
-	test('main click handling (<h1>)', async ({ page, browser }) => {
+	test('main click handling (<h1>)', async ({ page }) => {
 		let eventLog = await page.evaluate(() => window.eventLog);
 		expect(eventLog.length).toBe(0);
 
@@ -59,7 +59,7 @@ describe('reframed: event registration', () => {
 		]);
 	});
 
-	test('fragment click handling (<h2>)', async ({ page, browser }) => {
+	test('fragment click handling (<h2>)', async ({ page }) => {
 		let eventLog = await page.evaluate(() => window.eventLog);
 		expect(eventLog.length).toBe(0);
 
@@ -89,7 +89,7 @@ describe('reframed: event registration', () => {
 		]);
 	});
 
-	test('main click handling (<html>)', async ({ page, browser }) => {
+	test('main click handling (<html>)', async ({ page }) => {
 		let eventLog = await page.evaluate(() => window.eventLog);
 		expect(eventLog.length).toBe(0);
 
@@ -116,7 +116,7 @@ describe('reframed: event registration', () => {
 		]);
 	});
 
-	test('fragment click handling (<html>)', async ({ page, browser }) => {
+	test('fragment click handling (<html>)', async ({ page }) => {
 		let eventLog = await page.evaluate(() => window.eventLog);
 		expect(eventLog.length).toBe(0);
 
@@ -515,7 +515,7 @@ describe('reframed: event registration', () => {
 		}
 	});
 
-	test('main keydown handling (<body>)', async ({ page, browser }) => {
+	test('main keydown handling (<body>)', async ({ page }) => {
 		let eventLog = await page.evaluate(() => window.eventLog);
 		expect(eventLog.length).toBe(0);
 
@@ -547,7 +547,7 @@ describe('reframed: event registration', () => {
 	// this scenario is the same as the main scenario above — fragment's body can't be implicitly focused in a new way other than by focusing the main body
 	// test.skip('fragment keydown handling (<body>)', () => {});
 
-	test('main keydown handling (<input>)', async ({ page, browser }) => {
+	test('main keydown handling (<input>)', async ({ page }) => {
 		let eventLog = await page.evaluate(() => window.eventLog);
 		expect(eventLog.length).toBe(0);
 
@@ -602,7 +602,7 @@ describe('reframed: event registration', () => {
 		]);
 	});
 
-	test('fragment keydown handling (<input>)', async ({ page, browser }) => {
+	test('fragment keydown handling (<input>)', async ({ page }) => {
 		let eventLog = await page.evaluate(() => window.eventLog);
 		expect(eventLog.length).toBe(0);
 
