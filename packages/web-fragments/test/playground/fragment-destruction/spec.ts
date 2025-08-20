@@ -31,6 +31,7 @@ describe('fragment destruction', () => {
 		await expect(lastMessageSpan).toHaveText(/hello\d+/);
 		const messageBeforeDestruction = (await lastMessageSpan.textContent())!;
 		// wait for a few messages to be sent
+		// eslint-disable-next-line playwright/no-wait-for-timeout
 		await page.waitForTimeout(300);
 
 		await step('removing a fragment should cause any scheduled tasks to stop', async () => {
@@ -39,15 +40,19 @@ describe('fragment destruction', () => {
 			const messageAfterDestruction = (await lastMessageSpan.textContent())!;
 			expect(messageBeforeDestruction < messageAfterDestruction).toBeTruthy();
 			// extra wait to ensure that no timers are running any more in the background
+			// eslint-disable-next-line playwright/no-wait-for-timeout
 			await page.waitForTimeout(200);
 			expect(messageAfterDestruction).toBe(await lastMessageSpan.textContent());
 		});
 	});
 
 	test('memory cleanup', async ({ page, browserName }) => {
-		// this test currently fails on webkit and firefox but it's unclear why
-		// manual testing doesn't show any memory leaks
-		if (browserName === 'webkit' || browserName === 'firefox') return;
+		// eslint-disable-next-line playwright/no-skipped-test
+		test.skip(
+			browserName === 'webkit' || browserName === 'firefox',
+			`Fails on webkit and firefox but it's unclear why.
+			 Manual testing doesn't show any memory leaks.`,
+		);
 
 		const fragments = page.locator('web-fragment');
 		await expect(fragments.getByRole('heading')).toHaveText('hello world!');

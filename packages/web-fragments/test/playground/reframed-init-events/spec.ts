@@ -5,15 +5,16 @@ import { failOnBrowserErrors, getFragmentContext } from '../playwright.utils';
 beforeEach(failOnBrowserErrors);
 
 let fragment: Locator;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let fragmentContext: Frame;
 
-beforeEach(async ({ page, browserName }) => {
+beforeEach(async ({ page }) => {
 	await page.goto('/reframed-init-events/');
-	// wait for the fragment to load
-	await page.waitForSelector('web-fragment h2');
 
 	fragment = page.locator('web-fragment');
 	fragmentContext = await getFragmentContext(fragment);
+
+	await expect(fragment.getByRole('heading')).toHaveText('reframed-init-events fragment');
 });
 
 test('reframed: init events', async ({ page }) => {
