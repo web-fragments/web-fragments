@@ -24,7 +24,7 @@ test('fragment infinite recursion breaker', async ({ page }) => {
 		expect(lastError?.message).toBe(
 			'Reframed IFrame init error!\n' +
 				`IFrame loaded unexpected content from http://localhost:${new URL(page.url()).port}/fragment-infinite-recursion-breaker/!\n` +
-				'Ensure that Web Fragment gateway contains a fragment registration with a path matching: /fragment-infinite-recursion-breaker/',
+				'Ensure that the Web Fragment gateway contains a fragment registration with "routePatterns" matching path: /fragment-infinite-recursion-breaker/',
 		);
 	});
 });
