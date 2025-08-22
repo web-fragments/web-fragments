@@ -13,6 +13,7 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 	page.on('pageerror', async (error) => {
 		// ignore errors for tests that test error handling
 		if ((await page.title()) === 'WF Playground: fragment-infinite-recursion-breaker') return;
+		if ((await page.title()) === 'WF Playground: fragment-x-frame-options-deny') return;
 
 		// prefix error with [browser] so that it's easier to distinguish from Playwright/Node.js errors
 		error.message = `[browser]: ${error.message}`;

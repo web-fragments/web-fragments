@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>x-frame-options-deny test fragment</title>
+	</head>
+	<body>
+		<h2>This fragment will never become interactive due to the iframe being blocked by the browser!</h2>
+		<button>Click me to (not) see an alert</button>
+		<script>
+			document.querySelector('button').addEventListener('click', () => {
+				alert('clicked');
+			});
+		</script>
+	</body>
+</html>
