@@ -111,8 +111,8 @@ function interceptNodeResponse(
 	let originHead: ResponseInit;
 
 	let originHeadResolve: (response: ResponseInit) => void;
-	const originHeadPromise = new Promise<ResponseInit>((res) => {
-		originHeadResolve = res;
+	const originHeadPromise = new Promise<ResponseInit>((resolve) => {
+		originHeadResolve = resolve;
 	});
 
 	/**
