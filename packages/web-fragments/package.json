@@ -43,6 +43,7 @@
 		"types:root": "tsc -p .",
 		"types:check": "pnpm types --noEmit --emitDeclarationOnly false",
 		"types": "pnpm run --filter web-fragments --parallel \"/^types:(?!check).*/\"",
+		"test": "pnpm test:unit && pnpm test:gateway && pnpm test:playground",
 		"test:unit": "pnpm vitest run src",
 		"test:gateway": "pnpm -C test/gateway test",
 		"test:playground": "pnpm test:playground:pierced && pnpm test:playground:nonpierced",
