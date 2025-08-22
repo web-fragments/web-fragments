@@ -41,12 +41,30 @@ export default defineConfig({
 
 	plugins: [
 		{
+			name: 'playground-redirects-middleware',
+			configureServer: configurePlaygroundRedirectsMiddleware,
+			configurePreviewServer: configurePlaygroundRedirectsMiddleware,
+		},
+		{
 			name: 'web-fragments-middleware',
 			configureServer: configureGatewayMiddleware,
 			configurePreviewServer: configureGatewayMiddleware,
 		},
 	],
 });
+
+async function configurePlaygroundRedirectsMiddleware(server: ViteDevServer | PreviewServer) {
+	server.middlewares.use(function playgroundRedirectMiddleware(
+		req: http.IncomingMessage,
+		res: http.ServerResponse,
+		next: () => void,
+	) {
+		if (req.url === '/baz/' || req.url === '/baz') {
+			req.url = '/baz/index.html';
+		}
+		next();
+	});
+}
 
 async function configureGatewayMiddleware(server: ViteDevServer | PreviewServer) {
 	let serverUrl: string;
