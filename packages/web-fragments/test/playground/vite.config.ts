@@ -94,6 +94,7 @@ async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 				return getServerUrl();
 			},
 			prePiercingClassNames: [],
+			iframeHeaders: fragmentId === 'fragment-x-frame-options-deny' ? { 'X-Frame-Options': 'deny' } : undefined,
 		});
 	});
 
