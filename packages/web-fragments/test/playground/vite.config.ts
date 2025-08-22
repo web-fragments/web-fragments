@@ -27,7 +27,24 @@ export default defineConfig({
 		},
 	},
 
+	server: {
+		headers: {
+			'Content-Security-Policy': `
+							connect-src 'self';
+							object-src 'none'; 
+							script-src 'self' 'unsafe-eval' 'unsafe-inline';
+							base-uri 'self';`
+				.replaceAll('\n', '')
+				.replaceAll('  ', ' '),
+		},
+	},
+
 	plugins: [
+		{
+			name: 'playground-redirects-middleware',
+			configureServer: configurePlaygroundRedirectsMiddleware,
+			configurePreviewServer: configurePlaygroundRedirectsMiddleware,
+		},
 		{
 			name: 'web-fragments-middleware',
 			configureServer: configureGatewayMiddleware,
@@ -35,6 +52,19 @@ export default defineConfig({
 		},
 	],
 });
+
+async function configurePlaygroundRedirectsMiddleware(server: ViteDevServer | PreviewServer) {
+	server.middlewares.use(function playgroundRedirectMiddleware(
+		req: http.IncomingMessage,
+		res: http.ServerResponse,
+		next: () => void,
+	) {
+		if (req.url === '/baz/' || req.url === '/baz') {
+			req.url = '/baz/index.html';
+		}
+		next();
+	});
+}
 
 async function configureGatewayMiddleware(server: ViteDevServer | PreviewServer) {
 	let serverUrl: string;
@@ -77,20 +107,43 @@ async function configureGatewayMiddleware(server: ViteDevServer | PreviewServer)
 async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 	const fragmentGateway = new FragmentGateway();
 	(await glob('**/', { ignore: ['dist/**', 'public/**', 'node_modules/**'] })).forEach((appDir) => {
+		// ignore current dir
 		if (appDir === '.') return;
+
+		// don't register fragment for a special test that validates we don't infinitely recurse when a fragment is not registered
+		if (appDir === 'fragment-infinite-recursion-breaker') return;
 
 		const fragmentId = path.basename(appDir);
 
 		console.log(`Registering fragment: ${fragmentId}`);
-		fragmentGateway.registerFragment({
+		const fragmentConfig: FragmentConfig = {
 			fragmentId: fragmentId,
 			piercing: process.env.PIERCING === 'false' ? false : true,
 			routePatterns: [`/${fragmentId}/:_*`],
 			get endpoint() {
 				return getServerUrl();
 			},
-			prePiercingClassNames: [],
-		});
+		};
+
+		// fragment specific config
+		switch (fragmentId) {
+			case 'fragment-x-frame-options-deny':
+				fragmentConfig.iframeHeaders = { 'X-Frame-Options': 'deny' };
+				break;
+			case 'fragment-csp':
+				fragmentConfig.iframeHeaders = {
+					'Content-Security-Policy': `
+							connect-src 'self';
+							object-src 'none'; 
+							script-src 'self' 'unsafe-inline';
+							base-uri 'self';`
+						.replaceAll('\n', '')
+						.replaceAll('  ', ' '),
+				};
+				break;
+		}
+
+		fragmentGateway.registerFragment(fragmentConfig);
 	});
 
 	const fragmentGatewayMiddleware = getNodeMiddleware(fragmentGateway);

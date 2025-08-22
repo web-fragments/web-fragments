@@ -46,8 +46,27 @@ export class FragmentGateway {
 			);
 		}
 
+		// TODO: defensively deep clone the config object, but preserve any functions or property getters
+
 		// default to true
 		fragmentConfig.piercing ??= true;
+
+		if (fragmentConfig.iframeHeaders) {
+			// normalize header name casing to Camel-Case
+			fragmentConfig.iframeHeaders = Object.fromEntries(
+				Object.entries(fragmentConfig.iframeHeaders!).map(([key, value]) => [
+					[...key].reduce((acc, char) => {
+						if (acc === '') {
+							return char.toUpperCase();
+						} else if (acc.endsWith('-')) {
+							return acc + char.toUpperCase();
+						}
+						return acc + char.toLowerCase();
+					}, ''),
+					value,
+				]),
+			);
+		}
 
 		this.fragmentConfigs.set(fragmentConfig.fragmentId, fragmentConfig);
 
@@ -147,29 +166,40 @@ export interface FragmentConfig {
 	 * :not(web-fragment) > web-fragment-host[fragment-id="fragmentId"]
 	 */
 	piercingClassNames?: string[];
+
 	/**
 	 * @deprecated use `piercingClassNames` instead
 	 *
 	 */
 	prePiercingClassNames?: string[];
+
 	/**
 	 * An array of route patterns this fragment should handle serving.
 	 * Pattern format must adhere to https://github.com/pillarjs/path-to-regexp#parameters syntax
 	 */
 	routePatterns: string[];
+
 	/**
 	 * The endpoint URL of the fragment application, or a `fetch` function compatible with the standard [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 	 * This will be fetched on any request paths matching the specified `routePatterns`
 	 */
 	endpoint: string | typeof fetch;
+
 	/**
 	 * @deprecated use `endpoint` instead
 	 */
 	upstream?: string;
+
 	/**
-	 * An optional list of fragment response headers to forward to the gateway response.
+	 * An optional list of fragment response headers to append to the combined response from the fragment gateway created by piercing the fragment into the host response.
 	 */
 	forwardFragmentHeaders?: string[];
+
+	/**
+	 * An optional list of headers to append to the iframe response when initializing the reframed iframe.
+	 */
+	iframeHeaders?: Record<string, string>;
+
 	/**
 	 * Handler/Fallback to apply when the fetch for a fragment ssr code fails.
 	 * It allows the gateway to serve the provided fallback response instead of an error response straight

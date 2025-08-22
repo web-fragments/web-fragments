@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF Playground: fragment-csp</title>
+		<style>
+			web-fragment {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF Playground: fragment-csp</h1>
+
+		<button id="host-eval-button">Click me to try to eval() outside of a fragment</button>
+		<script>
+			document.getElementById('host-eval-button').addEventListener('click', () => {
+				eval('alert("clicked")');
+			});
+		</script>
+
+		<script type="module">
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
+		</script>
+
+		<web-fragment fragment-id="fragment-csp"></web-fragment>
+	</body>
+</html>

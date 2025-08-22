@@ -51,13 +51,16 @@ export function getWebMiddleware(
 		 * However, we don't want the iframe's document to actually contain the fragment's content; we're only using it as an isolated execution context. Returning a stub document here is our workaround to that problem.
 		 */
 		if (requestSecFetchDest === 'iframe') {
-			return new Response('<!doctype html><title>', {
+			// The title below is used be reframed to detect gateway misconfiguration. See reframed.ts
+			return new Response('<!doctype html><title>Web Fragments: reframed', {
+				// !!! Important: the header name must be Camel-Cased for overriding via the iframesHeaders to work !!!
 				headers: {
 					'Content-Type': 'text/html;charset=UTF-8',
-					vary: 'sec-fetch-dest',
-					'x-web-fragment-id': matchedFragment.fragmentId,
+					Vary: 'sec-fetch-dest',
+					'X-Web-Fragment-Id': matchedFragment.fragmentId,
 					// cache the response for 1 hour and then revalidate in the background just in case we need to make some changes to the served content in the future
 					'Cache-Control': 'max-age=3600, public, stale-while-revalidate=31536000',
+					...matchedFragment.iframeHeaders,
 				},
 			});
 		}
