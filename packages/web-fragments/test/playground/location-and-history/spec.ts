@@ -369,10 +369,6 @@ test('hard nav and reload behavior in a bound fragment', async ({ page }) => {
 	// popstateCount is now 0 because we reloaded
 	expect(await main.popstateCount()).toBe('0');
 
-	page.context().route('/baz', (route) => {
-		return route.fulfill({ body: 'baz' });
-	});
-
 	bound.hardNavToBazButton.click();
 	await page.waitForEvent('load', {
 		predicate: (page) => {

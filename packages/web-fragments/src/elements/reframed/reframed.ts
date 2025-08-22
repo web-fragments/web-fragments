@@ -76,18 +76,6 @@ export function reframed(
 	let alreadyLoaded = false;
 
 	iframe.addEventListener('load', () => {
-		// see web.ts, section "Handle IFrame request from reframed" for more details
-		if (iframe.contentDocument?.title !== 'Web Fragments: reframed') {
-			throw new WebFragmentError(
-				`Reframed IFrame init error!\n` +
-					`IFrame loaded unexpected content from ${iframe.src}!\n` +
-					`Ensure that the Web Fragment gateway contains a fragment registration with "routePatterns" matching path: ${new URL(iframe.src).pathname}` +
-					(!iframe.contentDocument
-						? '\nAdditionally, ensure that the iframe response is not delivered with the "X-Frame-Options" response header set to "deny".'
-						: ''),
-			);
-		}
-
 		if (alreadyLoaded) {
 			// iframe reload detected!
 
@@ -105,6 +93,18 @@ export function reframed(
 			return;
 		}
 		alreadyLoaded = true;
+
+		// see web.ts, section "Handle IFrame request from reframed" for more details
+		if (iframe.contentDocument?.title !== 'Web Fragments: reframed') {
+			throw new WebFragmentError(
+				`Reframed IFrame init error!\n` +
+					`IFrame loaded unexpected content from ${iframe.src}!\n` +
+					`Ensure that the Web Fragment gateway contains a fragment registration with "routePatterns" matching path: ${new URL(iframe.src).pathname}` +
+					(!iframe.contentDocument
+						? '\nAdditionally, ensure that the iframe response is not delivered with the "X-Frame-Options" response header set to "deny".'
+						: ''),
+			);
+		}
 
 		initializeIFrameContext(iframe, reframedShadowRoot, wfDocumentElement, options.bound);
 		resolveIframeReady(iframe);
