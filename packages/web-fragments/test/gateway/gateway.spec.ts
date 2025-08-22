@@ -451,10 +451,12 @@ for (const environment of environments) {
 
 				expect(response.status).toBe(200);
 				expect(await response.text()).toBe(`<!doctype html><title>`);
-				expect(response.headers.get('content-type')).toBe('text/html;charset=UTF-8');
-				expect(response.headers.get('vary')).toBe('sec-fetch-dest');
-				expect(response.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
-				expect(response.headers.get('cache-control')).toBe('max-age=3600, public, stale-while-revalidate=31536000');
+				expect(Object.fromEntries(response.headers.entries())).toMatchObject({
+					'content-type': 'text/html;charset=UTF-8',
+					vary: 'sec-fetch-dest',
+					'x-web-fragment-id': 'fragmentFoo',
+					'cache-control': 'max-age=3600, public, stale-while-revalidate=31536000',
+				});
 
 				// make one more request to the second fragment path
 				mockShellAppResponse(
@@ -468,8 +470,34 @@ for (const environment of environments) {
 
 				expect(response2.status).toBe(200);
 				expect(await response2.text()).toBe(`<!doctype html><title>`);
-				expect(response2.headers.get('content-type')).toBe('text/html;charset=UTF-8');
-				expect(response2.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(Object.fromEntries(response2.headers.entries())).toMatchObject({
+					'content-type': 'text/html;charset=UTF-8',
+					vary: 'sec-fetch-dest',
+					'x-web-fragment-id': 'fragmentBar',
+					'cache-control': 'max-age=3600, public, stale-while-revalidate=31536000',
+				});
+			});
+
+			it('should support adding additional response headers to the iframe response', async () => {
+				mockFragmentFooResponse('/baz', new Response('<p>baz fragment</p>'));
+
+				const response = await testRequest(
+					new Request('http://localhost/baz', { headers: { 'sec-fetch-dest': 'iframe' } }),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe(`<!doctype html><title>`);
+				expect(Object.fromEntries(response.headers.entries())).toMatchObject({
+					// over-written by the fragment config
+					'content-type': 'application/xhtml+xml',
+					vary: 'sec-fetch-dest',
+					'x-web-fragment-id': 'fragmentBazFetcher',
+					'cache-control': 'max-age=3600, public, stale-while-revalidate=31536000',
+					// added by the fragment config
+					'custom-header-1': 'value-1',
+					'custom-header-2': 'value-2',
+					'content-security-policy': "'default-src 'self'; img-src 'self' example.com'",
+				});
 			});
 		});
 
@@ -792,6 +820,12 @@ for (const environment of environments) {
 						status: 200,
 					});
 				} as typeof fetch,
+				iframeHeaders: {
+					'Content-Security-Policy': "'default-src 'self'; img-src 'self' example.com'",
+					'content-type': 'application/xhtml+xml',
+					'custom-header-1': 'value-1',
+					'custom-header-2': 'value-2',
+				},
 			});
 
 			fragmentGateway.registerFragment({
