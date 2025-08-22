@@ -34,7 +34,7 @@
 		"dist"
 	],
 	"scripts": {
-		"dev": "vite",
+		"dev": "pnpm dev:playground",
 		"dev:playground": "pnpm -C test/playground dev",
 		"preview:playground": "pnpm -C test/playground preview",
 		"build": "pnpm types && vite build",
