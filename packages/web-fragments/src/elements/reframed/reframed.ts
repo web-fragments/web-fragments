@@ -76,7 +76,8 @@ export function reframed(
 	let alreadyLoaded = false;
 
 	iframe.addEventListener('load', () => {
-		if (iframe.contentDocument?.head.childNodes.length !== 1 && iframe.contentDocument?.body.childNodes.length !== 0) {
+		// see web.ts, section "Handle IFrame request from reframed" for more details
+		if (iframe.contentDocument?.title !== 'Web Fragments: reframed') {
 			throw new WebFragmentError(
 				`Reframed IFrame init error!\n` +
 					`IFrame loaded unexpected content from ${iframe.src}!\n` +
