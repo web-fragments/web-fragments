@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>CSP test fragment</title>
+	</head>
+	<body>
+		<h2>CSP test fragment</h2>
+		<button id="fragment-eval-button">Click me to try to eval() inside of a fragment</button>
+		<script>
+			document.getElementById('fragment-eval-button').addEventListener('click', () => {
+				eval('alert("clicked")');
+			});
+		</script>
+	</body>
+</html>

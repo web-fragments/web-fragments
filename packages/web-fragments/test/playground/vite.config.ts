@@ -27,6 +27,18 @@ export default defineConfig({
 		},
 	},
 
+	server: {
+		headers: {
+			'Content-Security-Policy': `
+							connect-src 'self';
+							object-src 'none'; 
+							script-src 'self' 'unsafe-eval' 'unsafe-inline';
+							base-uri 'self';`
+				.replaceAll('\n', '')
+				.replaceAll('  ', ' '),
+		},
+	},
+
 	plugins: [
 		{
 			name: 'web-fragments-middleware',
@@ -86,16 +98,34 @@ async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 		const fragmentId = path.basename(appDir);
 
 		console.log(`Registering fragment: ${fragmentId}`);
-		fragmentGateway.registerFragment({
+		const fragmentConfig: FragmentConfig = {
 			fragmentId: fragmentId,
 			piercing: process.env.PIERCING === 'false' ? false : true,
 			routePatterns: [`/${fragmentId}/:_*`],
 			get endpoint() {
 				return getServerUrl();
 			},
-			prePiercingClassNames: [],
-			iframeHeaders: fragmentId === 'fragment-x-frame-options-deny' ? { 'X-Frame-Options': 'deny' } : undefined,
-		});
+		};
+
+		// fragment specific config
+		switch (fragmentId) {
+			case 'fragment-x-frame-options-deny':
+				fragmentConfig.iframeHeaders = { 'X-Frame-Options': 'deny' };
+				break;
+			case 'fragment-csp':
+				fragmentConfig.iframeHeaders = {
+					'Content-Security-Policy': `
+							connect-src 'self';
+							object-src 'none'; 
+							script-src 'self' 'unsafe-inline';
+							base-uri 'self';`
+						.replaceAll('\n', '')
+						.replaceAll('  ', ' '),
+				};
+				break;
+		}
+
+		fragmentGateway.registerFragment(fragmentConfig);
 	});
 
 	const fragmentGatewayMiddleware = getNodeMiddleware(fragmentGateway);
