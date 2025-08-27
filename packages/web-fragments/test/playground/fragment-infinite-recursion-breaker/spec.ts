@@ -23,7 +23,8 @@ test('fragment infinite recursion breaker', async ({ page }) => {
 		expect(await fragment.innerHTML()).toBe('');
 		expect(lastError?.message).toBe(
 			'Reframed IFrame init error!\n' +
-				`IFrame loaded unexpected content from http://localhost:${new URL(page.url()).port}/fragment-infinite-recursion-breaker/!\n` +
+				`IFrame loaded unexpected content for http://localhost:${new URL(page.url()).port}/fragment-infinite-recursion-breaker/!\n` +
+				'Expected document title to be "Web Fragments: reframed" but was "WF Playground: fragment-infinite-recursion-breaker"\n' +
 				'Ensure that the Web Fragment gateway contains a fragment registration with "routePatterns" matching path: /fragment-infinite-recursion-breaker/',
 		);
 	});
