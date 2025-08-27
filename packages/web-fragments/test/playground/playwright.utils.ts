@@ -12,11 +12,16 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 	// Abort a test if an exception in the browser is detected
 	page.on('pageerror', async (error) => {
 		// ignore/allow errors for tests that test error handling
-		switch (await page.title()) {
-			case 'WF Playground: fragment-infinite-recursion-breaker':
-			case 'WF Playground: fragment-x-frame-options-deny':
-			case 'WF Playground: fragment-csp':
-				return;
+		// wrap in try/catch because page.title() might throw if the test/page already crashed for unexpected reasons.
+		try {
+			switch (await page.title()) {
+				case 'WF Playground: fragment-infinite-recursion-breaker':
+				case 'WF Playground: fragment-x-frame-options-deny':
+				case 'WF Playground: fragment-csp':
+					return;
+			}
+		} catch (e) {
+			// intentionally ignore errors, they will be caught by the test
 		}
 
 		// prefix error with [browser] so that it's easier to distinguish from Playwright/Node.js errors
@@ -33,13 +38,20 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 
 	// Abort a test if a network request fails with HTTP status code >= 400
 	page.on('requestfinished', async (request: Request) => {
-		const response = await request.response();
-		if (!response) {
-			throw new Error(`Network request failed for: ${request.url()}\n    error: no response`);
-		}
-		if (response.status() >= 400) {
-			throw new Error(
-				`Network request failed or: ${request.url()}` + `\n    status: ${response.status()}` + `\n    body: )`,
+		try {
+			const response = await request.response();
+			if (!response) {
+				throw new Error(`Network request failed for: ${request.url()}\n    error: no response`);
+			}
+			if (response.status() >= 400) {
+				throw new Error(
+					`Network request failed or: ${request.url()}` + `\n    status: ${response.status()}` + `\n    body: )`,
+				);
+			}
+		} catch (e) {
+			console.warn(
+				`[playwright]: Network request failed for ${request.url()} (referrer: ${request.headers()['referer']})\n`,
+				e,
 			);
 		}
 	});

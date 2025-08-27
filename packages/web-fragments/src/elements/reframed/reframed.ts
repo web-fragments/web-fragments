@@ -74,14 +74,32 @@ export function reframed(
 	let { promise: iframeReady, resolve: resolveIframeReady } = Promise.withResolvers<HTMLIFrameElement>();
 
 	let alreadyLoaded = false;
+	let pendingHardNavigationHref: string | null = null;
 
 	iframe.addEventListener('load', () => {
 		if (alreadyLoaded) {
 			// iframe reload detected!
+			// this means that the fragment app attempted to reload or hard navigate to a different url
 
 			if (options.bound) {
-				// let's update the main location.href
-				location.href = iframe?.contentWindow?.location.href!;
+				// Workaround for a weird Safari (v26) bug
+				// - In Safari, if we hard navigate away from the host page, for example from /foo to /bar
+				// - and then hit the back button
+				// - the /foo host app will cause reframed iframes to be recreated (correctly) with iframe[src=/foo] however the browser makes network request for /bar and feeds the iframe with /bar
+				// - this is very bizarre and there is no public mention of this issue however Safari is known to have bugs related to bfcache, so this might be related
+				// - the workaround is to:
+				//   - intercept the load event to know that the iframe is being reloaded
+				//   - save the url we are trying to hard navigate to in pendingHardNavigationHref
+				//   - restore the location of the iframe to host's location.href
+				//   - catch the second load event, and update the host's location.href to pendingHardNavigationHref
+				//
+				// Related test location-and-history.spec.ts#hard nav and reload behavior in a bound fragment
+				if (pendingHardNavigationHref) {
+					location.href = pendingHardNavigationHref;
+				} else {
+					pendingHardNavigationHref = iframe!.contentWindow!.location.href;
+					iframe.contentWindow!.location.href = location.href;
+				}
 			} else {
 				// TODO: what to do here?
 				// should we recreate the fragment with the new src?
@@ -96,9 +114,11 @@ export function reframed(
 
 		// see web.ts, section "Handle IFrame request from reframed" for more details
 		if (iframe.contentDocument?.title !== 'Web Fragments: reframed') {
+			// TODO: make this a warning and only later an error
 			throw new WebFragmentError(
 				`Reframed IFrame init error!\n` +
-					`IFrame loaded unexpected content from ${iframe.src}!\n` +
+					`IFrame loaded unexpected content for ${iframe.src}!\n` +
+					`Expected document title to be "Web Fragments: reframed" but was "${iframe.contentDocument?.title}"\n` +
 					`Ensure that the Web Fragment gateway contains a fragment registration with "routePatterns" matching path: ${new URL(iframe.src).pathname}` +
 					(!iframe.contentDocument
 						? '\nAdditionally, ensure that the iframe response is not delivered with the "X-Frame-Options" response header set to "deny".'

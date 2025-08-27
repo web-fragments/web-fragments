@@ -25,7 +25,8 @@ test('fragment with iframe delivered with the x-frame-options=deny response head
 		expect(await fragment.innerHTML()).toBe('');
 		expect(lastError?.message).toBe(
 			'Reframed IFrame init error!\n' +
-				`IFrame loaded unexpected content from http://localhost:${new URL(page.url()).port}/fragment-x-frame-options-deny/!\n` +
+				`IFrame loaded unexpected content for http://localhost:${new URL(page.url()).port}/fragment-x-frame-options-deny/!\n` +
+				'Expected document title to be "Web Fragments: reframed" but was "undefined"\n' +
 				'Ensure that the Web Fragment gateway contains a fragment registration with "routePatterns" matching path: /fragment-x-frame-options-deny/\n' +
 				'Additionally, ensure that the iframe response is not delivered with the "X-Frame-Options" response header set to "deny".',
 		);
