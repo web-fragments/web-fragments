@@ -434,7 +434,7 @@ export function prefixHtmlHeadBody(fragmentResponse: Response): Response {
 				element.tagName = 'wf-body';
 			},
 		})
-		.transform(new Response(fragmentResponse.body, fragmentResponse));
+		.transform(fragmentResponse);
 }
 
 /**
