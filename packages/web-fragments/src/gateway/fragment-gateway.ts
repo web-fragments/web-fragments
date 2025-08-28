@@ -52,9 +52,9 @@ export class FragmentGateway {
 		fragmentConfig.piercing ??= true;
 
 		if (fragmentConfig.iframeHeaders) {
-			// normalize header name casing to Camel-Case
+			// normalize header name casing to HTTP-Header-Case (e.g. Content-Type, Sec-Fetch-Dest, etc.)
 			fragmentConfig.iframeHeaders = Object.fromEntries(
-				Object.entries(fragmentConfig.iframeHeaders!).map(([key, value]) => [
+				Object.entries(fragmentConfig.iframeHeaders).map(([key, value]) => [
 					[...key].reduce((acc, char) => {
 						if (acc === '') {
 							return char.toUpperCase();
