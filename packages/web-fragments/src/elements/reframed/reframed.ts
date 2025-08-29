@@ -113,7 +113,14 @@ export function reframed(
 		alreadyLoaded = true;
 
 		// see web.ts, section "Handle IFrame request from reframed" for more details
-		if (iframe.contentDocument?.title !== 'Web Fragments: reframed') {
+
+		if (
+			!(
+				iframe.contentDocument?.title === 'Web Fragments: reframed' ||
+				// TODO: remove in version 0.9 or later (but before 1.0)
+				iframe.contentDocument?.title === ''
+			)
+		) {
 			// TODO: make this a warning and only later an error
 			throw new WebFragmentError(
 				`Reframed IFrame init error!\n` +
