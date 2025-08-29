@@ -1,5 +1,63 @@
 # web-fragments
 
+## 0.8.0
+
+### Minor Changes
+
+- [#230](https://github.com/web-fragments/web-fragments/pull/230) [`dc26df0`](https://github.com/web-fragments/web-fragments/commit/dc26df02ec4896f75f35d98ca5332328fd6c41c1) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat(gateway): enable fragments to configure their own Content Security Policy (CSP)
+
+  With FragmentConfig#iframeHeaders, fragments can now configure their own Content Security Policy (CSP). See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP
+
+  This feature is very useful in enabling fragments to make their CSP more strict or relaxed based without requiring the entire fragment federation to have a single CSP policy.
+
+  Important: The CSP configured only applies to the script execution and does not affect the DOM operations. In fragments the script execution is isolated, but DOM is shared by all fragments and the host app. This means that the host app should be configured with a CSP that takes into account the DOM needs of all fragments (e.g. `img-src`), but the script execution and mainly allowing/disallowing `unsafe-eval` can be configured at the fragment level.
+
+  Example usage:
+
+  ```js
+  fragmentGateway.registerFragment({
+  	fragmentId: 'my-fragment',
+    ...
+    iframeHeaders: {
+      'Content-Security-Policy': `connect-src 'self'; object-src 'none'; script-src 'self'; base-uri 'self';`,
+  		...
+  	},
+  });
+  ```
+
+- [#230](https://github.com/web-fragments/web-fragments/pull/230) [`6b1af29`](https://github.com/web-fragments/web-fragments/commit/6b1af2975dcd8cd08af345050baf2803b2362a0d) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat(gateway): add FragmentConfig#iframeHeaders support for configuring iframe headers
+
+  The fragment config can now optionally include `iframeHeaders` key that can contain a `Record<string, string>` of header names and their values.
+
+  This feature is useful to configure response headers for requests that come from initialization of the reframed iframe which powers the configured Web Fragment.
+
+  For example, you could use this header to configure CSP policy for the iframe, or override any of the default headers set by the Web Fragments gateway.
+
+  Example usage:
+
+  ```js
+  fragmentGateway.registerFragment({
+  	fragmentId: 'my-fragment',
+    ...
+    iframeHeaders: {
+  		'Some-Header': 'my value',
+  		'another-header': 'my other value',
+  	},
+  });
+  ```
+
+### Patch Changes
+
+- [#230](https://github.com/web-fragments/web-fragments/pull/230) [`dcf26e5`](https://github.com/web-fragments/web-fragments/commit/dcf26e5aeaf8f2a3cad0a09552414de2ac5d86b5) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(web-fragments): handle iframe errors due to x-frame-options=deny header more gracefully
+
+  We now detect this scenario and show a helpful error in the console.
+
+- [#230](https://github.com/web-fragments/web-fragments/pull/230) [`21cb50f`](https://github.com/web-fragments/web-fragments/commit/21cb50f339c997b6759c646a799db2b184fa73eb) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: throw WebFragmentError when we risk infinite iframe recursion during reframe init
+
+  If the fragment gateway was not properly configured (e.g. the routePaths don't contain the main navigable url that starts a fragment), reframed creates an iframe which when loaded by the browser loads the original host html rather than the minimal reframed init html, which then causes a new nested fragment to be created which then repeats the process, resulting in an infinite recursion.
+
+  This turns out to be a rather common user error, so to make it easier to diagnose and fix, we now detect it and throw an error.
+
 ## 0.7.2
 
 ### Patch Changes
