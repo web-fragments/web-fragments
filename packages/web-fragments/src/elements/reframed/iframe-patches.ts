@@ -100,8 +100,10 @@ export function initializeIFrameContext(
 		assert(iframe !== null, 'attempted to read nested iframe before it was ready');
 		iframeWindow.length++;
 		if (iframe.name) {
+			// @ts-ignore
 			iframeWindow[iframe.name] = iframe;
 		}
+		// @ts-ignore
 		iframe.parent = iframeWindow;
 	};
 
@@ -110,6 +112,7 @@ export function initializeIFrameContext(
 		assert(iframe !== null, 'attempted to read nested iframe before it was ready');
 		iframeWindow.length--;
 		if (iframe.name) {
+			// @ts-ignore
 			delete iframeWindow[iframe.name];
 		}
 	};
