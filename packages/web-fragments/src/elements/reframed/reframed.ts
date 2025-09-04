@@ -116,7 +116,8 @@ export function reframed(
 			)
 		) {
 			// TODO: make this a warning and only later an error
-			throw new WebFragmentError(
+			//throw new WebFragmentError(
+			console.warn(
 				`Reframed IFrame init error!\n` +
 					`IFrame loaded unexpected content for ${iframe.src}!\n` +
 					`Expected document title to be "Web Fragments: reframed" but was "${iframe.contentDocument?.title}"\n` +
