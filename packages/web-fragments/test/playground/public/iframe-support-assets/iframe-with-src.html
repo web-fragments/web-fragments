@@ -1,0 +1,34 @@
+<!--
+	Workaround for https://github.com/web-fragments/web-fragments/issues/233
+	
+	Until the issue above is fixed, this file must be in a directory that doesn't match a fragment registered prefix, such as `iframe-support-assets` as opposed to `iframe-support`.
+	This results in the file being considered part of the host rather than the fragment and served as expected.
+	-->
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>A same-origin IFrame</title>
+	</head>
+	<body>
+		<h2>A same-origin IFrame</h2>
+		<ul>
+			<li><input type="checkbox" id="script-ran" /> The script ran</li>
+			<li><input type="checkbox" id="window-parent" /> <code>window.parent.name === 'wf:iframe-support'</code></li>
+			<li><input type="checkbox" id="window-top" /> <code>window.top.name === 'wf:iframe-support'</code></li>
+			<li><input type="checkbox" id="window-self" /> <code>window.self.name === window.name</code></li>
+			<li><input type="checkbox" id="window-window" /> <code>window.window.name === window.name</code></li>
+			<li><input type="checkbox" id="window-parent-frames" /> <code>window.parent[window.name] === window</code></li>
+		</ul>
+		<script>
+			document.title = window.name;
+			document.querySelector('h2').textContent = window.name;
+			document.getElementById('script-ran').checked = true;
+			document.getElementById('window-parent').checked = window.parent.name === 'wf:iframe-support';
+			document.getElementById('window-top').checked = window.top.name === 'wf:iframe-support';
+			document.getElementById('window-self').checked = window.self.name === window.name;
+			document.getElementById('window-window').checked = window.window.name === window.name;
+			document.getElementById('window-parent-frames').checked = window.parent[window.name] === window;
+		</script>
+	</body>
+</html>

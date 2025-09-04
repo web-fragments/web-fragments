@@ -68,6 +68,103 @@ export function initializeIFrameContext(
 	// END> WINDOW: GLOBAL CONSTRUCTORS PATCHES
 
 	/**
+	 * START> WINDOW: frame patches
+	 * https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-frames
+	 */
+
+	Object.defineProperties(iframeWindow, {
+		// TODO: window#top is non-configurable! is there a workaround?
+		// top: {
+		// 	value: iframeWindow,
+		// },
+
+		parent: {
+			value: iframeWindow,
+		},
+
+		frameElement: {
+			get() {
+				return null;
+			},
+		},
+
+		length: {
+			get() {
+				return wfDocumentElement.querySelectorAll('iframe').length;
+			},
+		},
+	});
+
+	const handleIFrameAddition = (iframeElement: HTMLIFrameElement) => {
+		const iframe = iframeElement.contentWindow;
+		assert(iframe !== null, 'attempted to read nested iframe before it was ready');
+		iframeWindow.length++;
+		if (iframe.name) {
+			iframeWindow[iframe.name] = iframe;
+		}
+		iframe.parent = iframeWindow;
+	};
+
+	const handleIFrameRemoval = (iframeElement: HTMLIFrameElement) => {
+		const iframe = iframeElement.contentWindow;
+		assert(iframe !== null, 'attempted to read nested iframe before it was ready');
+		iframeWindow.length--;
+		if (iframe.name) {
+			delete iframeWindow[iframe.name];
+		}
+	};
+
+	// Create a MutationObserver to watch for new iframes
+	const iframeMutationObserver = new mainWindow.MutationObserver((mutations) => {
+		mutations.forEach((mutation) => {
+			mutation.removedNodes.forEach((node) => {
+				// Check if the removed node is an iframe
+				if (node.nodeType === Node.ELEMENT_NODE) {
+					if (node.nodeName === 'IFRAME') {
+						handleIFrameRemoval(node as HTMLIFrameElement);
+					}
+
+					// Also check if any child elements of the removed node are iframes
+					const iframes = (node as HTMLElement).querySelectorAll('iframe');
+					iframes.forEach((iframe: HTMLIFrameElement) => {
+						handleIFrameRemoval(iframe);
+					});
+				}
+			});
+
+			// Check for added nodes
+			mutation.addedNodes.forEach((node) => {
+				// Check if the added node is an iframe
+				if (node.nodeType === Node.ELEMENT_NODE) {
+					if (node.nodeName === 'IFRAME') {
+						handleIFrameAddition(node as HTMLIFrameElement);
+					}
+
+					// Also check if any child elements of the added node are iframes
+					const iframes = (node as HTMLElement).querySelectorAll('iframe');
+					iframes.forEach((iframe: HTMLIFrameElement) => {
+						handleIFrameAddition(iframe);
+					});
+				}
+			});
+		});
+	});
+
+	// Start observing the document for changes
+	iframeMutationObserver.observe(wfDocumentElement, {
+		childList: true, // Watch for added/removed children
+		subtree: true, // Watch the entire subtree
+	});
+
+	wfDocumentElement.querySelectorAll('iframe').forEach(handleIFrameAddition);
+
+	// TODO: disconnect the observer when the fragment is destroyed
+
+	/**
+	 * END> WINDOW: frame patches
+	 */
+
+	/**
 	 * START> WINDOW: MISC PATCHES
 	 */
 	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;

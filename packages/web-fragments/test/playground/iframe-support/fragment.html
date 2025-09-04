@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Fragment with iframes!</title>
+		<style>
+			iframe {
+				width: 400px;
+				height: 400px;
+			}
+		</style>
+	</head>
+	<body>
+		<h2>Fragment with iframes</h2>
+		<ul>
+			<li><input type="checkbox" id="script-ran" /> script ran</li>
+			<li><input type="checkbox" id="window-parent" /> <code>window.parent === window</code></li>
+			<li><input type="checkbox" id="window-top" /> <code>window.top === window</code></li>
+			<li><input type="checkbox" id="window-self" /> <code>window.self === window</code></li>
+			<li><input type="checkbox" id="window-window" /> <code>window.window === window</code></li>
+			<li><input type="checkbox" id="window-parent-frames" /> <code>window.frames === window</code></li>
+			<li><input type="checkbox" id="window-parent-frames-length" /><code>window.frames.length === 2</code></li>
+			<li>
+				<input type="checkbox" id="window-parent-frames-contents" /><code
+					>window.frames[0].name === 'static iframe' && window.frames[1].name === 'dynamic iframe'</code
+				>
+			</li>
+			<li>
+				<input type="checkbox" id="window-parent-frames-name" />
+				<code>window.frames['static iframe'].name === 'static iframe'</code>
+			</li>
+			<li><input type="checkbox" id="window-frameElement" /> <code>window.frameElement === null</code></li>
+		</ul>
+
+		<iframe id="iframe-with-src" name="static iframe" src="/iframe-support-assets/iframe-with-src.html"></iframe>
+
+		<script>
+			const dynamicallyCreatedIframe = document.createElement('iframe');
+			dynamicallyCreatedIframe.src = '/iframe-support-assets/iframe-with-src.html';
+			dynamicallyCreatedIframe.name = 'dynamic iframe';
+			document.body.appendChild(dynamicallyCreatedIframe);
+		</script>
+
+		<script>
+			document.getElementById('script-ran').checked = true;
+			document.getElementById('window-parent').checked = window.parent === window;
+			document.getElementById('window-top').checked = window.top === window; // TODO this one is read-only
+			document.getElementById('window-self').checked = window.self === window;
+			document.getElementById('window-window').checked = window.window === window;
+			document.getElementById('window-parent-frames').checked = window.frames === window;
+			document.getElementById('window-parent-frames-length').checked = window.frames.length === 2;
+			document.getElementById('window-parent-frames-contents').checked =
+				window.frames[0]?.name === 'static iframe' && window.frames[1]?.name === 'dynamic iframe';
+			document.getElementById('window-parent-frames-name').checked =
+				window.frames['static iframe']?.name === 'static iframe';
+			document.getElementById('window-frameElement').checked = window.frameElement === null;
+		</script>
+	</body>
+</html>
