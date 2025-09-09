@@ -7,10 +7,43 @@
 			web-fragment {
 				border: 1px red dashed;
 			}
+			iframe {
+				width: 500px;
+				height: 400px;
+			}
 		</style>
 	</head>
 	<body>
 		<h1>WF Playground: iframe-support</h1>
+
+		<iframe
+			id="top-frame-iframe-child"
+			name="topFrameIframeChild"
+			src="http://localhost:5179/iframe-support-assets/iframe-with-src.html"
+			onload="console.log('top-frame-iframe-child loaded', Object.getOwnPropertyDescriptor(window, 'topFrameIframeChild'), window.topFrameIframeChild)"
+		></iframe>
+		<iframe
+			id="top-frame-iframe-child2"
+			name="topFrameIframeChild2"
+			src="http://localhost:5179/iframe-support-assets/iframe-with-src.html"
+		></iframe>
+		<script>
+			console.log(
+				`index.html iframe[name=topFrameIframeChild] created`,
+				Object.getOwnPropertyDescriptor(window, 'topFrameIframeChild'),
+				window.topFrameIframeChild,
+			);
+			// window.topFrameIframeChild.parent.topFrameIframeChild = { parent: window };
+			//window.topFrameIframeChild = {};
+			//window.topFrameIframeChild.parent = null;
+			window.topFrameIframeChild2.parent = window.topFrameIframeChild;
+			console.log(
+				`index.html iframe[name=topFrameIframeChild] created2`,
+				Object.getOwnPropertyDescriptor(window, 'topFrameIframeChild'),
+				window.topFrameIframeChild2.name,
+				window.topFrameIframeChild2.parent.name,
+			);
+		</script>
 
 		<script type="module">
 			import { initializeWebFragments } from 'web-fragments';
@@ -18,5 +51,11 @@
 		</script>
 
 		<web-fragment fragment-id="iframe-support"></web-fragment>
+
+		<iframe
+			id="iframe-with-src2"
+			name="static cross-origin iframe"
+			src="http://localhost:5179/iframe-support-assets/iframe-with-src.html"
+		></iframe>
 	</body>
 </html>

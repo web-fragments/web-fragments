@@ -98,13 +98,21 @@ export function initializeIFrameContext(
 	const handleIFrameAddition = (iframeElement: HTMLIFrameElement) => {
 		const iframe = iframeElement.contentWindow;
 		assert(iframe !== null, 'attempted to read nested iframe before it was ready');
+		console.log('handleIFrameAddition', iframeElement.name, iframeElement);
 		iframeWindow.length++;
-		if (iframe.name) {
+		// TODO: iframe.name throws, use iframeElement.name instead?
+		if (iframeElement.name) {
 			// @ts-ignore
-			iframeWindow[iframe.name] = iframe;
+			iframeWindow[iframeElement.name] = iframe;
+			// @ts-ignore
+			console.log(
+				`mainWindow['${iframeElement.name}'] = iframe`,
+				Object.getOwnPropertyDescriptor(mainWindow, iframeElement.name),
+			);
+			mainWindow[iframeElement.name] = iframe;
 		}
 		// @ts-ignore
-		iframe.parent = iframeWindow;
+		//iframe.parent = iframeWindow;
 	};
 
 	const handleIFrameRemoval = (iframeElement: HTMLIFrameElement) => {
@@ -113,7 +121,9 @@ export function initializeIFrameContext(
 		iframeWindow.length--;
 		if (iframe.name) {
 			// @ts-ignore
-			delete iframeWindow[iframe.name];
+			iframeWindow[iframe.name] = undefined;
+			// @ts-ignore
+			mainWindow[iframe.name] = undefined;
 		}
 	};
 

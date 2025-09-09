@@ -9,8 +9,34 @@
 	<head>
 		<meta charset="UTF-8" />
 		<title>A same-origin IFrame</title>
+		<style>
+			ul {
+				list-style-type: none;
+				padding-inline: 1rem;
+			}
+		</style>
 	</head>
 	<body>
+		<script>
+			console.log(
+				`iframe-with-src.html window.parent[window.name]`,
+				window.parent[window.name],
+				Object.getOwnPropertyDescriptor(window.parent, window.name),
+			);
+			console.log(
+				`iframe-with-src.html+-2 window.parent[window.name]`,
+				window.parent[window.name.endsWith('2') ? window.name.slice(0, -1) : window.name + '2'],
+				Object.getOwnPropertyDescriptor(
+					window.parent,
+					window.name.endsWith('2') ? window.name.slice(0, -1) : window.name + '2',
+				),
+			);
+			try {
+				console.log('parent check', window.name, window.parent);
+			} catch (e) {
+				console.log('parent check failed', window.name, e);
+			}
+		</script>
 		<h2>A same-origin IFrame</h2>
 		<ul>
 			<li><input type="checkbox" id="script-ran" /> The script ran</li>
@@ -18,17 +44,38 @@
 			<li><input type="checkbox" id="window-top" /> <code>window.top.name === 'wf:iframe-support'</code></li>
 			<li><input type="checkbox" id="window-self" /> <code>window.self.name === window.name</code></li>
 			<li><input type="checkbox" id="window-window" /> <code>window.window.name === window.name</code></li>
-			<li><input type="checkbox" id="window-parent-frames" /> <code>window.parent[window.name] === window</code></li>
+			<li>
+				<input type="checkbox" id="window-parent-iframe-name" /> <code>window.parent[window.name] === window</code>
+			</li>
+			<li>
+				<input type="checkbox" id="window-parent-frames-iframe" />
+				<code>window.parent.frames[window.name] === window</code>
+			</li>
 		</ul>
 		<script>
 			document.title = window.name;
 			document.querySelector('h2').textContent = window.name;
 			document.getElementById('script-ran').checked = true;
-			document.getElementById('window-parent').checked = window.parent.name === 'wf:iframe-support';
-			document.getElementById('window-top').checked = window.top.name === 'wf:iframe-support';
-			document.getElementById('window-self').checked = window.self.name === window.name;
-			document.getElementById('window-window').checked = window.window.name === window.name;
-			document.getElementById('window-parent-frames').checked = window.parent[window.name] === window;
+			//debugger;
+			//console.log('iframe-with-src.html test window.parent', window.parent.name, window.parent);
+			try {
+				document.getElementById('window-parent').checked = window.parent.name === 'wf:iframe-support';
+			} catch {}
+			try {
+				document.getElementById('window-top').checked = window.top.name === 'wf:iframe-support';
+			} catch {}
+			try {
+				document.getElementById('window-self').checked = window.self.name === window.name;
+			} catch {}
+			try {
+				document.getElementById('window-window').checked = window.window.name === window.name;
+			} catch {}
+			try {
+				document.getElementById('window-parent-iframe-name').checked = window.parent[window.name] === window;
+			} catch {}
+			try {
+				document.getElementById('window-parent-frames-iframe').checked = window.parent.frames[window.name] === window;
+			} catch {}
 		</script>
 	</body>
 </html>
