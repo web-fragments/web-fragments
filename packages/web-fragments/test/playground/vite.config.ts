@@ -2,6 +2,7 @@ import { defineConfig, ViteDevServer, PreviewServer } from 'vite';
 import { glob } from 'glob';
 import http from 'node:http';
 import path from 'node:path';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { FragmentGateway } from '../../src/gateway';
 import { getNodeMiddleware } from '../../src/gateway/middleware/node';
 
@@ -50,6 +51,8 @@ export default defineConfig({
 			configureServer: configureGatewayMiddleware,
 			configurePreviewServer: configureGatewayMiddleware,
 		},
+		// TODO: switch to ephemeral ports
+		secondOriginPlugin(5179),
 	],
 });
 
@@ -169,5 +172,64 @@ async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 
 		// If the request is coming straight from the browser, then service it via the gateway.
 		return fragmentGatewayMiddleware(req, res, next);
+	};
+}
+
+function secondOriginPlugin(port: number) {
+	return {
+		name: 'multi-port',
+		configureServer(server: ViteDevServer) {
+			return () => {
+				console.log('post hook called');
+
+				let proxyServer: http.Server;
+
+				server.httpServer?.on('listening', () => {
+					console.log('server.httpServer.address().port', server.httpServer?.address()?.port);
+
+					// Create proxy middleware
+					const proxy = createProxyMiddleware({
+						target: `http://localhost:${server.httpServer?.address()?.port}`,
+						changeOrigin: true,
+						ws: true, // Enable WebSocket proxying for HMR
+						logLevel: 'info',
+						onError: (err, req, res) => {
+							console.error(`Proxy error on port ${port}:`, err.message);
+						},
+					});
+
+					// Create HTTP server with the proxy middleware
+					proxyServer = http.createServer((req, res) => {
+						// TODO: what to do about passing in next()? provide a noop fn?
+						proxy(req, res);
+					});
+
+					// Handle WebSocket upgrades for HMR
+					proxyServer.on('upgrade', (req, socket, head) => {
+						// TODO: what to do about passing in next()? provide a noop fn?
+						proxy.upgrade(req, socket, head);
+					});
+
+					// Handle server errors
+					proxyServer.on('error', (err: NodeJS.ErrnoException) => {
+						if (err.code === 'EADDRINUSE') {
+							console.warn(`Port ${port} is already in use`);
+						} else {
+							console.error(`Server error on port ${port}:`, err.message);
+						}
+					});
+
+					// Start the proxy server
+					proxyServer.listen(port, () => {
+						console.log(`🚀 Additional Vite server running on http://localhost:${port}`);
+					});
+				});
+
+				// Shut down the proxy server when the main vite server shuts down
+				server.httpServer?.on('close', () => {
+					proxyServer.close();
+				});
+			};
+		},
 	};
 }
