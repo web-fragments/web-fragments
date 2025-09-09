@@ -498,7 +498,7 @@ for (const environment of environments) {
 				);
 
 				expect(response.status).toBe(200);
-				expect(await response.text()).toBe(`<!doctype html><title>Web Fragments: reframed`);
+				expect(await response.text()).toBe(`<!doctype html><title>Web Fragments: reframed</title>`);
 				expect(Object.fromEntries(response.headers.entries())).toMatchObject({
 					'content-type': 'text/html;charset=UTF-8',
 					vary: 'sec-fetch-dest',
@@ -517,7 +517,7 @@ for (const environment of environments) {
 				);
 
 				expect(response2.status).toBe(200);
-				expect(await response2.text()).toBe(`<!doctype html><title>Web Fragments: reframed`);
+				expect(await response2.text()).toBe(`<!doctype html><title>Web Fragments: reframed</title>`);
 				expect(Object.fromEntries(response2.headers.entries())).toMatchObject({
 					'content-type': 'text/html;charset=UTF-8',
 					vary: 'sec-fetch-dest',
@@ -534,7 +534,7 @@ for (const environment of environments) {
 				);
 
 				expect(response.status).toBe(200);
-				expect(await response.text()).toBe(`<!doctype html><title>Web Fragments: reframed`);
+				expect(await response.text()).toBe(`<!doctype html><title>Web Fragments: reframed</title>`);
 				expect(Object.fromEntries(response.headers.entries())).toMatchObject({
 					// over-written by the fragment config
 					'content-type': 'application/xhtml+xml',

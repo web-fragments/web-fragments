@@ -52,7 +52,7 @@ export function getWebMiddleware(
 		 */
 		if (requestSecFetchDest === 'iframe') {
 			// The title below is used be reframed to detect gateway misconfiguration. See reframed.ts
-			return new Response('<!doctype html><title>Web Fragments: reframed', {
+			return new Response('<!doctype html><title>Web Fragments: reframed</title>', {
 				// !!! Important: the header name must be Camel-Cased for overriding via the iframesHeaders to work !!!
 				headers: {
 					'Content-Type': 'text/html;charset=UTF-8',
