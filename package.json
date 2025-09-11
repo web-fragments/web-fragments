@@ -4,7 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "pnpm --filter reframed --filter web-fragments build",
+		"build": "pnpm --filter web-fragments build",
 		"prettier": "prettier . --ignore-unknown",
 		"types:check": "pnpm --filter '*' types:check",
 		"prettier:check": "pnpm run prettier --check",
