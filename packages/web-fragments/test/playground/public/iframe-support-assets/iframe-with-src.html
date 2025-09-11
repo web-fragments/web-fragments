@@ -23,14 +23,16 @@
 				window.parent[window.name],
 				Object.getOwnPropertyDescriptor(window.parent, window.name),
 			);
-			console.log(
-				`iframe-with-src.html+-2 window.parent[window.name]`,
-				window.parent[window.name.endsWith('2') ? window.name.slice(0, -1) : window.name + '2'],
-				Object.getOwnPropertyDescriptor(
-					window.parent,
-					window.name.endsWith('2') ? window.name.slice(0, -1) : window.name + '2',
-				),
-			);
+			if (window.name.includes('SameOrigin')) {
+				console.log(
+					`iframe-with-src.html+-2 window.parent[window.name]`,
+					window.parent[window.name.endsWith('2') ? window.name.slice(0, -1) : window.name + '2'],
+					Object.getOwnPropertyDescriptor(
+						window.parent,
+						window.name.endsWith('2') ? window.name.slice(0, -1) : window.name + '2',
+					),
+				);
+			}
 			try {
 				console.log('parent check', window.name, window.parent);
 			} catch (e) {
@@ -57,13 +59,18 @@
 			document.querySelector('h2').textContent = window.name;
 			document.getElementById('script-ran').checked = true;
 			//debugger;
-			//console.log('iframe-with-src.html test window.parent', window.parent.name, window.parent);
+			console.log('window.name:', window.name);
 			try {
-				document.getElementById('window-parent').checked = window.parent.name === 'wf:iframe-support';
+				console.log('iframe-with-src.html test window.parent', window.parent.name, window.parent);
 			} catch {}
-			try {
-				document.getElementById('window-top').checked = window.top.name === 'wf:iframe-support';
-			} catch {}
+			if (window.name.includes('SameOrigin')) {
+				try {
+					document.getElementById('window-parent').checked = window.parent.name === 'wf:iframe-support';
+				} catch {}
+				try {
+					document.getElementById('window-top').checked = window.top.name === 'wf:iframe-support';
+				} catch {}
+			}
 			try {
 				document.getElementById('window-self').checked = window.self.name === window.name;
 			} catch {}

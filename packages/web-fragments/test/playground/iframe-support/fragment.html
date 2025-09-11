@@ -16,7 +16,7 @@
 	</head>
 	<body>
 		<h2>Fragment with iframes</h2>
-		<!-- <ul>
+		<ul>
 			<li><input type="checkbox" id="script-ran" /> script ran</li>
 			<li><input type="checkbox" id="window-parent" /> <code>window.parent === window</code></li>
 			<li><input type="checkbox" id="window-top" /> <code>window.top === window</code></li>
@@ -26,50 +26,54 @@
 			<li><input type="checkbox" id="window-parent-frames-length" /><code>window.frames.length === 4</code></li>
 			<li>
 				<input type="checkbox" id="window-parent-frames-contents" /><code
-					>window.frames[0].name === 'static same-origin iframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp; window.frames[1].name
-					=== 'static cross-origin iframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp; window.frames[2].name === 'dynamic
-					same-origin iframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp; window.frames[3].name === 'dynamic cross-origin
-					iframe'</code
+					>window.frames[0].name === 'StaticSameOriginIframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp; window.frames[1].name
+					=== 'StaticCrossOriginIframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp; window.frames[2].name ===
+					'DynamicSameOriginIframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp; window.frames[3].name ===
+					'DynamicCrossOriginIframe'</code
 				>
 			</li>
 			<li>
 				<input type="checkbox" id="window-parent-frames-contents-2" /><code
-					>window['static same-origin iframe'].name === 'static same-origin iframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp;
-					window['static cross-origin iframe'].name === 'static cross-origin iframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp;
-					window['dynamic same-origin iframe'].name === 'dynamic same-origin iframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp;
-					window['dynamic cross-origin iframe'].name === 'dynamic cross-origin iframe'</code
+					>window.StaticSameOriginIframe.name === 'StaticSameOriginIframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp;
+					window.StaticCrossOriginIframe.name === 'StaticCrossOriginIframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp;
+					window.DynamicSameOriginIframe.name === 'DynamicSameOriginIframe' && <br />&nbsp;&nbsp;&nbsp;&nbsp;
+					window.DynamicCrossOriginIframe.name === 'DynamicCrossOriginIframe'</code
 				>
 			</li>
 			<li>
 				<input type="checkbox" id="window-parent-frames-name" />
-				<code>window.frames['static same-origin iframe'].name === 'static same-origin iframe'</code>
+				<code>window.frames.StaticSameOriginIframe.name === 'StaticSameOriginIframe'</code>
 			</li>
 			<li><input type="checkbox" id="window-frameElement" /> <code>window.frameElement === null</code></li>
 		</ul>
 
 		<iframe
 			id="iframe-with-src"
-			name="static same-origin iframe"
-			src="/iframe-support-assets/iframe-with-src.html"
+			name="StaticSameOriginIframe"
+			inert-src="/iframe-support-assets/iframe-with-src.html"
 		></iframe>
 
 		<iframe
-			id="iframe-with-src"
-			name="static cross-origin iframe"
-			src="http://localhost:5179/iframe-support-assets/iframe-with-src.html"
+			id="iframe-with-src2"
+			name="StaticCrossOriginIframe"
+			inert-src="http://localhost:5179/iframe-support-assets/iframe-with-src.html"
 		></iframe>
 
 		<br />
 
 		<script>
 			const dynamicallyCreatedIframe = document.createElement('iframe');
-			dynamicallyCreatedIframe.src = '/iframe-support-assets/iframe-with-src.html';
-			dynamicallyCreatedIframe.name = 'dynamic same-origin iframe';
+			//dynamicallyCreatedIframe.src = '/iframe-support-assets/iframe-with-src.html';
+			dynamicallyCreatedIframe.setAttribute('inert-src', '/iframe-support-assets/iframe-with-src.html');
+			dynamicallyCreatedIframe.name = 'DynamicSameOriginIframe';
 			document.body.appendChild(dynamicallyCreatedIframe);
 
 			const dynamicallyCreatedCrossOriginIframe = document.createElement('iframe');
-			dynamicallyCreatedCrossOriginIframe.src = 'http://localhost:5179/iframe-support-assets/iframe-with-src.html';
-			dynamicallyCreatedCrossOriginIframe.name = 'dynamic cross-origin iframe';
+			dynamicallyCreatedCrossOriginIframe.setAttribute(
+				'inert-src',
+				'http://localhost:5179/iframe-support-assets/iframe-with-src.html',
+			);
+			dynamicallyCreatedCrossOriginIframe.name = 'DynamicCrossOriginIframe';
 			document.body.appendChild(dynamicallyCreatedCrossOriginIframe);
 		</script>
 
@@ -82,21 +86,21 @@
 			document.getElementById('window-parent-frames').checked = window.frames === window;
 			document.getElementById('window-parent-frames-length').checked = window.frames.length === 4;
 			document.getElementById('window-parent-frames-contents').checked =
-				window.frames[0]?.name === 'static same-origin iframe' &&
-				window.frames[1]?.name === 'static cross-origin iframe' &&
-				window.frames[2]?.name === 'dynamic same-origin iframe' &&
-				window.frames[3]?.name === 'dynamic cross-origin iframe';
+				window.frames[0]?.name === 'StaticSameOriginIframe' &&
+				window.frames[1]?.name === 'StaticCrossOriginIframe' &&
+				window.frames[2]?.name === 'DynamicSameOriginIframe' &&
+				window.frames[3]?.name === 'DynamicCrossOriginIframe';
 
 			try {
 				document.getElementById('window-parent-frames-contents-2').checked =
-					window['static same-origin iframe']?.name === 'static same-origin iframe' &&
-					window['static cross-origin iframe']?.name === 'static cross-origin iframe' &&
-					window['dynamic same-origin iframe']?.name === 'dynamic same-origin iframe' &&
-					window['dynamic cross-origin iframe']?.name === 'dynamic cross-origin iframe';
+					window.StaticSameOriginIframe?.name === 'StaticSameOriginIframe' &&
+					window.StaticCrossOriginIframe?.name === 'StaticCrossOriginIframe' &&
+					window.DynamicSameOriginIframe?.name === 'DynamicSameOriginIframe' &&
+					window.DynamicCrossOriginIframe?.name === 'DynamicCrossOriginIframe';
 			} catch {}
 			document.getElementById('window-parent-frames-name').checked =
-				window.frames['static same-origin iframe']?.name === 'static same-origin iframe';
+				window.frames.StaticSameOriginIframe?.name === 'StaticSameOriginIframe';
 			document.getElementById('window-frameElement').checked = window.frameElement === null;
-		</script> -->
+		</script>
 	</body>
 </html>

@@ -90,41 +90,61 @@ export function initializeIFrameContext(
 
 		length: {
 			get() {
-				return wfDocumentElement.querySelectorAll('iframe').length;
+				return (
+					wfDocumentElement.querySelectorAll('iframe').length +
+					wfDocumentElement.querySelectorAll('slot[name^="wf-iframe-slot"]').length
+				);
 			},
 		},
 	});
 
+	const isCrossOriginIframe = (iframeElement: HTMLIFrameElement) => {
+		try {
+			// If we can access contentDocument without throwing a SecurityError it's same-origin
+			return iframeElement.contentDocument || false;
+		} catch (e) {
+			// SecurityError means cross-origin
+			return true;
+		}
+	};
+
 	const handleIFrameAddition = (iframeElement: HTMLIFrameElement) => {
 		const iframe = iframeElement.contentWindow;
 		assert(iframe !== null, 'attempted to read nested iframe before it was ready');
-		console.log('handleIFrameAddition', iframeElement.name, iframeElement);
-		iframeWindow.length++;
-		// TODO: iframe.name throws, use iframeElement.name instead?
-		if (iframeElement.name) {
-			// @ts-ignore
-			iframeWindow[iframeElement.name] = iframe;
-			// @ts-ignore
-			console.log(
-				`mainWindow['${iframeElement.name}'] = iframe`,
-				Object.getOwnPropertyDescriptor(mainWindow, iframeElement.name),
-			);
-			mainWindow[iframeElement.name] = iframe;
+		console.log('handleIFrameAddition', iframeElement.name, iframeElement, isCrossOriginIframe(iframeElement));
+
+		if (iframeElement.name && isCrossOriginIframe(iframeElement)) {
+			// create and append a new web-fragment slot
+			const wfSlotElement = document.createElement('slot');
+			const wfSlotName = `wf-iframe-slot: ${iframeElement.name}`;
+			wfSlotElement.name = wfSlotName;
+			// TODO: make this work with piercing, <web-fragment> might not be available yet
+			reframedShadowRoot.host.getRootNode().insertBefore(wfSlotElement, null);
+
+			// create and append a new web-fragment-host slot
+			const wfHostSlotElement = document.createElement('slot');
+			const wfHostSlotName = `wf-host-iframe-slot: ${iframeElement.name}`;
+			wfHostSlotElement.name = wfHostSlotName;
+			wfHostSlotElement.setAttribute('slot', wfHostSlotName);
+			//reframedShadowRoot.host.insertBefore(wfHostSlotElement, null);
+			iframeElement.parentNode!.insertBefore(wfHostSlotElement, iframeElement);
+
+			// set slot name
+			iframeElement.setAttribute('slot', wfSlotName);
+
+			// TODO: we should move the iframe to light dom before it's attached or while its inert
+			(reframedShadowRoot.host.getRootNode() as ShadowRoot).host.insertBefore(iframeElement, null);
+
+			// activate
+			iframeElement.setAttribute('src', iframeElement.getAttribute('inert-src')!);
 		}
-		// @ts-ignore
-		//iframe.parent = iframeWindow;
 	};
 
-	const handleIFrameRemoval = (iframeElement: HTMLIFrameElement) => {
-		const iframe = iframeElement.contentWindow;
-		assert(iframe !== null, 'attempted to read nested iframe before it was ready');
-		iframeWindow.length--;
-		if (iframe.name) {
-			// @ts-ignore
-			iframeWindow[iframe.name] = undefined;
-			// @ts-ignore
-			mainWindow[iframe.name] = undefined;
-		}
+	const handleIFrameSlotRemoval = (slotElement: HTMLSlotElement) => {
+		const wfIframeSlotElement = slotElement.assignedElements()[0] as HTMLSlotElement;
+		const iframeElement = wfIframeSlotElement.assignedElements()[0] as HTMLIFrameElement;
+		iframeElement.remove();
+		wfIframeSlotElement.remove();
 	};
 
 	// Create a MutationObserver to watch for new iframes
@@ -132,15 +152,20 @@ export function initializeIFrameContext(
 		mutations.forEach((mutation) => {
 			mutation.removedNodes.forEach((node) => {
 				// Check if the removed node is an iframe
-				if (node.nodeType === Node.ELEMENT_NODE) {
-					if (node.nodeName === 'IFRAME') {
-						handleIFrameRemoval(node as HTMLIFrameElement);
+				if (node.nodeType === Node.ELEMENT_NODE && reframedShadowRoot.contains(node)) {
+					if (
+						node.nodeName === 'SLOT' &&
+						(node as HTMLSlotElement).getAttribute('name')?.startsWith('wf-host-iframe-slot:')
+					) {
+						handleIFrameSlotRemoval(node as HTMLSlotElement);
 					}
 
 					// Also check if any child elements of the removed node are iframes
-					const iframes = (node as HTMLElement).querySelectorAll('iframe');
-					iframes.forEach((iframe: HTMLIFrameElement) => {
-						handleIFrameRemoval(iframe);
+					const iframeSlots = (node as HTMLElement).querySelectorAll<HTMLSlotElement>(
+						'slot[name^="wf-host-iframe-slot:"]',
+					);
+					iframeSlots.forEach((slot) => {
+						handleIFrameSlotRemoval(slot);
 					});
 				}
 			});
@@ -148,7 +173,7 @@ export function initializeIFrameContext(
 			// Check for added nodes
 			mutation.addedNodes.forEach((node) => {
 				// Check if the added node is an iframe
-				if (node.nodeType === Node.ELEMENT_NODE) {
+				if (node.nodeType === Node.ELEMENT_NODE && reframedShadowRoot.contains(node)) {
 					if (node.nodeName === 'IFRAME') {
 						handleIFrameAddition(node as HTMLIFrameElement);
 					}
