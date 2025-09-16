@@ -88,6 +88,23 @@ export function initializeIFrameContext(
 			},
 		},
 
+		self: {
+			get() {
+				// TODO: to keep stripe happy
+				try {
+					throw new Error();
+				} catch (e) {
+					// if ((e as Error).stack?.split('\n')[2].match(/\/stripe\.js\:\d+\:\d+\)/)) {
+					if ((e as Error).stack?.split('\n')[2].match(/\/stripe\.js\:1\:(219740|219807)\)/)) {
+						// if ((e as Error).stack?.split('\n')[2].match(/\/stripe\.js\:1\:(219807)\)/)) {
+						return iframeWindow.top;
+					}
+				}
+
+				return iframeWindow;
+			},
+		},
+
 		length: {
 			get() {
 				return (
@@ -114,20 +131,20 @@ export function initializeIFrameContext(
 		console.log('handleIFrameAddition', iframeElement.name, iframeElement, isCrossOriginIframe(iframeElement));
 
 		if (iframeElement.name && isCrossOriginIframe(iframeElement)) {
-			// create and append a new web-fragment slot
-			const wfSlotElement = document.createElement('slot');
-			const wfSlotName = `wf-iframe-slot: ${iframeElement.name}`;
-			wfSlotElement.name = wfSlotName;
-			// TODO: make this work with piercing, <web-fragment> might not be available yet
-			reframedShadowRoot.host.getRootNode().insertBefore(wfSlotElement, null);
-
 			// create and append a new web-fragment-host slot
 			const wfHostSlotElement = document.createElement('slot');
 			const wfHostSlotName = `wf-host-iframe-slot: ${iframeElement.name}`;
 			wfHostSlotElement.name = wfHostSlotName;
-			wfHostSlotElement.setAttribute('slot', wfHostSlotName);
 			//reframedShadowRoot.host.insertBefore(wfHostSlotElement, null);
 			iframeElement.parentNode!.insertBefore(wfHostSlotElement, iframeElement);
+
+			// create and append a new web-fragment slot
+			const wfSlotElement = document.createElement('slot');
+			const wfSlotName = `wf-iframe-slot: ${iframeElement.name}`;
+			wfSlotElement.name = wfSlotName;
+			wfSlotElement.setAttribute('slot', wfHostSlotName);
+			// TODO: make this work with piercing, <web-fragment> might not be available yet
+			reframedShadowRoot.host.getRootNode().insertBefore(wfSlotElement, null);
 
 			// set slot name
 			iframeElement.setAttribute('slot', wfSlotName);
@@ -147,52 +164,52 @@ export function initializeIFrameContext(
 		wfIframeSlotElement.remove();
 	};
 
-	// Create a MutationObserver to watch for new iframes
-	const iframeMutationObserver = new mainWindow.MutationObserver((mutations) => {
-		mutations.forEach((mutation) => {
-			mutation.removedNodes.forEach((node) => {
-				// Check if the removed node is an iframe
-				if (node.nodeType === Node.ELEMENT_NODE && reframedShadowRoot.contains(node)) {
-					if (
-						node.nodeName === 'SLOT' &&
-						(node as HTMLSlotElement).getAttribute('name')?.startsWith('wf-host-iframe-slot:')
-					) {
-						handleIFrameSlotRemoval(node as HTMLSlotElement);
-					}
+	// // Create a MutationObserver to watch for new iframes
+	// const iframeMutationObserver = new mainWindow.MutationObserver((mutations) => {
+	// 	mutations.forEach((mutation) => {
+	// 		mutation.removedNodes.forEach((node) => {
+	// 			// Check if the removed node is an iframe
+	// 			if (node.nodeType === Node.ELEMENT_NODE && reframedShadowRoot.contains(node)) {
+	// 				if (
+	// 					node.nodeName === 'SLOT' &&
+	// 					(node as HTMLSlotElement).getAttribute('name')?.startsWith('wf-host-iframe-slot:')
+	// 				) {
+	// 					handleIFrameSlotRemoval(node as HTMLSlotElement);
+	// 				}
 
-					// Also check if any child elements of the removed node are iframes
-					const iframeSlots = (node as HTMLElement).querySelectorAll<HTMLSlotElement>(
-						'slot[name^="wf-host-iframe-slot:"]',
-					);
-					iframeSlots.forEach((slot) => {
-						handleIFrameSlotRemoval(slot);
-					});
-				}
-			});
+	// 				// Also check if any child elements of the removed node are iframes
+	// 				const iframeSlots = (node as HTMLElement).querySelectorAll<HTMLSlotElement>(
+	// 					'slot[name^="wf-host-iframe-slot:"]',
+	// 				);
+	// 				iframeSlots.forEach((slot) => {
+	// 					handleIFrameSlotRemoval(slot);
+	// 				});
+	// 			}
+	// 		});
 
-			// Check for added nodes
-			mutation.addedNodes.forEach((node) => {
-				// Check if the added node is an iframe
-				if (node.nodeType === Node.ELEMENT_NODE && reframedShadowRoot.contains(node)) {
-					if (node.nodeName === 'IFRAME') {
-						handleIFrameAddition(node as HTMLIFrameElement);
-					}
+	// 		// Check for added nodes
+	// 		mutation.addedNodes.forEach((node) => {
+	// 			// Check if the added node is an iframe
+	// 			if (node.nodeType === Node.ELEMENT_NODE && reframedShadowRoot.contains(node)) {
+	// 				if (node.nodeName === 'IFRAME') {
+	// 					handleIFrameAddition(node as HTMLIFrameElement);
+	// 				}
 
-					// Also check if any child elements of the added node are iframes
-					const iframes = (node as HTMLElement).querySelectorAll('iframe');
-					iframes.forEach((iframe: HTMLIFrameElement) => {
-						handleIFrameAddition(iframe);
-					});
-				}
-			});
-		});
-	});
+	// 				// Also check if any child elements of the added node are iframes
+	// 				const iframes = (node as HTMLElement).querySelectorAll('iframe');
+	// 				iframes.forEach((iframe: HTMLIFrameElement) => {
+	// 					handleIFrameAddition(iframe);
+	// 				});
+	// 			}
+	// 		});
+	// 	});
+	// });
 
-	// Start observing the document for changes
-	iframeMutationObserver.observe(wfDocumentElement, {
-		childList: true, // Watch for added/removed children
-		subtree: true, // Watch the entire subtree
-	});
+	// // Start observing the document for changes
+	// iframeMutationObserver.observe(wfDocumentElement, {
+	// 	childList: true, // Watch for added/removed children
+	// 	subtree: true, // Watch the entire subtree
+	// });
 
 	wfDocumentElement.querySelectorAll('iframe').forEach(handleIFrameAddition);
 
@@ -222,6 +239,9 @@ export function initializeIFrameContext(
 		} else {
 			return reframedShadowRoot.dispatchEvent(event);
 		}
+	};
+	iframeWindow.dispatchEvent.toString = function toString() {
+		return 'function dispatchEvent() { [native code] }';
 	};
 
 	const windowSizeProperties: (keyof Pick<
