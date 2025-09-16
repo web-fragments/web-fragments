@@ -68,11 +68,167 @@ export function initializeIFrameContext(
 	// END> WINDOW: GLOBAL CONSTRUCTORS PATCHES
 
 	/**
+	 * START> WINDOW: frame patches
+	 * https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-frames
+	 */
+
+	Object.defineProperties(iframeWindow, {
+		// TODO: window#top is non-configurable! is there a workaround?
+		// top: {
+		// 	value: iframeWindow,
+		// },
+
+		parent: {
+			value: iframeWindow,
+		},
+
+		frameElement: {
+			get() {
+				return null;
+			},
+		},
+
+		self: {
+			get() {
+				// TODO: to keep stripe happy
+				try {
+					throw new Error();
+				} catch (e) {
+					// if ((e as Error).stack?.split('\n')[2].match(/\/stripe\.js\:\d+\:\d+\)/)) {
+					if ((e as Error).stack?.split('\n')[2].match(/\/stripe\.js\:1\:(219740|219807)\)/)) {
+						// if ((e as Error).stack?.split('\n')[2].match(/\/stripe\.js\:1\:(219807)\)/)) {
+						return iframeWindow.top;
+					}
+				}
+
+				return iframeWindow;
+			},
+		},
+
+		length: {
+			get() {
+				return (
+					wfDocumentElement.querySelectorAll('iframe').length +
+					wfDocumentElement.querySelectorAll('slot[name^="wf-iframe-slot"]').length
+				);
+			},
+		},
+	});
+
+	const isCrossOriginIframe = (iframeElement: HTMLIFrameElement) => {
+		try {
+			// If we can access contentDocument without throwing a SecurityError it's same-origin
+			return iframeElement.contentDocument || false;
+		} catch (e) {
+			// SecurityError means cross-origin
+			return true;
+		}
+	};
+
+	const handleIFrameAddition = (iframeElement: HTMLIFrameElement) => {
+		const iframe = iframeElement.contentWindow;
+		assert(iframe !== null, 'attempted to read nested iframe before it was ready');
+		console.log('handleIFrameAddition', iframeElement.name, iframeElement, isCrossOriginIframe(iframeElement));
+
+		if (iframeElement.name && isCrossOriginIframe(iframeElement)) {
+			// create and append a new web-fragment-host slot
+			const wfHostSlotElement = document.createElement('slot');
+			const wfHostSlotName = `wf-host-iframe-slot: ${iframeElement.name}`;
+			wfHostSlotElement.name = wfHostSlotName;
+			//reframedShadowRoot.host.insertBefore(wfHostSlotElement, null);
+			iframeElement.parentNode!.insertBefore(wfHostSlotElement, iframeElement);
+
+			// create and append a new web-fragment slot
+			const wfSlotElement = document.createElement('slot');
+			const wfSlotName = `wf-iframe-slot: ${iframeElement.name}`;
+			wfSlotElement.name = wfSlotName;
+			wfSlotElement.setAttribute('slot', wfHostSlotName);
+			// TODO: make this work with piercing, <web-fragment> might not be available yet
+			reframedShadowRoot.host.getRootNode().insertBefore(wfSlotElement, null);
+
+			// set slot name
+			iframeElement.setAttribute('slot', wfSlotName);
+
+			// TODO: we should move the iframe to light dom before it's attached or while its inert
+			(reframedShadowRoot.host.getRootNode() as ShadowRoot).host.insertBefore(iframeElement, null);
+
+			// activate
+			iframeElement.setAttribute('src', iframeElement.getAttribute('inert-src')!);
+		}
+	};
+
+	const handleIFrameSlotRemoval = (slotElement: HTMLSlotElement) => {
+		const wfIframeSlotElement = slotElement.assignedElements()[0] as HTMLSlotElement;
+		const iframeElement = wfIframeSlotElement.assignedElements()[0] as HTMLIFrameElement;
+		iframeElement.remove();
+		wfIframeSlotElement.remove();
+	};
+
+	// // Create a MutationObserver to watch for new iframes
+	// const iframeMutationObserver = new mainWindow.MutationObserver((mutations) => {
+	// 	mutations.forEach((mutation) => {
+	// 		mutation.removedNodes.forEach((node) => {
+	// 			// Check if the removed node is an iframe
+	// 			if (node.nodeType === Node.ELEMENT_NODE && reframedShadowRoot.contains(node)) {
+	// 				if (
+	// 					node.nodeName === 'SLOT' &&
+	// 					(node as HTMLSlotElement).getAttribute('name')?.startsWith('wf-host-iframe-slot:')
+	// 				) {
+	// 					handleIFrameSlotRemoval(node as HTMLSlotElement);
+	// 				}
+
+	// 				// Also check if any child elements of the removed node are iframes
+	// 				const iframeSlots = (node as HTMLElement).querySelectorAll<HTMLSlotElement>(
+	// 					'slot[name^="wf-host-iframe-slot:"]',
+	// 				);
+	// 				iframeSlots.forEach((slot) => {
+	// 					handleIFrameSlotRemoval(slot);
+	// 				});
+	// 			}
+	// 		});
+
+	// 		// Check for added nodes
+	// 		mutation.addedNodes.forEach((node) => {
+	// 			// Check if the added node is an iframe
+	// 			if (node.nodeType === Node.ELEMENT_NODE && reframedShadowRoot.contains(node)) {
+	// 				if (node.nodeName === 'IFRAME') {
+	// 					handleIFrameAddition(node as HTMLIFrameElement);
+	// 				}
+
+	// 				// Also check if any child elements of the added node are iframes
+	// 				const iframes = (node as HTMLElement).querySelectorAll('iframe');
+	// 				iframes.forEach((iframe: HTMLIFrameElement) => {
+	// 					handleIFrameAddition(iframe);
+	// 				});
+	// 			}
+	// 		});
+	// 	});
+	// });
+
+	// // Start observing the document for changes
+	// iframeMutationObserver.observe(wfDocumentElement, {
+	// 	childList: true, // Watch for added/removed children
+	// 	subtree: true, // Watch the entire subtree
+	// });
+
+	wfDocumentElement.querySelectorAll('iframe').forEach(handleIFrameAddition);
+
+	// TODO: disconnect the observer when the fragment is destroyed
+
+	/**
+	 * END> WINDOW: frame patches
+	 */
+
+	/**
 	 * START> WINDOW: MISC PATCHES
 	 */
 	iframeWindow.IntersectionObserver = mainWindow.IntersectionObserver;
 	iframeWindow.MutationObserver = mainWindow.MutationObserver;
 	iframeWindow.ResizeObserver = mainWindow.ResizeObserver;
+
+	// CSSStyleSheet don't work across documents, so we need to use the constructor from the main context
+	iframeWindow.CSSStyleSheet = mainWindow.CSSStyleSheet;
+
 	iframeWindow.matchMedia = mainWindow.matchMedia.bind(mainWindow); // needs to be bound to mainWindow otherwise operates on the iframe window
 
 	// dispatch events onto the shadowRoot if the event is not one of the special iframe events
@@ -83,6 +239,9 @@ export function initializeIFrameContext(
 		} else {
 			return reframedShadowRoot.dispatchEvent(event);
 		}
+	};
+	iframeWindow.dispatchEvent.toString = function toString() {
+		return 'function dispatchEvent() { [native code] }';
 	};
 
 	const windowSizeProperties: (keyof Pick<
@@ -300,6 +459,15 @@ export function initializeIFrameContext(
 		styleSheets: {
 			get: () => {
 				return reframedShadowRoot.styleSheets;
+			},
+		},
+
+		adoptedStyleSheets: {
+			get() {
+				return reframedShadowRoot.adoptedStyleSheets;
+			},
+			set(value: CSSStyleSheet[]) {
+				reframedShadowRoot.adoptedStyleSheets = value;
 			},
 		},
 

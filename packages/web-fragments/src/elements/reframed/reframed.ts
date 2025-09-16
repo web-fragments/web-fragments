@@ -60,12 +60,6 @@ export function reframed(
 		[reframedMetadataSymbol]: reframeMetadata,
 	});
 
-	// Since fragments will most likely contain other block elements, they should be blocks themselves by default
-	const blockSheet = new CSSStyleSheet();
-	blockSheet.insertRule(':host, wf-document, wf-html, wf-body { display: block; }');
-	blockSheet.insertRule('wf-head { display: none;}');
-	reframedShadowRoot.adoptedStyleSheets.push(blockSheet);
-
 	/**
 	 * Initialize a promise and resolver for monkeyPatchIFrameDocument.
 	 * We need to know when monkeyPatchIFrameDocument resolves so we can return from reframe()
@@ -122,7 +116,8 @@ export function reframed(
 			)
 		) {
 			// TODO: make this a warning and only later an error
-			throw new WebFragmentError(
+			//throw new WebFragmentError(
+			console.warn(
 				`Reframed IFrame init error!\n` +
 					`IFrame loaded unexpected content for ${iframe.src}!\n` +
 					`Expected document title to be "Web Fragments: reframed" but was "${iframe.contentDocument?.title}"\n` +

@@ -31,6 +31,7 @@ const unpatchedElementProto = {
 	replaceChildren: Element.prototype.replaceChildren,
 	replaceWith: Element.prototype.replaceWith,
 	insertAdjacentElement: Element.prototype.insertAdjacentElement,
+	contains: Element.prototype.contains,
 };
 
 /**
@@ -58,10 +59,34 @@ function getIframeDocumentIfWithinReframedDom(node: Node, includeShadowRoot = tr
 }
 
 function monkeyPatchDOMInsertionMethods() {
-	Node.prototype.appendChild = function appendChild<T extends Node>(this: Node, childNode: T): T {
-		const doInsertTheNode = () => unpatchedNodeProto.appendChild.apply(this, arguments as any) as T;
+	Element.prototype.contains = function contains<T extends Node>(this: Node, childNode: T): boolean {
 		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
-		return reframedDomInsertion(childNode, doInsertTheNode, iframeDocument);
+		return (
+			unpatchedElementProto.contains.apply(this, arguments as any) ||
+			// TODO: keep track of cross-origin iframes in a Set/Map
+			!!(iframeDocument && childNode instanceof HTMLIFrameElement && !!childNode.parentElement)
+		);
+	};
+
+	Node.prototype.appendChild = function appendChild<T extends Node>(this: Node, childNode: T): T {
+		if (childNode instanceof HTMLIFrameElement) {
+			console.log('appendChild iframe', childNode.name);
+			// debugger;
+		}
+		const doInsertTheNode = () => {
+			if ((doInsertTheNode as any).nodeToInsert) {
+				arguments[0] = (doInsertTheNode as any).nodeToInsert;
+			}
+			return unpatchedNodeProto.appendChild.apply(this, arguments as any) as T;
+		};
+		const iframeDocument = getIframeDocumentIfWithinReframedDom(this);
+		return reframedDomInsertion(
+			childNode,
+			doInsertTheNode,
+			iframeDocument,
+			unpatchedNodeProto.getRootNode.call(this) as ShadowRoot,
+			this as Element,
+		);
 	};
 
 	Node.prototype.insertBefore = function insertBefore<T extends Node>(this: Node, childNode: T): T {

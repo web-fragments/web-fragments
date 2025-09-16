@@ -27,13 +27,13 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 		// prefix error with [browser] so that it's easier to distinguish from Playwright/Node.js errors
 		error.message = `[browser]: ${error.message}`;
 		// rewrite stack trace to align it with the filesystem path to make stack frames easier to navigate
-		error.stack = error.stack?.replace(/http:\/\/[^\/]*\//g, new URL('../src/', import.meta.url).pathname);
+		error.stack = error.stack?.replace(/http:\/\/[^/]*\//g, new URL('../src/', import.meta.url).pathname);
 		throw error;
 	});
 
 	// Abort a test if an network request fails (e.g. aborted requests)
 	page.on('requestfailed', async (request: Request) => {
-		//throw new Error(`Network request failed for: ${request.url()}` + `\n    error: ${request.failure()?.errorText})`);
+		throw new Error(`Network request failed for: ${request.url()}` + `\n    error: ${request.failure()?.errorText})`);
 	});
 
 	// Abort a test if a network request fails with HTTP status code >= 400

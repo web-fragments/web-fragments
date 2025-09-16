@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF Playground: piercing</title>
+		<style>
+			web-fragment {
+				border: 1px red dashed;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF Playground: piercing</h1>
+		<button id="portal-fragment">portal fragment</button>
+
+		<script type="module">
+			import { initializeWebFragments, WebFragment } from 'web-fragments';
+			initializeWebFragments();
+
+			window.fragmentContext = () => document.querySelector('iframe').contentWindow;
+
+			const button = document.querySelector('button#portal-fragment');
+			button.addEventListener('click', () => {
+				button.disabled = true;
+				const wf = new WebFragment();
+				wf.setAttribute('fragment-id', 'piercing');
+				document.body.appendChild(wf);
+			});
+		</script>
+	</body>
+</html>

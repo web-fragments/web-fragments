@@ -5,6 +5,8 @@ export function reframedDomInsertion<T extends Node>(
 	nodeToInsert: T,
 	doInsertTheNode: Function,
 	iframeDocument?: Document,
+	shadowRoot?: ShadowRoot,
+	insertionParent?: Element,
 ): T {
 	// if we are operating outside of a reframed DOM or the appended child is not an element, then just append
 	if (!iframeDocument || !(nodeToInsert instanceof HTMLElement)) {
@@ -45,6 +47,64 @@ export function reframedDomInsertion<T extends Node>(
 	const nestedScriptsAndLinks: NodeListOf<HTMLScriptElement | HTMLLinkElement> = nodeToInsert.querySelectorAll?.(
 		'script,link[rel=preload],link[rel=prefetch],link[rel=modulepreload]',
 	);
+
+	const isCrossOriginIframe = (iframeElement: HTMLIFrameElement) => {
+		try {
+			// If we can access contentDocument without throwing a SecurityError it's same-origin
+			return iframeElement.contentDocument || false;
+		} catch (e) {
+			// SecurityError means cross-origin
+			return true;
+		}
+	};
+
+	const handleIFrameAddition = (iframeElement: HTMLIFrameElement, swapIframeForSlot = false) => {
+		// const iframe = iframeElement.contentWindow;
+		// assert(iframe !== null, 'attempted to read nested iframe before it was ready');
+		// console.log('handleIFrameAddition', iframeElement.name, iframeElement, isCrossOriginIframe(iframeElement));
+
+		if (iframeElement.name /*&& isCrossOriginIframe(iframeElement)*/) {
+			// create and append a new web-fragment-host slot
+			const wfHostSlotElement = document.createElement('slot');
+			const wfHostSlotName = `wf-host-iframe-slot: ${iframeElement.name}`;
+			wfHostSlotElement.name = wfHostSlotName;
+
+			//reframedShadowRoot.host.insertBefore(wfHostSlotElement, null);
+			//iframeElement.parentNode!.insertBefore(wfHostSlotElement, iframeElement);
+			//insertionParent!.insertBefore(wfHostSlotElement, insertionParent!);
+			if (swapIframeForSlot) {
+				iframeElement.replaceWith(wfHostSlotElement);
+			} else {
+				(doInsertTheNode as any).nodeToInsert = wfHostSlotElement;
+			}
+
+			// create and append a new web-fragment slot
+			const wfSlotElement = document.createElement('slot');
+			const wfSlotName = `wf-iframe-slot: ${iframeElement.name}`;
+			wfSlotElement.name = wfSlotName;
+			wfSlotElement.setAttribute('slot', wfHostSlotName);
+			// TODO: make this work with piercing, <web-fragment> might not be available yet
+			shadowRoot!.host.insertBefore(wfSlotElement, null);
+
+			// set slot name
+			iframeElement.setAttribute('slot', wfSlotName);
+
+			// TODO: we should move the iframe to light dom before it's attached or while its inert
+			(shadowRoot!.host.getRootNode() as ShadowRoot).host.insertBefore(iframeElement, null);
+
+			// activate
+			//iframeElement.setAttribute('src', iframeElement.getAttribute('inert-src')!);
+		}
+	};
+
+	if (nodeToInsert instanceof HTMLIFrameElement) {
+		console.warn('adding iframe!!!', nodeToInsert.name, nodeToInsert);
+		handleIFrameAddition(nodeToInsert);
+	} else {
+		nodeToInsert.querySelectorAll('iframe').forEach((iframeElement) => {
+			handleIFrameAddition(iframeElement, true);
+		});
+	}
 
 	// if the child doesn't contains nested scripts or links, then just append it
 	if (nestedScriptsAndLinks.length === 0) {

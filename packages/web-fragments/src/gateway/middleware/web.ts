@@ -52,7 +52,7 @@ export function getWebMiddleware(
 		 */
 		if (requestSecFetchDest === 'iframe') {
 			// The title below is used be reframed to detect gateway misconfiguration. See reframed.ts
-			return new Response('<!doctype html><title>Web Fragments: reframed', {
+			return new Response('<!doctype html><title>Web Fragments: reframed</title>', {
 				// !!! Important: the header name must be Camel-Cased for overriding via the iframesHeaders to work !!!
 				headers: {
 					'Content-Type': 'text/html;charset=UTF-8',
@@ -303,12 +303,17 @@ export function getWebMiddleware(
 			let fragmentPierced = false;
 			const fragmentStream = asReadableStream`
 			<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true">
-				<template shadowrootmode="open"><wf-document>${fragmentResponse.body ?? ''}</wf-document></template>
+				<template shadowrootmode="open"><style>wf-document, wf-html, wf-body { display: block; }wf-head { display: none;}</style><wf-document>${fragmentResponse.body ?? ''}</wf-document></template>
 			</web-fragment-host>`;
 
 			return new HTMLRewriter()
 				.on('head', {
 					element(element) {
+						element.prepend(
+							// prettier-ignore
+							'<style>web-fragment, web-fragment-host { display: block; }</style>',
+							{ html: true },
+						);
 						element.append(gateway.piercingStyles ?? '', { html: true });
 					},
 				})
@@ -341,6 +346,13 @@ export function getWebMiddleware(
 			return new HTMLRewriter()
 				.on('head', {
 					element(element) {
+						element.prepend(
+							// Inject WF stylesheet
+							// Since fragments will most likely contain other block elements, WF related elements should be blocks themselves by default
+							// prettier-ignore
+							'<style>web-fragment, web-fragment-host { display: block; }</style>',
+							{ html: true },
+						);
 						element.append(gateway.piercingStyles ?? '', { html: true });
 					},
 				})
@@ -349,7 +361,7 @@ export function getWebMiddleware(
 						if (element.getAttribute('fragment-id') !== fragmentId) return;
 
 						element.append(
-							`<template shadowrootmode="open"><web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open"><wf-document>${fragmentContent}</wf-document></template></web-fragment-host></template>`,
+							`<template shadowrootmode="open"><web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open"><style>wf-document, wf-html, wf-body { display: block; }wf-head { display: none;}</style><wf-document>${fragmentContent}</wf-document></template></web-fragment-host></template>`,
 							{ html: true },
 						);
 						fragmentPierced = true;
@@ -361,7 +373,7 @@ export function getWebMiddleware(
 							if (fragmentPierced) return;
 
 							endTag.before(
-								`<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open"><wf-document>${fragmentContent}</wf-document></template></web-fragment-host>`,
+								`<web-fragment-host class="${piercingClassNames.join(' ')}" fragment-id="${fragmentId}" data-piercing="true"><template shadowrootmode="open"><style>wf-document, wf-html, wf-body { display: block; }wf-head { display: none;}</style><wf-document>${fragmentContent}</wf-document></template></web-fragment-host>`,
 								{ html: true },
 							);
 						});

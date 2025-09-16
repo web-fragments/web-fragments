@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF Playground: iframe-support</title>
+		<style>
+			web-fragment {
+				border: 1px red dashed;
+			}
+			iframe {
+				width: 500px;
+				height: 400px;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF Playground: iframe-support</h1>
+
+		<iframe
+			id="top-frame-cross-origin-iframe-child"
+			name="topFrameCrossOriginIframeChild"
+			src="http://localhost:5179/iframe-support-assets/iframe-with-src.html"
+			onload="console.log('top-frame-iframe-child loaded', Object.getOwnPropertyDescriptor(window, 'topFrameCrossOriginIframeChild'), window.topFrameCrossOriginIframeChild)"
+		></iframe>
+		<iframe
+			id="top-frame-cross-origin-iframe-child2"
+			name="topFrameCrossOriginIframeChild2"
+			src="http://localhost:5179/iframe-support-assets/iframe-with-src.html"
+		></iframe>
+		<script>
+			console.log(
+				`index.html iframe[name=topFrameCrossOriginIframeChild] created`,
+				Object.getOwnPropertyDescriptor(window, 'topFrameCrossOriginIframeChild'),
+				window.topFrameCrossOriginIframeChild,
+			);
+			// window.topFrameIframeChild.parent.topFrameIframeChild = { parent: window };
+			//window.topFrameIframeChild = {};
+			//window.topFrameIframeChild.parent = null;
+			//window.topFrameCrossOriginIframeChild2.parent = window.topFrameCrossOriginIframeChild;
+			console.log(
+				`index.html iframe[name=topFrameCrossOriginIframeChild] created2`,
+				Object.getOwnPropertyDescriptor(window, 'topFrameCrossOriginIframeChild'),
+				window.topFrameCrossOriginIframeChild2.name,
+				window.topFrameCrossOriginIframeChild2.parent.name,
+			);
+		</script>
+
+		<script type="module">
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
+		</script>
+
+		<web-fragment fragment-id="iframe-support"></web-fragment>
+	</body>
+</html>

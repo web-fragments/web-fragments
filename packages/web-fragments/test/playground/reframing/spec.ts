@@ -9,11 +9,11 @@ let fragmentContext: Frame;
 
 beforeEach(async ({ page }) => {
 	await page.goto('/reframing/');
-	// wait for the fragment to load
-	await page.waitForSelector('web-fragment h2');
 
 	fragment = page.locator('web-fragment');
 	fragmentContext = await getFragmentContext(fragment);
+
+	await expect(fragment.getByRole('heading')).toHaveText('hello world!');
 });
 
 test('window sizing in fragment should delegate to the main context', async ({ page }) => {
@@ -46,13 +46,13 @@ test('DOM related observers should be delegate to the main context', async ({ pa
 	}
 });
 
-test('Node, Document, Element be from the to the main context', async ({ page }) => {
+test('Node, Document, Element be from the to the main context', async () => {
 	expect(await fragmentContext.evaluate(`document.querySelector('h2') instanceof Node`)).toBe(true);
 	expect(await fragmentContext.evaluate(`document.querySelector('h2') instanceof Element`)).toBe(true);
 	expect(await fragmentContext.evaluate(`document.querySelector('h2').firstChild instanceof Text`)).toBe(true);
 });
 
-test('matchMedia should delegate to the main context', async ({ page }) => {
+test('matchMedia should delegate to the main context', async () => {
 	// the iframe window/document have 0px width so '(max-width: 755px)' returns false unless patched
 	expect(await fragmentContext.evaluate(`window.matchMedia('(max-width: 755px)').matches`)).toBe(false);
 });

@@ -29,7 +29,7 @@ test('fragment creation', async ({ page }) => {
 
 	await step('fragment can be parameterized via query params in fragment[src]', async () => {
 		const fragment = page.locator('web-fragment[fragment-id=fragment-creation4]');
-		await expect(await fragment.getAttribute('src')).toBe('/fragment-creation/fragment?name=Natalia');
+		await expect(fragment).toHaveAttribute('src', '/fragment-creation/fragment?name=Natalia');
 		await expect(fragment.getByRole('heading')).toHaveText('hello Natalia!');
 	});
 });
@@ -60,19 +60,19 @@ test('fragment initialization', async ({ page }) => {
 
 	await step('fragment should have a shadow root which contains fragment host', async () => {
 		const fragment = page.locator('web-fragment[fragment-id=fragment-creation]');
-		await expect(await fragment.evaluate((fragment) => fragment.shadowRoot!.firstElementChild!.tagName)).toBe(
+		expect(await fragment.evaluate((fragment) => fragment.shadowRoot!.firstElementChild!.tagName)).toBe(
 			'WEB-FRAGMENT-HOST',
 		);
 	});
 
 	await step(`fragment's iframe should have it's name set to fragment-id`, async () => {
 		const fragment = page.locator('web-fragment[fragment-id=fragment-creation]');
-		await expect(await fragment.locator('h2')).toBeVisible();
+		await expect(fragment.locator('h2')).toBeVisible();
 		const fragmentIframe = page.locator('iframe[name="wf:fragment-creation"]');
 		await expect(await fragmentIframe).toBeAttached();
 
 		const fragment4 = page.locator('web-fragment[fragment-id=fragment-creation4]');
-		await expect(await fragment4.locator('h2')).toBeVisible();
+		await expect(fragment4.locator('h2')).toBeVisible();
 		const fragmentIframe4 = page.locator('iframe[name="wf:fragment-creation4"]');
 		await expect(await fragmentIframe4).toBeAttached();
 	});
