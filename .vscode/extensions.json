@@ -2,6 +2,7 @@
 	"recommendations": [
 		"astro-build.astro-vscode",
 		"esbenp.prettier-vscode",
+		"github.vscode-github-actions",
 		"ms-playwright.playwright",
 		"streetsidesoftware.code-spell-checker"
 	]
