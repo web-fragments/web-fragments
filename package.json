@@ -6,6 +6,7 @@
 	"scripts": {
 		"build": "pnpm --filter web-fragments build",
 		"prettier": "prettier . --ignore-unknown",
+		"cspell:check": "cspell . --config cspell.json",
 		"types:check": "pnpm --filter '*' types:check",
 		"prettier:check": "pnpm run prettier --check",
 		"prettier:fix": "pnpm run prettier --write",
@@ -13,6 +14,7 @@
 	},
 	"devDependencies": {
 		"prettier": "^3.2.5",
+		"cspell": "^9.2.1",
 		"@changesets/changelog-github": "^0.5.0",
 		"@changesets/cli": "^2.27.7"
 	},

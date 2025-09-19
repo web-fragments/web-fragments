@@ -162,13 +162,13 @@
   Without this fix, browsers might warn that preloaded scripts were not utilized by the application.
   This is because browsers don't understand that the scripts were actually executed in fragment's iframe.
 
-- [#206](https://github.com/web-fragments/web-fragments/pull/206) [`7d9b350`](https://github.com/web-fragments/web-fragments/commit/7d9b350c51ab9779ae78967366d637867b0e39ea) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): workaround miniflare issue impacting compresed responses to subreqeusts
+- [#206](https://github.com/web-fragments/web-fragments/pull/206) [`7d9b350`](https://github.com/web-fragments/web-fragments/commit/7d9b350c51ab9779ae78967366d637867b0e39ea) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): workaround miniflare issue impacting compressed responses to subrequests
 
   Workaround for https://github.com/cloudflare/workers-sdk/issues/8004 which impacts only dev mode with miniflare.
 
 - [#206](https://github.com/web-fragments/web-fragments/pull/206) [`df338f4`](https://github.com/web-fragments/web-fragments/commit/df338f4e9afa4d6f1de52075581144d7381f53e9) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): preserve response headers for soft nav and asset coming from a fragment endpoint
 
-  Previously we mistakingly stripped them and returned a response with minimalistic response head and original body, which resulted in many useful headers missing.
+  Previously we mistakenly stripped them and returned a response with minimalistic response head and original body, which resulted in many useful headers missing.
   Most importantly this issue resulted in caching headers not being correctly relayed to the client.
 
 - [#206](https://github.com/web-fragments/web-fragments/pull/206) [`c6ae1c6`](https://github.com/web-fragments/web-fragments/commit/c6ae1c65d7642f3b0162a089986ac32110ba8ee8) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): clone response before modifying it to prevent immutable response crashes
@@ -506,7 +506,7 @@
   Since it's unlikely that anyone used it directly it's unlikely that anyone will be impacted by this change.
 
   Over the course of the development we realized that reframed as a standalone library doesn't make sense.
-  Reframing and the reframed library requires shadowdom and the gateway and without the rest of web-fragments it provides very little utility.
+  Reframing and the reframed library requires ShadowDOM and the gateway and without the rest of web-fragments it provides very little utility.
   On the other hand, keeping the library as a separate package creates unnecessary overhead and friction.
 
   For these reasons we decided to keep the library just as an implementation detail of web-fragments.

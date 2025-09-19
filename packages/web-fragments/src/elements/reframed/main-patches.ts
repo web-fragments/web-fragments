@@ -42,7 +42,7 @@ const unpatchedElementProto = {
  *
  * Good example of shadowroot being considered to be part of the fragment is when we are appending a new child to the shadowroot, and we need to get hold of the iframe document so that we execute any scripts being appended in the iframe.
  *
- * On the other hand if a code executing in the main frame is checking `ownerdocument` of the shadowroot, we don't want to expose the iframe document.
+ * On the other hand if a code executing in the main frame is checking `ownerDocument` of the shadowroot, we don't want to expose the iframe document.
  *
  * @param node
  * @param includeShadowRoot  If true, consider the shadow root node to be part of the fragment and return the iframe document, otherwise return undefined.
