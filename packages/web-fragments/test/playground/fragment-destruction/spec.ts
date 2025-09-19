@@ -101,7 +101,7 @@ describe('fragment destruction', () => {
 			peakMemoryUsage = await getMemoryUsage();
 			expect(peakMemoryUsage).toBeGreaterThan(0);
 
-			// TODO: this fails because the result is always 1, peakMemoryUsage and initalMemoryUsage are the same
+			// TODO: this fails because the result is always 1, peakMemoryUsage and initialMemoryUsage are the same
 			expect(peakMemoryUsage / initialMemoryUsage).toBeCloseTo(10, 0);
 		});
 
