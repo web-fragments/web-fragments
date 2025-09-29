@@ -59,7 +59,7 @@ gateway.registerFragment({
 A typical fragment has two kinds of url patterns which you need to configure in `routePatterns` of a web fragment configuration:
 
 - The routable url pattern — navigating to a url matching this pattern with the browser should invoke a fragment
-- The asset url patter — a pattern which uniquely identifies static assets of a fragment belonging to a particular fragment. We recommend using `/_fragment/<fragment-id>/` prefix to ensure uniqueness.
+- The asset url pattern — a pattern which uniquely identifies static assets of a fragment belonging to a particular fragment. We recommend using `/_fragment/<fragment-id>/` prefix to ensure uniqueness.
 
 ---
 
