@@ -57,6 +57,26 @@ test('matchMedia should delegate to the main context', async ({ page }) => {
 	expect(await fragmentContext.evaluate(`window.matchMedia('(max-width: 755px)').matches`)).toBe(false);
 });
 
+test('navigator API should delegate to the main context', async ({ page }) => {
+	expect(await page.evaluate(`navigator === fragmentContext().navigator`)).toBe(true);
+});
+
+test('navigator.clipboard should delegate to the main context', async ({ page, browserName }) => {
+	// Since navigator is shared, the clipboard should also be the same object
+	expect(await page.evaluate(`navigator.clipboard === fragmentContext().navigator.clipboard`)).toBe(true);
+
+	if (browserName === 'webkit') {
+		// playwright + webkit doesn't seem to support granting Clipboard API permissions
+		// see https://github.com/microsoft/playwright/issues/25666
+		return;
+	}
+
+	await page.evaluate(`navigator.clipboard.writeText('')`);
+	expect(await page.evaluate(`navigator.clipboard.readText()`)).toBe('');
+	await page.locator('button#clipboardWriteButton').click();
+	expect(await page.evaluate(`navigator.clipboard.readText()`)).toMatch(/http:\/\/localhost:\d+\/reframing\/ @ .+/);
+});
+
 test('document.title should read the value from <title> element, and write to it as well', async ({ page }) => {
 	expect(await fragmentContext.evaluate(`document.title`)).toBe('hello fragment');
 	// TODO: should we update the parent title when a bound fragment is initialized?

@@ -74,6 +74,13 @@ export function initializeIFrameContext(
 	iframeWindow.MutationObserver = mainWindow.MutationObserver;
 	iframeWindow.ResizeObserver = mainWindow.ResizeObserver;
 	iframeWindow.matchMedia = mainWindow.matchMedia.bind(mainWindow); // needs to be bound to mainWindow otherwise operates on the iframe window
+	// the navigator API is defined as enumerable and configurable property with a getter and an undefined setter
+	Object.defineProperty(iframeWindow, 'navigator', {
+		set: undefined,
+		get: () => mainWindow.navigator,
+		configurable: true,
+		enumerable: true,
+	});
 
 	// dispatch events onto the shadowRoot if the event is not one of the special iframe events
 	const originalDispatchEvent = iframeWindow.dispatchEvent.bind(iframeWindow);

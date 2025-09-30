@@ -69,6 +69,7 @@ export default function Index() {
 						>
 							+
 						</button>
+						<button onClick={() => navigator.clipboard.writeText(counter.toString())}>copy</button>
 					</div>
 					{new Array(1000).fill(undefined).map((_element, idx) => (
 						<div key={idx}>I am the {idx} element in this list of divs</div>
