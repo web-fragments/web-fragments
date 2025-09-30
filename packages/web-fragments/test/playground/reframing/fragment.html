@@ -6,9 +6,19 @@
 	</head>
 	<body>
 		<h2>hello</h2>
+
+		<button id="clipboardWriteButton">Write to clipboard</button>
+		<button id="clipboardReadButton">Read and print clipboard</button>
 		<script>
 			const name = new URL(location.href).searchParams.get('name') ?? 'world';
 			document.querySelector('h2').textContent += ` ${name}!`;
+
+			document.querySelector('#clipboardWriteButton').addEventListener('click', () => {
+				navigator.clipboard.writeText(`${location.href} @ ${new Date().toString()}`);
+			});
+			document.querySelector('#clipboardReadButton').addEventListener('click', async () => {
+				alert('Clipboard content: ' + (await navigator.clipboard.readText()));
+			});
 		</script>
 	</body>
 </html>

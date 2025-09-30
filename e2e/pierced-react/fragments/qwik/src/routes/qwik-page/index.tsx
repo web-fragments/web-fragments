@@ -15,12 +15,12 @@ export default component$(() => {
       margin: 1rem;
       width: fit-content;
       color: black;
- 
+
       p {
         margin-bottom: 0.5rem;
         text-align: center;
       }
- 
+
       .counter {
         display: flex;
         gap: 1rem;
@@ -54,6 +54,7 @@ export default component$(() => {
 						>
 							+
 						</button>
+						<button onClick$={() => navigator.clipboard.writeText(counter.value.toString())}>copy</button>
 					</div>
 					{new Array(1000).fill(undefined).map((_element, idx) => (
 						<div key={idx}>I am the {idx} element in this list of divs</div>
