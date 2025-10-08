@@ -2,7 +2,7 @@ import WritableDOMStream from 'writable-dom';
 import { initializeIFrameContext } from './iframe-patches';
 import { initializeMainContext } from './main-patches';
 import { executeScriptsInPiercedFragment } from './script-execution';
-import { WebFragmentError } from './utils/web-fragment-error';
+import { WebFragmentError } from '../../_utils/web-fragment-error';
 
 type ReframedOptions = {
 	pierced: boolean;

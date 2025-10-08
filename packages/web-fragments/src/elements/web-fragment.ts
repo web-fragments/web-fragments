@@ -1,4 +1,4 @@
-import { assert } from './reframed/utils/assert';
+import { assert } from '../_utils/assert';
 import { type WebFragmentHost } from './web-fragment-host';
 
 /**

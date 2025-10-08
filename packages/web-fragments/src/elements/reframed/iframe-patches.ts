@@ -1,6 +1,6 @@
 import { ReframedShadowRoot, reframedMetadataSymbol } from './reframed';
 import { execToInertScriptMap } from './script-execution';
-import { assert } from './utils/assert';
+import { assert } from '../../_utils/assert';
 import { rewriteQuerySelector } from './utils/selector-helpers';
 
 /**

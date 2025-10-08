@@ -1,4 +1,5 @@
-import { MatchFunction, match } from 'path-to-regexp';
+import { match } from 'path-to-regexp';
+import { WebFragmentError } from '../_utils/web-fragment-error';
 
 export class FragmentGateway {
 	private fragmentConfigs: Map<string, FragmentConfig> = new Map();
@@ -111,12 +112,13 @@ export class FragmentGateway {
 		});
 	}
 
-	matchRequestToFragment(urlPath: string, requestFragmentId?: string) {
+	matchRequestToFragment(urlPath: string, requestFragmentId?: string): FragmentConfig | null | WebFragmentError {
 		// TODO: path matching needs to take pattern specificity into account
 		// such that more specific patterns are matched before less specific ones
 		//   e.g. given route patterns `['/:accountId', '/:accountId/workers']` and a request path of `/abc123/workers/foo`,
 		//   the matched pattern should be `/:accountId/workers` since it is the more specific pattern.
 		const matches = [...this.routeMap.keys()].filter((matcher) => matcher(urlPath));
+		let possibleRequestFragmentMismatch = false;
 
 		for (const match of matches) {
 			const fragmentConfig = this.routeMap.get(match) ?? null;
@@ -128,13 +130,19 @@ export class FragmentGateway {
 
 			if (requestFragmentId === fragmentConfig?.fragmentId) {
 				return fragmentConfig;
+			} else {
+				possibleRequestFragmentMismatch = true;
 			}
+		}
+
+		if (possibleRequestFragmentMismatch) {
+			return new WebFragmentError(`Unknown Web Fragment! X-Web-Fragment-Id=${requestFragmentId}`);
 		}
 
 		// for backwards compatibility if we have a path match, but fragment id doesn't match any of the routes, return the first match
 		// TODO: remove this to increase security and resiliency once we have better request type identification
 		if (matches.length) {
-			return this.routeMap.get(matches[0]);
+			return this.routeMap.get(matches[0]) || null;
 		}
 
 		return null;
