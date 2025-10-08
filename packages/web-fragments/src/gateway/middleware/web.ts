@@ -185,12 +185,16 @@ export function getWebMiddleware(
 										Request: ${fragmentRequest.method} ${fragmentRequest.url}<br>
 										${
 											fetchError
-												? `Response: HTTP ${fragmentResponseOrError.status} ${fragmentResponseOrError.statusText}<br>
-												${await fragmentResponseOrError.text()}`
+												? `Response: HTTP ${fragmentResponseOrError.status} ${fragmentResponseOrError.statusText}${
+														fragmentResponseOrError.status >= 300 &&
+														fragmentResponseOrError.status < 400 &&
+														fragmentResponseOrError.headers.has('location')
+															? `<br> Location: ${fragmentResponseOrError.headers.get('location')}`
+															: ''
+													}<br>${await fragmentResponseOrError.text()}`
 												: `Internal exception: ${fragmentResponseOrError}<br>
 										 		Stack: <br>${fragmentResponseOrError.stack}`
-										}
-								</p>`
+										}</p>`
 						: '<p>There was a problem fulfilling your request.</p>',
 					{ status: 500, headers: [['content-type', 'text/html']] },
 				),
@@ -265,9 +269,10 @@ export function getWebMiddleware(
 			fragmentReq.headers.set('Accept-Encoding', 'gzip, br');
 		}
 
-		// make the request, and follow any redirects returned by the fragment endpoint
-		// TODO: is it always safe to follow redirects?
-		return fragmentFetch(fragmentReq, { redirect: 'follow' });
+		// make the request and ensure we don't follow redirects
+		// redirects should be sent all the way to the client, which can then decide to follow them or not
+		// this ensures that window.location is updated in the reframed iframe if the fragment returns a redirect
+		return fragmentFetch(fragmentReq, { redirect: 'manual' });
 
 		// TODO: add timeout handling
 		// return fetch(fragmentReq, { signal: abortController.signal }).finally(
