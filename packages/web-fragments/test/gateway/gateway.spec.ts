@@ -64,6 +64,25 @@ for (const environment of environments) {
 				expect(response404.status).toBe(404);
 				expect(await response404.text()).toBe('<html><body>does not exist here! 👻</body></html>');
 			});
+
+			it('should serve a redirect response from the app shell as is', async () => {
+				mockShellAppResponse(new Response(null, { status: 302, statusText: 'Found', headers: { location: '/foo' } }));
+
+				const response = await testRequest(new Request('http://localhost/'));
+
+				expect(response.status).toBe(302);
+				expect(response.statusText).toBe('Found');
+				expect(response.headers.get('location')).toBe('/foo');
+
+				// make one more request to a different non-fragment path
+				mockShellAppResponse(new Response(null, { status: 301, statusText: 'Found', headers: { location: '/bar' } }));
+
+				const response404 = await testRequest(new Request('http://localhost/not-here'));
+
+				expect(response404.status).toBe(301);
+				expect(response404.statusText).toBe('Found');
+				expect(response404.headers.get('location')).toBe('/bar');
+			});
 		});
 
 		describe(`pierced fragment requests`, () => {
@@ -374,7 +393,36 @@ for (const environment of environments) {
 						stripMultipleSpaces(`<html><body>app shell 🙂<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><p>Failed to fetch fragment!<br>
 								Endpoint: http://foo.test:1234<br>
 								Request: GET http://localhost${server ? ':' + server.address()!.port : ''}/foo<br>
-								Response: HTTP 500 <br> fragment failed to render 🙈 </p></wf-document></template></web-fragment-host></body></html>`),
+								Response: HTTP 500 <br>fragment failed to render 🙈</p></wf-document></template></web-fragment-host></body></html>`),
+					);
+				});
+
+				it('should serve the app shell with the default fragment SSR fetch error message when fragment endpoint returns a redirect response', async () => {
+					/**
+					 * When can't follow redirects when piercing because the location.href would get out of sync between the fragment's server-side and client-side.
+					 *
+					 * For this reason, we need to treat redirects as errors.
+					 */
+
+					mockShellAppResponse(
+						new Response('<html><body>app shell 🙂</body></html>', {
+							status: 200,
+							headers: { 'content-type': 'text/html' },
+						}),
+					);
+					mockFragmentFooResponse('/foo', new Response(null, { status: 302, headers: { location: '/foo/bar' } }));
+
+					const response = await testRequest(
+						new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'document' } }),
+					);
+
+					expect(response.status).toBe(200);
+					expect(stripMultipleSpaces(await response.text())).toBe(
+						stripMultipleSpaces(`<html><body>app shell 🙂<web-fragment-host class="foo" fragment-id="fragmentFoo" data-piercing="true"><template shadowrootmode="open"><wf-document><p>Failed to fetch fragment!<br>
+								Endpoint: http://foo.test:1234<br>
+								Request: GET http://localhost${server ? ':' + server.address()!.port : ''}/foo<br>
+								Response: HTTP 302 <br>
+								Location: /foo/bar<br></p></wf-document></template></web-fragment-host></body></html>`),
 					);
 				});
 
@@ -543,6 +591,33 @@ for (const environment of environments) {
 				expect(hardNavResponse.headers.get('content-type')).toBe('text/html');
 				expect(hardNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
 				expect(hardNavResponse.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
+			});
+
+			it(`should serve a redirect response as is for a fragment soft navigation request`, async () => {
+				/**
+				 * The client should receive a 302 without it being obscured by automatic follow on the server side.
+				 *
+				 * TODO: client should gracefully handle these redirects https://github.com/web-fragments/web-fragments/issues/245
+				 */
+
+				mockFragmentFooResponse(
+					'/foo/some/path',
+					new Response(null, {
+						status: 302,
+						headers: { location: '/foo/some/other/path' },
+					}),
+				);
+
+				const softNavResponse = await testRequest(
+					new Request('http://localhost/foo/some/path', { headers: { 'sec-fetch-dest': 'empty' } }),
+				);
+
+				expect(softNavResponse.status).toBe(302);
+				expect(await softNavResponse.text()).toBe('');
+				expect(softNavResponse.headers.get('location')).toBe('/foo/some/other/path');
+				expect(softNavResponse.headers.get('content-type')).toBeNull();
+				expect(softNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(softNavResponse.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
 			});
 
 			it(`should disambiguate and serve a fragment soft navigation request`, async () => {
@@ -741,6 +816,26 @@ for (const environment of environments) {
 				expect(barImgResponse.headers.get('x-web-fragment-id')).toBe('fragmentBar');
 			});
 
+			it(`should serve unmodified redirect responses`, async () => {
+				// fetch an image from the fooFragment
+				mockFragmentFooResponse(
+					'/_fragment/foo/image.jpg',
+					new Response(null, {
+						status: 302,
+						headers: {
+							Location: '/_fragment/foo/image2.jpg',
+						},
+					}),
+				);
+
+				const imgResponse = await testRequest(new Request('http://localhost/_fragment/foo/image.jpg'));
+
+				expect(imgResponse.status).toBe(302);
+				expect(imgResponse.headers.get('location')).toBe('/_fragment/foo/image2.jpg');
+				// node.js always returns a body equal to an empty string rather than null, is this a bug in the adapter?
+				expect(imgResponse.body === null || (await imgResponse.text()) === '').toBe(true);
+			});
+
 			it(`should handle 304 responses`, async () => {
 				// fetch an image from the fooFragment
 				mockFragmentFooResponse('/_fragment/foo/image.jpg', new Response(null, { status: 304 }));
@@ -755,7 +850,7 @@ for (const environment of environments) {
 				);
 
 				expect(imgResponse.status).toBe(304);
-				expect(imgResponse.body).toBe(null);
+				expect(imgResponse.body).toBeNull();
 			});
 
 			it(`should append x-forwarded-host and x-forwarded-proto headers to the asset request`, async () => {
@@ -866,9 +961,6 @@ for (const environment of environments) {
 							if (!appShellResponse) {
 								throw new Error('No app shell response provided, use mockShellAppResponse to set it');
 							}
-							if (appShellResponse.status === 302) {
-								return fetch(appShellResponse.url);
-							}
 							return Promise.resolve(appShellResponse);
 						});
 					};
@@ -943,7 +1035,7 @@ for (const environment of environments) {
 						// TODO: why not working?
 						// fetchMock.dontMockOnce();
 						// fetch(newRequest);
-						return fetch.unpatchedFetch(newRequest);
+						return fetch.unpatchedFetch(newRequest, { redirect: 'manual' });
 					};
 
 					break;
