@@ -61,9 +61,19 @@ export function initializeIFrameContext(
 	// extend global constructors to support instanceof checks using
 	// their equivalent constructor from the parent execution context
 	globalConstructors.forEach((constructor) => {
-		Object.defineProperty(constructor, Symbol.hasInstance, {
-			value: hasInstance,
-		});
+		try {
+			Object.defineProperty(constructor, Symbol.hasInstance, {
+				value: hasInstance,
+			});
+		} catch (e) {
+			console.warn(
+				`WebFragments: failed to patch \`${constructor.name}[Symbol.hasInstance]\`\nA browser extension might be interfering with the browser APIs...\nSome application functionality may not work as expected!`,
+				'\nError:',
+				e,
+				`\nDescriptor:`,
+				Object.getOwnPropertyDescriptor(constructor, Symbol.hasInstance),
+			);
+		}
 	});
 	// END> WINDOW: GLOBAL CONSTRUCTORS PATCHES
 
