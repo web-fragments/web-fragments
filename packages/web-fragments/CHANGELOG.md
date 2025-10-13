@@ -1,5 +1,108 @@
 # web-fragments
 
+## 0.8.0
+
+### Minor Changes
+
+- [#230](https://github.com/web-fragments/web-fragments/pull/230) [`dc26df0`](https://github.com/web-fragments/web-fragments/commit/dc26df02ec4896f75f35d98ca5332328fd6c41c1) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat(gateway): enable fragments to configure their own Content Security Policy (CSP)
+
+  With FragmentConfig#iframeHeaders, fragments can now configure their own Content Security Policy (CSP). See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP
+
+  This feature is very useful in enabling fragments to make their CSP more strict or relaxed based without requiring the entire fragment federation to have a single CSP policy.
+
+  Important: The CSP configured only applies to the script execution and does not affect the DOM operations. In fragments the script execution is isolated, but DOM is shared by all fragments and the host app. This means that the host app should be configured with a CSP that takes into account the DOM needs of all fragments (e.g. `img-src`), but the script execution and mainly allowing/disallowing `unsafe-eval` can be configured at the fragment level.
+
+  Example usage:
+
+  ```js
+  fragmentGateway.registerFragment({
+  	fragmentId: 'my-fragment',
+    ...
+    iframeHeaders: {
+      'Content-Security-Policy': `connect-src 'self'; object-src 'none'; script-src 'self'; base-uri 'self';`,
+  		...
+  	},
+  });
+  ```
+
+- [#230](https://github.com/web-fragments/web-fragments/pull/230) [`6b1af29`](https://github.com/web-fragments/web-fragments/commit/6b1af2975dcd8cd08af345050baf2803b2362a0d) Thanks [@IgorMinar](https://github.com/IgorMinar)! - feat(gateway): add FragmentConfig#iframeHeaders support for configuring iframe headers
+
+  The fragment config can now optionally include `iframeHeaders` key that can contain a `Record<string, string>` of header names and their values.
+
+  This feature is useful to configure response headers for requests that come from initialization of the reframed iframe which powers the configured Web Fragment.
+
+  For example, you could use this header to configure CSP policy for the iframe, or override any of the default headers set by the Web Fragments gateway.
+
+  Example usage:
+
+  ```js
+  fragmentGateway.registerFragment({
+  	fragmentId: 'my-fragment',
+    ...
+    iframeHeaders: {
+  		'Some-Header': 'my value',
+  		'another-header': 'my other value',
+  	},
+  });
+  ```
+
+### Patch Changes
+
+- [#242](https://github.com/web-fragments/web-fragments/pull/242) [`c204c50`](https://github.com/web-fragments/web-fragments/commit/c204c5072052d3c975d1d3910753af1e60c5c6c6) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): pass any fragment redirect responses to the client
+
+  If a fragment returns a redirect response, the gateway should not follow this redirect, but instead should pass the redirect to the client, which can then decide to follow it.
+
+  Previously the gateway would follow redirects returned by the fragment endpoint, which was not always safe, because it could result in situations the client was expected to receive the redirect and update window.location before making a new request to the server.
+
+  If the gateway auto-follows redirects, the client will not be aware of them, and window.location will not get updated, resulting in the server assuming that the client performed a redirect when it hasn't.
+
+  In the real world, this then results in hydration errors because the client and server get out of sync when it comes to the current URL.
+
+  Additionally, if the gateway is composing streams during a pierced request, and the fragment endpoint returns a redirect, we must not follow the redirect and instead write a fragment init error into the composed stream because as mentioned above, the fragment client would get out of sync with the fragment server
+
+  This change essentially reverts 6a8846a5759e72b7eb5854b63209f9a4d8f35005, which was made with good intentions but failed the test of time and real world usage.
+
+- [#247](https://github.com/web-fragments/web-fragments/pull/247) [`1d970d2`](https://github.com/web-fragments/web-fragments/commit/1d970d25f741ba0b3cca9157e01b676485b028d6) Thanks [@IgorMinar](https://github.com/IgorMinar)! - ci: add pkg.pr.new integration
+
+  This way we can now publish preview npm packages from PRs for early testing.
+
+- [#246](https://github.com/web-fragments/web-fragments/pull/246) [`3439f7c`](https://github.com/web-fragments/web-fragments/commit/3439f7c91e7d340c3b37b29c67633c7620dd0fcb) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(reframed): make browser API patching more resilient to defend against browser extensions
+
+  Some browser extensions incorrectly patch browser APIs in ways that prevent Web Fragments from working correctly.
+
+  The most recent offender is Dashlane password manager (https://www.dashlane.com/), which patches the `hasInstance` property of global constructors with non-configurable descriptors, which prevents further patching by WebFragments.
+
+  To defend against such issues, WebFragments now catches patching errors, issues a warning including the error details, and continues patching the remaining APIs.
+
+  It's likely that many applications will work just fine even with a few browser APIs unpatched, so this approach is preferable to fatal errors that crash the apps.
+
+  Example warning:
+
+  ```
+  WebFragments: failed to patch `PublicKeyCredential[Symbol.hasInstance]`
+  A browser extension might be interfering with the browser APIs...
+  Some application functionality may not work as expected!
+  Error: TypeError: Cannot redefine property: Symbol(Symbol.hasInstance)
+      at Object.defineProperty (<anonymous>)
+      at cf-fragments.4eb1694958c0444acce6.js:533:48
+      at Array.forEach (<anonymous>)
+      at cf-fragments.4eb1694958c0444acce6.js:531:174
+      at HTMLIFrameElement.<anonymous> (cf-fragments.4eb1694958c0444acce6.js:895:34)
+  Descriptor: {value: Proxy(Function), writable: false, enumerable: false, configurable: false}
+  ```
+
+- [#230](https://github.com/web-fragments/web-fragments/pull/230) [`dcf26e5`](https://github.com/web-fragments/web-fragments/commit/dcf26e5aeaf8f2a3cad0a09552414de2ac5d86b5) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(web-fragments): handle iframe errors due to x-frame-options=deny header more gracefully
+
+  We now detect this scenario and show a helpful error in the console.
+
+- [#230](https://github.com/web-fragments/web-fragments/pull/230) [`21cb50f`](https://github.com/web-fragments/web-fragments/commit/21cb50f339c997b6759c646a799db2b184fa73eb) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: throw WebFragmentError when we risk infinite iframe recursion during reframe init
+
+  If the fragment gateway was not properly configured (e.g. the routePaths don't contain the main navigable url that starts a fragment), reframed creates an iframe which when loaded by the browser loads the original host html rather than the minimal reframed init html, which then causes a new nested fragment to be created which then repeats the process, resulting in an infinite recursion.
+
+  This turns out to be a rather common user error, so to make it easier to diagnose and fix, we now detect it and throw an error.
+
+- [#240](https://github.com/web-fragments/web-fragments/pull/240) [`515c1d6`](https://github.com/web-fragments/web-fragments/commit/515c1d6d3620d9512516d6369f3320b03ed8aa90) Thanks [@third774](https://github.com/third774)! - Proxy navigator.clipboard API to main window
+
 ## 0.7.2
 
 ### Patch Changes
