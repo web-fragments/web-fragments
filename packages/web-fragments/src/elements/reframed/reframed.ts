@@ -204,6 +204,33 @@ async function reframeWithFetch(
 		headers: { accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', ...options.headers },
 	});
 
+	// Handle HTTP redirects (3xx status codes)
+	if (reframedHtmlResponse.status >= 300 && reframedHtmlResponse.status < 400) {
+		const location = reframedHtmlResponse.headers.get('location');
+		if (!location) {
+			throw new WebFragmentError(`Redirect response missing Location header for ${reframedSrc}`);
+		}
+		const redirectUrl = new URL(location, reframedSrc).href;
+
+		if (options.pierced && options.bound) {
+			// Pierced+bound fragments cannot handle redirects
+			throw new WebFragmentError(
+				`Fragment endpoint returned redirect (${reframedHtmlResponse.status}) but pierced+bound fragments cannot follow redirects. URL: ${reframedSrc}`,
+			);
+		} else if (options.pierced && !options.bound) {
+			// Piercing disabled: follow redirect by updating host window location
+			window.location.href = redirectUrl;
+			// Return a promise that never resolves since we're navigating away
+			return new Promise(() => {});
+		} else {
+			// Unbound fragment: follow redirect by updating iframe src
+			const iframe = await iframeReady;
+			iframe.src = redirectUrl;
+			// Return early since the iframe will reload and reframe
+			return;
+		}
+	}
+
 	const reframedHtmlStream =
 		reframedHtmlResponse.status === 200
 			? reframedHtmlResponse.body!

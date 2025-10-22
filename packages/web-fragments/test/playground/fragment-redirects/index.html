@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>WF Playground: fragment-redirects</title>
+		<style>
+			web-fragment {
+				border: 1px red dashed;
+				margin: 10px;
+				padding: 10px;
+			}
+			.test-section {
+				margin: 20px 0;
+				padding: 10px;
+				border: 1px solid #ccc;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>WF Playground: fragment-redirects</h1>
+
+		<div class="test-section">
+			<h2>Unbound Fragment (should update iframe src)</h2>
+			<web-fragment fragment-id="fragment-redirects-unbound" src="/fragment-redirects/unbound"></web-fragment>
+		</div>
+
+		<div class="test-section">
+			<h2>Piercing Disabled Fragment (should update window.location)</h2>
+			<web-fragment fragment-id="fragment-redirects-piercing-disabled"></web-fragment>
+		</div>
+
+		<div class="test-section">
+			<h2>Pierced+Bound Fragment (should show error)</h2>
+			<web-fragment fragment-id="fragment-redirects-pierced-bound"></web-fragment>
+		</div>
+
+		<div id="test-results">
+			<h2>Test Results</h2>
+			<div id="unbound-result">Unbound test: <span id="unbound-status">Not started</span></div>
+			<div id="piercing-disabled-result">
+				Piercing disabled test: <span id="piercing-disabled-status">Not started</span>
+			</div>
+			<div id="pierced-bound-result">Pierced+bound test: <span id="pierced-bound-status">Not started</span></div>
+		</div>
+
+		<script type="module">
+			import { initializeWebFragments } from 'web-fragments';
+			initializeWebFragments();
+
+			// Test helpers
+			window.testResults = {
+				unbound: false,
+				piercingDisabled: false,
+				piercedBound: false,
+			};
+
+			window.updateTestResult = (testName, status) => {
+				document.getElementById(`${testName}-status`).textContent = status;
+				window.testResults[testName] = status === 'PASS';
+			};
+		</script>
+	</body>
+</html>
