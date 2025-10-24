@@ -320,10 +320,12 @@ export function getWebMiddleware(
 				.on('web-fragment', {
 					element(element) {
 						if (element.getAttribute('fragment-id') !== fragmentId) return;
+						element.append('<template shadowrootmode="open">', { html: true });
 
 						(element.append as any as (content: ReadableStream, options: { html: boolean }) => void)(fragmentStream, {
 							html: true,
 						});
+						element.append('</template>', { html: true });
 						fragmentPierced = true;
 					},
 				})
