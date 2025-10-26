@@ -1,5 +1,15 @@
 # web-fragments
 
+## 0.8.1
+
+### Patch Changes
+
+- [#253](https://github.com/web-fragments/web-fragments/pull/253) [`8cde51e`](https://github.com/web-fragments/web-fragments/commit/8cde51e2f38543f96950252f841bede58a4ebfe2) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): correctly insert shadow root between web-fragment and web-fragment-host during piercing into SSR-ed host
+
+  Before this fix, piercing into SSR-ed host would not work because the shadow root was not inserted between the web-fragment and web-fragment-host elements.
+
+  This was due to us having two code paths where this logic happens and only the WASM HTMLRewriter implementation was inserting the shadow root.
+
 ## 0.8.0
 
 ### Minor Changes
