@@ -1,8 +1,0 @@
-#:schema node_modules/wrangler/config-schema.json
-name = "webfragments-dev"
-account_id = "70dde660886a968f28d1f701048a0898"
-compatibility_date = "2024-12-05"
-
-[assets]
-directory = "./dist/"
-not_found_handling = "404-page"
