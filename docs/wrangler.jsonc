@@ -6,7 +6,6 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "web-fragments-dev",
 	"account_id": "70dde660886a968f28d1f701048a0898",
-	"main": "src/index.ts",
 	"compatibility_date": "2024-12-05",
 	"observability": {
 		"enabled": true,
