@@ -11,7 +11,7 @@ Getting started with Web Fragments is easy.
 
 Web fragment is a standalone application built with any web tech stack and deployed anywhere as a regular HTTP endpoint that serves HTML, static assets, and if required by the application, also handles form submissions, data requests, and other kinds of HTTP requests.
 
-Check out a simple example of a fragment at https://party-button.demos.web-fragments.dev/ and review the [source code on GitHub](https://github.com/web-fragments/party-button-fragment).
+Check out a simple example of a fragment at https://party-button.fragments.demos.web-fragments.dev/ and review the [source code on GitHub](https://github.com/web-fragments/party-button-fragment).
 
 Web fragments can be as simple as a button, or as sophisticated as multi-tier full-stack applications, with deeply nested routes and layouts.
 
