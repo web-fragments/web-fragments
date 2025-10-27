@@ -5,7 +5,8 @@
 
 # Web Fragments: A radically new architecture to build micro-frontends
 
-[![Official documentation](https://img.shields.io/badge/Official%20Docs-8A2BE2?style=flat-square)](https://web-fragments.dev/)
+[![Official documentation](https://img.shields.io/badge/Official%20Docs-fuchsia?style=flat-square)](https://web-fragments.dev/)
+[![Discord](https://img.shields.io/badge/Discord-8A2BE2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/dcgA8YxyCb)
 [![Our blog](https://img.shields.io/badge/Blog%20post-F28021?style=flat-square&logo=cloudflare&logoColor=white)](https://blog.cloudflare.com/better-micro-frontends)
 [![New to micro-frontends?](https://img.shields.io/badge/Microfrontend.dev-2F80ED?style=flat-square)](https://microfrontend.dev)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/web-fragments/web-fragments/release.yml?style=flat-square&label=Release%20Status)](https://github.com/web-fragments/web-fragments/actions)
