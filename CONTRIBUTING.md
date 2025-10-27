@@ -1,5 +1,7 @@
 This project welcomes contributions and suggestions.
 
+Join our community on [Discord](https://discord.gg/dcgA8YxyCb) in the **#development** channel to discuss ideas, ask questions, and collaborate with other contributors.
+
 As a contributor, here are the guidelines we would like you to follow:
 
 - [Code of Conduct](#code-of-conduct)

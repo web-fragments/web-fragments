@@ -66,4 +66,6 @@ This research and development is sponsored by Cloudflare:
 
 ## Contributing
 
-This project is open-source and welcomes contributions! To get started, please read our [contributor's guidelines](./CONTRIBUTING.md) and [code of conduct](./CODE_OF_CONDUCT.md)
+This project is open-source and welcomes contributions! Join us on [Discord](https://discord.gg/dcgA8YxyCb) in the **#development** channel to discuss ideas and get help.
+
+To get started, please read our [contributor's guidelines](./CONTRIBUTING.md) and [code of conduct](./CODE_OF_CONDUCT.md)
