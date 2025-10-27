@@ -253,13 +253,11 @@ The scope should be the name of the npm package affected (as perceived by the pe
 
 The following is the list of supported scopes:
 
-- webfragments
+- client
 - reframed
 - gateway
-- elements
-- e2e
 - docs
-- playground
+- examples
 
 ##### Summary
 
