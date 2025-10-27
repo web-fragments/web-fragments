@@ -40,7 +40,7 @@ Navigation initialized from the existing application or a web fragment will be r
 Optionally, a fragment can be created with the `src` attribute, which specifies the url from which the fragment should be initialized.
 This will cause a creation of an "unbound" fragments, which has its own `window.location` and history, both of which are independent of that of the rest of the application or other fragments.
 
-Both bound and unbound fragments run in a dedicated JavaScript context through [reframing](./reframed.md) — a virtualization technique unique to Web Fragments.
+Both bound and unbound fragments run in a dedicated JavaScript context through [reframing](./reframing.md) — a virtualization technique unique to Web Fragments.
 
 ## Server-side piercing
 
