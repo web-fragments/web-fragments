@@ -16,6 +16,11 @@ export const headerData = {
 				},
 
 				{
+					text: "Reframing",
+					href: getPermalink("/documentation/reframing"),
+				},
+
+				{
 					text: "Elements",
 					href: getPermalink("/documentation/elements"),
 				},

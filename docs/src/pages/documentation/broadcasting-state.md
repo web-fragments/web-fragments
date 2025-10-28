@@ -43,7 +43,7 @@ return () => {
 
 ![web fragments middleware](../../assets/images/wf-broadcastchannel.drawio.png)
 
-Please note that all [fragments](./glossary#fragment) should share the same origin.
+Please note that all [fragments](/documentation/glossary#fragment) should share the same origin.
 
 ---
 

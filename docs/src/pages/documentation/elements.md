@@ -40,7 +40,7 @@ Navigation initialized from the existing application or a web fragment will be r
 Optionally, a fragment can be created with the `src` attribute, which specifies the url from which the fragment should be initialized.
 This will cause a creation of an "unbound" fragments, which has its own `window.location` and history, both of which are independent of that of the rest of the application or other fragments.
 
-Both bound and unbound fragments run in a dedicated JavaScript context through [reframing](./reframing.md) — a virtualization technique unique to Web Fragments.
+Both bound and unbound fragments run in a dedicated JavaScript context through [reframing](/documentation/reframing) — a virtualization technique unique to Web Fragments.
 
 ## Server-side piercing
 
@@ -48,7 +48,7 @@ Server-side piercing refers to he process through which the legacy app shell is 
 
 It allows the eager display and initialization of a fragment at the moment of bootstrapping the shell application.
 
-[piercing-styles](./glossary#eager-rendering-piercing) configured during fragment registration, help positioning the fragment in the correct slot.
+[piercing-styles](/documentation/glossary#piercing-eager-rendering) configured during fragment registration, help positioning the fragment in the correct slot.
 
 ![web fragments middleware](../../assets/images/wf-middleware.drawio.png)
 
@@ -57,7 +57,7 @@ It allows the eager display and initialization of a fragment at the moment of bo
 All requests initiated from DOM or JavaScript of a fragment are intercepted by the fragment gateway middleware.
 This middleware sits in front of the legacy application, identifies requests originating from the fragment via the `routePattern` in the fragment registration configuration, and reroutes all assets requests to the right fragment endpoint.
 
-Learn more about middleware in the [gateway](./gateway) section.
+Learn more about middleware in the [gateway](/documentation/gateway) section.
 
 ---
 

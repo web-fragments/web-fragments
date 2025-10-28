@@ -9,8 +9,8 @@ _Last updated_: March 19, 2025
 
 | Error domain    | Probable cause                                                                | Link                                                                                  |
 | --------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| elements errors | Custom elements are not registered or not registered on time                  | <a href="./elements">Elements registration</a>                                        |
-| fragment errors | Fragment not found. Server is down or fragment registration misconfiguration. | <a href="./gateway#pre-requirements-and-conventions">Requirements and conventions</a> |
+| elements errors | Custom elements are not registered or not registered on time                  | <a href="/documentation/elements">Elements registration</a>                                        |
+| fragment errors | Fragment not found. Server is down or fragment registration misconfiguration. | <a href="/documentation/gateway#requirements-and-conventions">Requirements and conventions</a> |
 
 ---
 
