@@ -5,7 +5,8 @@
 
 # Web Fragments: A radically new architecture to build micro-frontends
 
-[![Official documentation](https://img.shields.io/badge/Official%20Docs-8A2BE2?style=flat-square)](https://web-fragments.dev/)
+[![Official documentation](https://img.shields.io/badge/Official%20Docs-fuchsia?style=flat-square)](https://web-fragments.dev/)
+[![Discord](https://img.shields.io/badge/Discord-8A2BE2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/dcgA8YxyCb)
 [![Our blog](https://img.shields.io/badge/Blog%20post-F28021?style=flat-square&logo=cloudflare&logoColor=white)](https://blog.cloudflare.com/better-micro-frontends)
 [![New to micro-frontends?](https://img.shields.io/badge/Microfrontend.dev-2F80ED?style=flat-square)](https://microfrontend.dev)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/web-fragments/web-fragments/release.yml?style=flat-square&label=Release%20Status)](https://github.com/web-fragments/web-fragments/actions)
@@ -62,3 +63,9 @@ We also blogged about how Web Fragments can enable incremental adoption of micro
 This research and development is sponsored by Cloudflare:
 
 <img src="https://github.com/user-attachments/assets/daee5d2d-174d-4679-80d5-29cc3b38a903" data-canonical-src="https://github.com/user-attachments/assets/daee5d2d-174d-4679-80d5-29cc3b38a903" width="300" />
+
+## Contributing
+
+This project is open-source and welcomes contributions! Join us on [Discord](https://discord.gg/dcgA8YxyCb) in the **#development** channel to discuss ideas and get help.
+
+To get started, please read our [contributor's guidelines](./CONTRIBUTING.md) and [code of conduct](./CODE_OF_CONDUCT.md)
