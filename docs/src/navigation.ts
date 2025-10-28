@@ -1,4 +1,3 @@
-import { text } from "node:stream/consumers";
 import { getPermalink, /* getBlogPermalink, */ getAsset } from "./utils/permalinks";
 
 export const headerData = {
