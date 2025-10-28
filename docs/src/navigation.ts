@@ -1,3 +1,4 @@
+import { text } from "node:stream/consumers";
 import { getPermalink, /* getBlogPermalink, */ getAsset } from "./utils/permalinks";
 
 export const headerData = {
@@ -13,6 +14,11 @@ export const headerData = {
 				{
 					text: "Glossary",
 					href: getPermalink("/documentation/glossary"),
+				},
+
+				{
+					text: "Reframing",
+					href: getPermalink("/documentation/reframing"),
 				},
 
 				{
