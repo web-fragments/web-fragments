@@ -13,7 +13,7 @@ Web fragment is a standalone application built with any web tech stack and deplo
 
 Check out a simple example of a fragment at https://party-button.fragments.demos.web-fragments.dev/ and review the [source code on GitHub](https://github.com/web-fragments/party-button-fragment).
 
-Web fragments can be as simple as a button, or as sophisticated as multi-tier full-stack applications, with deeply nested routes and layouts.
+Web Fragments can be as simple as a button, or as sophisticated as multi-tier full-stack applications, with deeply nested routes and layouts.
 
 ## 2. Embed the new fragment into your existing existing application
 
@@ -25,9 +25,7 @@ Install the `web-fragments` package as a dependency to your existing web applica
 $ npm install web-fragments
 ```
 
-<!--
-Note: Is your existing frontend app not an npm/JavaScript project? You can still use Web Fragments! See advanced usage.
--->
+**Platform Support**: Web Fragments works with any modern JavaScript runtime. While this guide focuses on npm-based projects, the library is compatible with any environment that supports modern Web APIs (Fetch, Custom Elements, Shadow DOM).
 
 ### b. Initialize the client side Web Fragments library
 
@@ -39,8 +37,9 @@ import { initializeWebFragments } from "web-fragments";
 initializeWebFragments();
 ```
 
-This code is designed to be minimal, and should be invoked as early as possible during your application bootstrap.
-It will initialize the library and register `<web-fragment>` [custom element](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry).
+This code is designed to be minimal and has zero side effects beyond registering the custom element. It should be invoked as early as possible during your application bootstrap—ideally before any rendering happens.
+
+What does this do? It registers the `<web-fragment>` [custom element](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry) with the browser, making it available for use in your HTML or JSX templates. Think of it like importing and registering a component in your framework, except this registration is at the browser level.
 
 ### c. Replace parts of your existing application with web fragments
 
@@ -50,80 +49,158 @@ Identify a place in your existing application's HTML or templates where you'd li
 <web-fragment fragment-id="party-button"></web-fragment>
 ```
 
-The `fragment-id` attribute uniquely identifies the instance of the fragment in your application.
-We'll register this id with the fragment gateway in the next step.
+The `fragment-id` attribute uniquely identifies this fragment in your application. This ID must match the `fragmentId` you'll register with the gateway in the next step—it's how the gateway knows which fragment endpoint to route requests to.
 
-For initial testing you can add the fragment to the root template of your application, or any route of your choosing.
-In either case ensure that the routable location of the web fragment in the application matches the `routePatterns` configuration in the `FragmentGateway` below.
+For initial testing, you can add the fragment to any page or route in your application. Just remember: the URL where this page lives should be included in the `routePatterns` configuration you'll set up in the gateway. For example, if you place this on a page at `/dashboard`, you'll need `/dashboard/:_*` in your route patterns.
+
+**Framework Examples**:
+
+```jsx
+// React/JSX
+export const DashboardPage = () => (
+	<div>
+		<h1>Dashboard</h1>
+		<web-fragment fragment-id="party-button"></web-fragment>
+	</div>
+);
+```
+
+```html
+<!-- Vue template -->
+<template>
+	<div>
+		<h1>Dashboard</h1>
+		<web-fragment fragment-id="party-button"></web-fragment>
+	</div>
+</template>
+```
+
+```html
+<!-- Plain HTML -->
+<div>
+	<h1>Dashboard</h1>
+	<web-fragment fragment-id="party-button"></web-fragment>
+</div>
+```
 
 ### d. Register your fragment with the fragment gateway
 
-Web fragments rely on a thin middleware - the fragment gateway — to route all requests from the browser to the right destination.
-This enables us to reap the performance and maintenance benefits of operating the user-facing micro-frontend application on a single origin, governed by the [same origin policy](https://web.dev/articles/same-origin-policy).
+Here's where things get interesting. Web Fragments uses a lightweight middleware - _the fragment gateway_ - to coordinate all the moving parts. The gateway sits in front of your application and routes requests to the right destination: your existing app, or one of your fragments.
 
-For the gateway to understand how to route your web fragment's requests, the fragment needs to be registered.
+Why do we need this? The gateway enables you to operate your entire micro-frontend application on a single origin, which brings huge benefits:
+
+- **No CORS headaches**: Everything shares the same origin
+- **Better performance**: No cross-origin preflight requests
+- **Simpler security**: The [same-origin policy](https://web.dev/articles/same-origin-policy) works in your favor
+- **Unified deployment**: One domain, multiple independent services behind it
+
+Think of the gateway as a smart router that inspects each incoming request and says, "This request is for the shell app," or "This request is for the party-button fragment," and routes accordingly.
+
+For the gateway to make these routing decisions, you need to tell it about your fragments:
 
 ```js
 import { FragmentGateway } from "web-fragments/gateway";
 
-// initialize the gateway
+// Initialize the gateway
 const myGateway = new FragmentGateway();
 
-// register our fragment
+// Register our fragment
 myGateway.registerFragment({
-	// a unique ID of the fragment
+	// A unique ID matching the fragment-id attribute in your HTML
 	fragmentId: "party-button",
-	piercingClassNames: [],
+	// The endpoint where your fragment is hosted
+	// This can be an HTTP URL, or a Service Binding on Cloudflare
 	endpoint: "https://party-button.demos.web-fragments.dev",
+
+	// Route patterns tell the gateway which URLs belong to this fragment
 	routePatterns: [
-		// url pattern for fetching all assets of this fragment, this pattern is determined by the fragment and should be unique:
-		"/__wf/dev.web-fragments.demos.party-button/:_*",
-		// routable url in the final application where this fragment will be initialized (adjust as needed per step 2c):
+		// Assets pattern: uniquely identifies this fragment's static files
+		// The :_* is a wildcard that matches everything after this point
+		"/__wf/party-button.demos.web-fragments.dev/:_*",
+
+		// Application pattern: where in your app this fragment appears
+		// Adjust this to match where you placed the <web-fragment> element
 		"/",
 	],
+
+	// Optional: CSS classes for positioning during server-side piercing
+	piercingClassNames: [],
 });
 ```
 
-<!--
-Apart from registering the custom elements, `fragments` must be registered in the [fragment gateway](./gateway). In order to do so, the gateway must be imported to the server application.
+Let's break down the `routePatterns`:
 
-A detailed guide can be found in the [fragment gateway](./gateway) section.
--->
+- The **asset pattern** (`/__wf/.../:_*`) captures requests for the fragment's JavaScript, CSS, images, etc.
+- The **application pattern** (`/`) captures navigation to pages where the fragment should render
+- The `:_*` wildcard means "match this path and everything after it"
 
-### e. Install fragment gateway as a middleware of your existing application
+If you placed your `<web-fragment>` on a `/dashboard` page instead of the root, you'd use `"/dashboard/:_*"` as the application pattern.
 
-The final configuration step of is to add the fragment gateway as a middleware to your application.
+### e. Install the fragment gateway as middleware
 
-If your existing application already has a middleware infrastructure, or it is deployed to a platform that natively supports middleware (for example Cloudflare, Netlify, or Vercel), then adding the fragment middleware is just a few lines of code.
+The final configuration step is to install the gateway as middleware in your application. This middleware intercepts all requests and makes the routing decisions mentioned above.
 
-For Web ([Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)) based middleware systems obtain a Web compatible middleware function and integrate it into your application:
+The installation looks different depending on your deployment platform. Web Fragments provides adapters for both modern Web (Fetch API) platforms and traditional Node.js servers.
+
+#### For Modern Edge Platforms (Cloudflare, Deno, Bun)
+
+If you're deploying to Cloudflare Workers, Deno Deploy, or similar platforms that use the standard [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API):
 
 ```js
-import { getWebMiddleware } from "web-fragments/middleware";
+import { getWebMiddleware } from "web-fragments/gateway";
 
-const middleware = getWebMiddleware(myGateway);
+const middleware = getWebMiddleware(myGateway, {
+	mode: "production", // Use 'development' for verbose logging
+});
 
-// Now follow a platform / router specific guide:
-//
-// - Cloudflare Pages: https://developers.cloudflare.com/pages/functions/middleware/
-// - Netlify: https://docs.netlify.com/edge-functions/api/#modify-a-response
-// - Vercel: https://vercel.com/docs/edge-middleware
-// - Hono: https://hono.dev/docs/guides/middleware
+// Example: Edge middleware platforms (with origin backend)
+export default {
+	async fetch(request, env, ctx) {
+		return middleware(request, () => fetch(request));
+	},
+};
 ```
 
-See also: [Cloudflare Pages example](https://github.com/web-fragments/web-fragments/blob/main/e2e/pierced-react/functions/_middleware.ts)
+The middleware takes a **fallback function** that handles requests not matching any fragment routes. 
 
-For Node.js-based middleware systems like `express` or `connect` obtain a Node-compatible middleware function and integrate it into
+In this example, `fetch(request)` forwards the request to your origin server or backend - this works on platforms like **Cloudflare Pages, Netlify Edge, and Vercel Edge** where the middleware runs in front of an existing application.
+
+**Note**: For standalone workers without an origin (e.g., Cloudflare Workers), you'll need a different approach like Assets binding. See the platform-specific guides below for complete implementations.
+
+**Platform-Specific Guides**:
+
+- **Cloudflare Workers**: See our comprehensive [Cloudflare Workers guide](./cloudflare-workers) for Service Bindings, Assets, and deployment best practices
+- **Cloudflare Pages**: [Official middleware docs](https://developers.cloudflare.com/pages/functions/middleware/) + [example](https://github.com/web-fragments/web-fragments/blob/main/e2e/pierced-react/functions/_middleware.ts)
+- **Netlify**: [Edge Functions API](https://docs.netlify.com/edge-functions/api/#modify-a-response)
+- **Vercel**: [Edge Middleware docs](https://vercel.com/docs/edge-middleware)
+
+#### For Node.js Servers (Express, Connect)
+
+If you're using a traditional Node.js server with Express or Connect:
 
 ```js
-import { getNodeMiddleware } from "web-fragments/middleware/node";
+import { getNodeMiddleware } from "web-fragments/gateway/node";
+import express from "express";
 
 const app = express();
 
+// Install the middleware before your application routes
 app.use(getNodeMiddleware(myGateway));
+
+// Your existing routes come after
+app.get("/", (req, res) => {
+	res.sendFile("index.html");
+});
+
+app.listen(3000);
 ```
 
-See also: [express example](https://github.com/web-fragments/web-fragments/blob/main/e2e/node-servers/app/server/src/express.ts) or [connect example](https://github.com/web-fragments/web-fragments/blob/main/e2e/node-servers/app/server/src/connect.ts)
+Order matters here: install the Web Fragments middleware before your application's route handlers so it can intercept fragment requests.
+
+**Examples**:
+
+- [Express integration](https://github.com/web-fragments/web-fragments/blob/main/e2e/node-servers/app/server/src/express.ts)
+- [Connect integration](https://github.com/web-fragments/web-fragments/blob/main/e2e/node-servers/app/server/src/connect.ts)
 
 ### f. Build and deploy
 
