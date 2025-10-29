@@ -31,6 +31,11 @@ export const headerData = {
 				},
 
 				{
+					text: "Cloudflare Workers",
+					href: getPermalink("/documentation/cloudflare-workers"),
+				},
+
+				{
 					text: "Broadcasting events",
 					href: getPermalink("/documentation/broadcasting-state"),
 				},
