@@ -116,7 +116,7 @@ See also: [Cloudflare Pages example](https://github.com/web-fragments/web-fragme
 For Node.js-based middleware systems like `express` or `connect` obtain a Node-compatible middleware function and integrate it into
 
 ```js
-import { getNodeMiddleware } from "web-fragments/middleware/node";
+import { getNodeMiddleware } from "web-fragments/gateway/node";
 
 const app = express();
 
