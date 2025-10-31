@@ -12,17 +12,11 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 	// Abort a test if an exception in the browser is detected
 	page.on('pageerror', async (error) => {
 		// ignore/allow errors for tests that test error handling
-		// wrap in try/catch because page.title() might throw if the test/page already crashed for unexpected reasons.
-		try {
-			switch (await page.title()) {
-				case 'WF Playground: fragment-infinite-recursion-breaker':
-				case 'WF Playground: fragment-x-frame-options-deny':
-				case 'WF Playground: fragment-csp':
-					return;
-			}
-		} catch (e) {
-			// intentionally ignore errors, they will be caught by the test
-			console.log(`caught error in playwright's failOnBrowserErrors`, e);
+		switch (await getPageTitle()) {
+			case 'WF Playground: fragment-infinite-recursion-breaker':
+			case 'WF Playground: fragment-x-frame-options-deny':
+			case 'WF Playground: fragment-csp':
+				return;
 		}
 
 		// prefix error with [browser] so that it's easier to distinguish from Playwright/Node.js errors
@@ -34,6 +28,12 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 
 	// Abort a test if an network request fails (e.g. aborted requests)
 	page.on('requestfailed', async (request: Request) => {
+		// ignore/allow errors for tests that test error handling
+		switch (await getPageTitle()) {
+			case 'WF Playground: fragment-x-frame-options-deny':
+				return;
+		}
+
 		throw new Error(`Network request failed for: ${request.url()}` + `\n    error: ${request.failure()?.errorText})`);
 	});
 
@@ -62,6 +62,16 @@ export function failOnBrowserErrors({ page }: { page: Page }) {
 		page.on('console', async (msg) => {
 			console.log('[browser]:', msg);
 		});
+	}
+
+	async function getPageTitle(): Promise<string> {
+		// wrap in try/catch because page.title() might throw if the test/page already crashed for unexpected reasons.
+		try {
+			return await page.title();
+		} catch (e) {
+			console.log(`caught error in playwright's failOnBrowserErrors when trying to retrieve page.title()`, e);
+			return '';
+		}
 	}
 }
 
