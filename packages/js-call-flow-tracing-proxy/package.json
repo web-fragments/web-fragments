@@ -1,0 +1,39 @@
+{
+	"name": "js-call-flow-tracing-proxy",
+	"description": "JavaScript Call Flow Tracing Proxy — instruments client-side JavaScript and generates a function call flow trace.",
+	"type": "module",
+	"exports": {
+		".": {
+			"import": "./src/index.ts"
+		}
+	},
+	"publishConfig": {
+		"exports": {
+			".": {
+				"import": "./dist/index.js"
+			}
+		}
+	},
+	"version": "0.0.0",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"dev": "vite-node src/index.ts",
+		"build": "tsc --build && vite build",
+		"changeset": "pnpm -C ../../ exec changeset",
+		"prepare": "pnpm build",
+		"browser": "/Applications/Google\\ Chrome\\ Beta.app/Contents/MacOS/Google\\ Chrome\\ Beta --user-data-dir=/tmp/chrome-trace-profile3 --no-default-browser-check --disable-extensions --disable-plugins --disable-default-apps --no-first-run --proxy-server='http=localhost:8081;https=localhost:8081' --proxy-bypass-list=\"<-loopback>\""
+	},
+	"dependencies": {
+		"http-mitm-proxy": "1.1.0"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vite-node": "catalog:"
+	},
+	"author": "Igor Minar<i@igor.dev>",
+	"contributors": []
+}

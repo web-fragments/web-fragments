@@ -152,6 +152,8 @@ async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 	 * Middleware to handle requests for fragments in Vite.
 	 */
 	return function fragmentViteMiddleware(req: http.IncomingMessage, res: http.ServerResponse, next: () => void) {
+		console.log('request:', req.method, req.url);
+
 		// TODO: Disable compression for now as the web-to-node adapter seems to have an issue with it.
 		// Otherwise http request hang and no responses are ever sent in spite of the adapter flushing them to Node.
 		delete req.headers['accept-encoding'];
