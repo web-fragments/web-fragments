@@ -57,7 +57,7 @@
 		"htmlrewriter": "npm:wf-htmlrewriter@0.0.13"
 	},
 	"devDependencies": {
-		"@types/node": "^20.12.7",
+		"@types/node": "catalog:",
 		"path-to-regexp": "^6.2.2",
 		"ts-node-dev": "^2.0.0",
 		"writable-dom": "github:web-fragments/writable-dom#build-improvements",
