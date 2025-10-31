@@ -406,6 +406,9 @@ importers:
       http-mitm-proxy:
         specifier: 1.1.0
         version: 1.1.0
+      recast:
+        specifier: 0.23.11
+        version: 0.23.11
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -6861,8 +6864,8 @@ packages:
   reading-time@1.5.0:
     resolution: {integrity: sha512-onYyVhBNr4CmAxFsKS7bz+uTLRakypIe4R+5A824vBSkQy/hB3fZepoVEf8OVAxzLvK+H/jm9TzpI3ETSm64Kg==}
 
-  recast@0.23.9:
-    resolution: {integrity: sha512-Hx/BGIbwj+Des3+xy5uAtAbdCyqK9y9wbBcDFDYanLS9JnMqf7OeF87HQwUimE87OEc72mr6tkKUKMBBL+hF9Q==}
+  recast@0.23.11:
+    resolution: {integrity: sha512-YTUo+Flmw4ZXiWfQKGcwwc11KnoRAYgzAE2E7mXKCjSviTKShtxBsN6YUUBB2gtaBzKzeKunxhUwNHQuRryhWA==}
     engines: {node: '>= 4'}
 
   recma-build-jsx@1.0.0:
@@ -11671,7 +11674,7 @@ snapshots:
     dependencies:
       astro: 4.16.17(@types/node@22.13.0)(lightningcss@1.27.0)(rollup@4.34.6)(terser@5.34.1)(typescript@5.7.2)
       pathe: 1.1.2
-      recast: 0.23.9
+      recast: 0.23.11
 
   astro@4.16.17(@types/node@22.13.0)(lightningcss@1.27.0)(rollup@4.34.6)(terser@5.34.1)(typescript@5.7.2):
     dependencies:
@@ -16406,7 +16409,7 @@ snapshots:
 
   reading-time@1.5.0: {}
 
-  recast@0.23.9:
+  recast@0.23.11:
     dependencies:
       ast-types: 0.16.1
       esprima: 4.0.1

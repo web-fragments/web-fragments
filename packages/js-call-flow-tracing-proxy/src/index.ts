@@ -1,5 +1,6 @@
 import { Proxy } from 'http-mitm-proxy';
 import path from 'path';
+import { transform } from './transform';
 
 const PORT = 8081;
 const proxy = new Proxy();
@@ -36,10 +37,7 @@ proxy.onRequest((ctx, callback) => {
 				ctx.onResponseEnd((ctx, callback) => {
 					let body: string | Buffer = Buffer.concat(chunks);
 
-					body =
-						body.toString() +
-						`;console.log('jcftp: hello from ${ctx.clientToProxyRequest.headers.host!}${ctx.clientToProxyRequest.url} 🙃');`;
-
+					body = transform(body.toString(), ctx.clientToProxyRequest.headers.host! + ctx.clientToProxyRequest.url).code;
 					ctx.proxyToClientResponse.write(body);
 					return callback();
 				});

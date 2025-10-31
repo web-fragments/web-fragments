@@ -26,7 +26,8 @@
 		"browser": "/Applications/Google\\ Chrome\\ Beta.app/Contents/MacOS/Google\\ Chrome\\ Beta --user-data-dir=/tmp/chrome-trace-profile3 --no-default-browser-check --disable-extensions --disable-plugins --disable-default-apps --no-first-run --proxy-server='http=localhost:8081;https=localhost:8081' --proxy-bypass-list=\"<-loopback>\""
 	},
 	"dependencies": {
-		"http-mitm-proxy": "1.1.0"
+		"http-mitm-proxy": "1.1.0",
+		"recast": "0.23.11"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
