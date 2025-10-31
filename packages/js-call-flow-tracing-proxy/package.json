@@ -19,7 +19,7 @@
 		"dist"
 	],
 	"scripts": {
-		"dev": "vite-node src/index.ts",
+		"dev": "nodemon --exec 'pnpm vite-node src/index.ts' --watch src/** --watch vite.config.ts --watch ../../pnpm-lock.yaml",
 		"build": "tsc --build && vite build",
 		"changeset": "pnpm -C ../../ exec changeset",
 		"prepare": "pnpm build",
@@ -32,7 +32,8 @@
 		"@types/node": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
-		"vite-node": "catalog:"
+		"vite-node": "catalog:",
+		"nodemon": "3.1.10"
 	},
 	"author": "Igor Minar<i@igor.dev>",
 	"contributors": []

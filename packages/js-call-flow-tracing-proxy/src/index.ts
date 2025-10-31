@@ -1,16 +1,9 @@
 import { Proxy } from 'http-mitm-proxy';
-import fs from 'fs';
 import path from 'path';
 
+const PORT = 8081;
 const proxy = new Proxy();
 
-// Configure the proxy
-proxy.listen({
-	port: 8081,
-	sslCaDir: path.join(process.env.HOME!, '.http-mitm-proxy'),
-});
-
-// Log all requests
 proxy.onRequest((ctx, callback) => {
 	console.log(
 		'REQUEST:',
@@ -80,4 +73,13 @@ proxy.onError((ctx, err) => {
 	console.error('Error:', err);
 });
 
-console.log('MITM Proxy listening on port 8081');
+// Configure the proxy
+proxy.listen(
+	{
+		port: PORT,
+		sslCaDir: path.join(process.env.HOME!, '.http-mitm-proxy'),
+	},
+	() => {
+		console.log(`MITM Proxy listening on port ${PORT}!`);
+	},
+);
