@@ -21,6 +21,7 @@
 	"scripts": {
 		"dev": "nodemon --exec 'pnpm vite-node src/index.ts' --watch src/** --watch vite.config.ts --watch ../../pnpm-lock.yaml",
 		"build": "tsc --build && vite build",
+		"test": "vitest",
 		"changeset": "pnpm -C ../../ exec changeset",
 		"prepare": "pnpm build",
 		"browser": "/Applications/Google\\ Chrome\\ Beta.app/Contents/MacOS/Google\\ Chrome\\ Beta --user-data-dir=/tmp/chrome-trace-profile3 --no-default-browser-check --disable-extensions --disable-plugins --disable-default-apps --no-first-run --proxy-server='http=localhost:8081;https=localhost:8081' --proxy-bypass-list=\"<-loopback>\""
@@ -34,6 +35,7 @@
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-node": "catalog:",
+		"vitest": "catalog:",
 		"nodemon": "3.1.10"
 	},
 	"author": "Igor Minar<i@igor.dev>",
