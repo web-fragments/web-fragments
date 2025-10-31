@@ -32,22 +32,24 @@ proxy.onRequest((ctx, callback) => {
 				delete ctx.serverToProxyResponse.headers['content-security-policy'];
 			} else if (ctx.serverToProxyResponse?.headers['content-type']?.startsWith('text/javascript')) {
 				ctx.proxyToClientResponse.setHeader('x-jcftp-modified', 'true');
-			}
 
-			callback();
-		});
+				const chunks = new Array<Buffer>();
 
-		ctx.onResponseData(function (ctx, chunk, callback) {
-			//console.log('RESPONSE DATA:', chunk.toString());
-			return callback(null, chunk);
-		});
+				ctx.onResponseData((ctx, chunk, callback) => {
+					chunks.push(chunk);
+					return callback(null, undefined); // don't write chunks to client response
+				});
 
-		ctx.onResponseEnd((ctx, callback) => {
-			if (ctx.serverToProxyResponse?.headers['content-type']?.startsWith('text/javascript')) {
-				console.log('appending!!');
-				ctx.proxyToClientResponse.end(
-					`;console.log('jcftp: hello from ${ctx.clientToProxyRequest.headers.host!}${ctx.clientToProxyRequest.url}');`,
-				);
+				ctx.onResponseEnd((ctx, callback) => {
+					let body: string | Buffer = Buffer.concat(chunks);
+
+					body =
+						body.toString() +
+						`;console.log('jcftp: hello from ${ctx.clientToProxyRequest.headers.host!}${ctx.clientToProxyRequest.url} 🙃');`;
+
+					ctx.proxyToClientResponse.write(body);
+					return callback();
+				});
 			}
 			callback();
 		});
