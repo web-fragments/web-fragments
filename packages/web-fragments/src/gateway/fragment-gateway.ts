@@ -111,7 +111,11 @@ export class FragmentGateway {
 		});
 	}
 
-	matchRequestToFragment(urlPath: string, requestType: string, requestFragmentId?: string): FragmentConfig | boolean {
+	matchRequestToFragment(
+		urlPath: string,
+		requestType: WFRequestType,
+		requestFragmentId?: string,
+	): FragmentConfig | null {
 		// TODO: path matching needs to take pattern specificity into account
 		// such that more specific patterns are matched before less specific ones
 		//   e.g. given route patterns `['/:accountId', '/:accountId/workers']` and a request path of `/abc123/workers/foo`,
@@ -136,7 +140,7 @@ export class FragmentGateway {
 		// for backwards compatibility if we have a path match, but fragment id doesn't match any of the routes, return the first match
 		// TODO: remove this to increase security and resiliency once we have better request type identification
 		if (matches.length) {
-			return this.routeMap.get(matches[0]);
+			return this.routeMap.get(matches[0]) ?? null;
 		}
 
 		return null;
@@ -234,3 +238,5 @@ export interface FragmentMiddlewareOptions {
 	additionalHeaders?: HeadersInit;
 	mode?: 'production' | 'development';
 }
+
+export type WFRequestType = 'hardNav' | 'softNav' | 'data' | 'asset' | 'iframe';

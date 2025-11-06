@@ -2,7 +2,13 @@
  * The middleware provides support for Web request-response handling using fetch-like behavior, and for Node.js native http request and responses object, including using Connect framework, via the imported adaptor.
  */
 
-import { FragmentGateway, FragmentMiddlewareOptions, FragmentConfig, FragmentGatewayConfig } from '../fragment-gateway';
+import {
+	FragmentGateway,
+	FragmentMiddlewareOptions,
+	FragmentConfig,
+	FragmentGatewayConfig,
+	WFRequestType,
+} from '../fragment-gateway';
 import { HTMLRewriter } from 'htmlrewriter';
 
 const isNativeHtmlRewriter = HTMLRewriter.toString().endsWith('{ [native code] }');
@@ -28,7 +34,11 @@ export function getWebMiddleware(
 		);
 		const matchedFragment = gateway.matchRequestToFragment(`${pathname}${search}`, requestType, requestFragmentId);
 
-		if ((!matchedFragment && requestFragmentId) || (matchedFragment && !requestFragmentId)) {
+		if (
+			(!matchedFragment && requestFragmentId) ||
+			((requestType === 'data' || requestType === 'softNav') && matchedFragment && !requestFragmentId) ||
+			(matchedFragment && matchedFragment.fragmentId !== requestFragmentId)
+		) {
 			return new Response('Invalid request!', { status: 404 });
 		}
 
@@ -143,6 +153,7 @@ export function getWebMiddleware(
 
 			return prefixHtmlHeadBody(fragmentSoftNavResponse);
 		}
+		console.log('xxx', fragmentResponse.status);
 
 		/**
 		 * Handle Asset or Data request
@@ -571,10 +582,7 @@ export function asReadableStream(strings: TemplateStringsArray, ...values: Array
 	});
 }
 
-export function identifyRequestType(
-	secFetchDest: string | null,
-	xFragmentMode: string | null,
-): 'hardNav' | 'softNav' | 'data' | 'asset' | 'iframe' {
+export function identifyRequestType(secFetchDest: string | null, xFragmentMode: string | null): WFRequestType {
 	switch (secFetchDest) {
 		case 'document':
 			return 'hardNav';

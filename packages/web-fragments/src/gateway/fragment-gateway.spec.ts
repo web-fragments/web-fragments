@@ -16,55 +16,55 @@ describe('matchRequestToFragment()', () => {
 
 	test('should match fragment-1: /foo/bar', () => {
 		const url = '/foo/bar';
-		const fragment = fragmentGateway.matchRequestToFragment(url);
+		const fragment = fragmentGateway.matchRequestToFragment(url, 'hardNav');
 		expect(fragment?.fragmentId).toBe('fragment-1');
 	});
 
 	test('should match fragment-1: /_fragments/foo/app.js', () => {
 		const url = '/_fragments/foo/app.js';
-		const fragment = fragmentGateway.matchRequestToFragment(url);
+		const fragment = fragmentGateway.matchRequestToFragment(url, 'asset');
 		expect(fragment?.fragmentId).toBe('fragment-1');
 	});
 
 	test('should match fragment-1: /__shared?param=/hash123/foo', () => {
 		const url = '/__shared?param=%2Fhash123%2Ffoo';
-		const fragment = fragmentGateway.matchRequestToFragment(url);
+		const fragment = fragmentGateway.matchRequestToFragment(url, 'softNav');
 		expect(fragment?.fragmentId).toBe('fragment-1');
 	});
 
 	test('should match fragment-1: /__shared?param=/hash123/foo&extra_param=bar', () => {
 		const url = '/__shared?param=%2Fhash123%2Ffoo';
-		const fragment = fragmentGateway.matchRequestToFragment(url);
+		const fragment = fragmentGateway.matchRequestToFragment(url, 'softNav');
 		expect(fragment?.fragmentId).toBe('fragment-1');
 	});
 
 	test('should match fragment-1: /__shared?a=a&b=b', () => {
 		const url = '/__shared?a=a&b=b';
-		const fragment = fragmentGateway.matchRequestToFragment(url);
+		const fragment = fragmentGateway.matchRequestToFragment(url, 'softNav');
 		expect(fragment?.fragmentId).toBe('fragment-1');
 	});
 
 	test('should match fragment-2: /__shared?param=/hash123/bar', () => {
 		const url = '/__shared?param=%2Fhash123%2Fbar';
-		const fragment = fragmentGateway.matchRequestToFragment(url);
+		const fragment = fragmentGateway.matchRequestToFragment(url, 'softNav');
 		expect(fragment?.fragmentId).toBe('fragment-2');
 	});
 
 	test('should fail to match any fragment: /baz', () => {
 		const url = '/baz';
-		const fragment = fragmentGateway.matchRequestToFragment(url);
+		const fragment = fragmentGateway.matchRequestToFragment(url, 'hardNav');
 		expect(fragment).not.toBeTruthy();
 	});
 
 	test('should fail to match any fragment: /__shared', () => {
 		const url = '/__shared';
-		const fragment = fragmentGateway.matchRequestToFragment(url);
+		const fragment = fragmentGateway.matchRequestToFragment(url, 'asset');
 		expect(fragment).not.toBeTruthy();
 	});
 
 	test('should fail to match any fragment: /__shared?a=a', () => {
 		const url = '/__shared?a=a';
-		const fragment = fragmentGateway.matchRequestToFragment(url);
+		const fragment = fragmentGateway.matchRequestToFragment(url, 'hardNav');
 		expect(fragment).not.toBeTruthy();
 	});
 });

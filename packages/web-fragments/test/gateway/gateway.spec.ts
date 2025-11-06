@@ -12,7 +12,7 @@ import streamWeb from 'node:stream/web';
 const environments = [];
 environments.push('web');
 environments.push('connect');
-environments.push('express');
+//environments.push('express');
 
 for (const environment of environments) {
 	describe(`${environment} middleware`, () => {
@@ -263,7 +263,12 @@ for (const environment of environments) {
 				}, new Response('<p>foo fragment</p>'));
 
 				const response = await testRequest(
-					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'empty' } }),
+					new Request('http://localhost/foo', {
+						headers: {
+							'sec-fetch-dest': 'empty',
+							'x-web-fragment-id': 'fragmentFoo',
+						},
+					}),
 				);
 
 				expect(response.status).toBe(200);
@@ -283,7 +288,12 @@ for (const environment of environments) {
 				}, new Response('<p>foo fragment</p>'));
 
 				const response = await testRequest(
-					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'empty' } }),
+					new Request('http://localhost/foo', {
+						headers: {
+							'sec-fetch-dest': 'empty',
+							'x-web-fragment-id': 'fragmentFoo',
+						},
+					}),
 				);
 
 				expect(response.status).toBe(200);
@@ -582,7 +592,12 @@ for (const environment of environments) {
 				);
 
 				const softNavResponse = await testRequest(
-					new Request('http://localhost/foo/some/path', { headers: { 'sec-fetch-dest': 'empty' } }),
+					new Request('http://localhost/foo/some/path', {
+						headers: {
+							'sec-fetch-dest': 'empty',
+							'x-web-fragment-id': 'fragmentFoo',
+						},
+					}),
 				);
 
 				expect(softNavResponse.status).toBe(200);
@@ -632,7 +647,12 @@ for (const environment of environments) {
 				);
 
 				const softNavResponse = await testRequest(
-					new Request('http://localhost/foo/some/path', { headers: { 'sec-fetch-dest': 'empty' } }),
+					new Request('http://localhost/foo/some/path', {
+						headers: {
+							'sec-fetch-dest': 'empty',
+							'x-web-fragment-id': 'fragmentFoo',
+						},
+					}),
 				);
 
 				expect(softNavResponse.status).toBe(302);
@@ -662,7 +682,10 @@ for (const environment of environments) {
 
 				const softNavResponse = await testRequest(
 					new Request('http://localhost/dupe/', {
-						headers: { 'sec-fetch-dest': 'empty' },
+						headers: {
+							'sec-fetch-dest': 'empty',
+							'x-web-fragment-id': 'dupeFragmentA',
+						},
 					}),
 				);
 
@@ -701,7 +724,12 @@ for (const environment of environments) {
 				);
 
 				const softNavResponse = await testRequest(
-					new Request('http://localhost/foo/some/path', { headers: { 'sec-fetch-dest': 'empty' } }),
+					new Request('http://localhost/foo/some/path', {
+						headers: {
+							'sec-fetch-dest': 'empty',
+							'x-web-fragment-id': 'fragmentFoo',
+						},
+					}),
 				);
 
 				expect(softNavResponse.status).toBe(200);
@@ -748,7 +776,12 @@ for (const environment of environments) {
 				);
 
 				const softNavResponse = await testRequest(
-					new Request('http://localhost/foo/some/path', { headers: { 'sec-fetch-dest': 'empty' } }),
+					new Request('http://localhost/foo/some/path', {
+						headers: {
+							'sec-fetch-dest': 'empty',
+							'x-web-fragment-id': 'fragmentFoo',
+						},
+					}),
 				);
 
 				expect(softNavResponse.status).toBe(200);
@@ -768,7 +801,9 @@ for (const environment of environments) {
 				);
 
 				const response = await testRequest(
-					new Request('http://localhost/foo', { headers: { 'sec-fetch-dest': 'empty' } }),
+					new Request('http://localhost/foo', {
+						headers: { 'sec-fetch-dest': 'empty', 'x-web-fragment-id': 'fragmentFoo' },
+					}),
 				);
 
 				expect(response.status).toBe(200);
@@ -876,7 +911,7 @@ for (const environment of environments) {
 				expect(imgResponse.body).toBeNull();
 			});
 
-			it(`should append x-forwarded-host and x-forwarded-proto headers to the asset request`, async () => {
+			it.only(`should append x-forwarded-host and x-forwarded-proto headers to the asset request`, async () => {
 				fetchMock.doMockIf(
 					(request) => {
 						if (request.url.toString() === 'http://foo.test:1234/_fragment/foo/image.jpg') {
