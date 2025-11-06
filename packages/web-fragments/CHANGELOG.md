@@ -1,5 +1,31 @@
 # web-fragments
 
+## 0.8.2
+
+### Patch Changes
+
+- [#279](https://github.com/web-fragments/web-fragments/pull/279) [`32dbfd6`](https://github.com/web-fragments/web-fragments/commit/32dbfd6f54fd648400823d3e3b13edd96c6866ec) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(client): improve pierced preserveStyle resiliency
+
+  In more complex applications, especially those relying on constructed stylesheets, it was possible to for CSS stylesheets to get corrupted during the portaling operation (when pierced fragment is being moved into the newly constructed CSR-ed DOM of the host application).
+
+  This change makes the portaling operation much more resilient and avoids most of the problems.
+
+  Interestingly, we now do employ the atomic DOM move API (`moveBefore`), which falls a bit short for our needs as it causes the styles to be reloaded during the move operation. This change works around that shortcoming.
+
+  This change also introduces better support for adoptedStylesheets and CSS stylesheets in general.
+
+- [#267](https://github.com/web-fragments/web-fragments/pull/267) [`85697c6`](https://github.com/web-fragments/web-fragments/commit/85697c6ab26f6a1679c7ae040f6330b12ab0d30a) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix(gateway): close tag in reframed init HTML response
+
+  We've observed that some middlewares append strings to the reframed init html. Simple append results in the new string becoming part of the title which is causes problems for reframed library as well as the injected code/html as that's not how it was intended to be used.
+
+  By closing the title tag, even though not needed by the browser, the html becomes more resilient.
+
+- [#219](https://github.com/web-fragments/web-fragments/pull/219) [`11f47f3`](https://github.com/web-fragments/web-fragments/commit/11f47f301b470161825ea873aafdeeb6d44a4be7) Thanks [@IgorMinar](https://github.com/IgorMinar)! - fix: move the default WF styles into an injected inline style sheet
+
+  Instead of using a constructed style sheet, we now inject the styles into the response as an inline style sheet.
+
+  This prevents FOUC during bootstrap and also simplifies the code.
+
 ## 0.8.1
 
 ### Patch Changes
