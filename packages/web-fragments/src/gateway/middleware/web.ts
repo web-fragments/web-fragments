@@ -2,7 +2,13 @@
  * The middleware provides support for Web request-response handling using fetch-like behavior, and for Node.js native http request and responses object, including using Connect framework, via the imported adaptor.
  */
 
-import { FragmentGateway, FragmentMiddlewareOptions, FragmentConfig, FragmentGatewayConfig } from '../fragment-gateway';
+import {
+	FragmentGateway,
+	FragmentMiddlewareOptions,
+	FragmentConfig,
+	FragmentGatewayConfig,
+	WFRequestType,
+} from '../fragment-gateway';
 import { HTMLRewriter } from 'htmlrewriter';
 
 const isNativeHtmlRewriter = HTMLRewriter.toString().endsWith('{ [native code] }');
@@ -22,7 +28,19 @@ export function getWebMiddleware(
 	return async (request: Request, next: () => Promise<Response>): Promise<Response> => {
 		const { pathname, search = '' } = new URL(request.url);
 		const requestFragmentId = request.headers.get('x-web-fragment-id') ?? undefined;
-		const matchedFragment = gateway.matchRequestToFragment(`${pathname}${search}`, requestFragmentId);
+		const requestType = identifyRequestType(
+			request.headers.get('sec-fetch-dest'),
+			request.headers.get('x-fragment-mode'),
+		);
+		const matchedFragment = gateway.matchRequestToFragment(`${pathname}${search}`, requestType, requestFragmentId);
+
+		if (
+			(!matchedFragment && requestFragmentId) ||
+			((requestType === 'data' || requestType === 'softNav') && matchedFragment && !requestFragmentId) ||
+			(matchedFragment && matchedFragment.fragmentId !== requestFragmentId)
+		) {
+			return new Response('Invalid request!', { status: 404 });
+		}
 
 		/**
 		 * Handle app shell (legacy app) requests
@@ -135,6 +153,7 @@ export function getWebMiddleware(
 
 			return prefixHtmlHeadBody(fragmentSoftNavResponse);
 		}
+		console.log('xxx', fragmentResponse.status);
 
 		/**
 		 * Handle Asset or Data request
@@ -561,4 +580,17 @@ export function asReadableStream(strings: TemplateStringsArray, ...values: Array
 			controller.close();
 		},
 	});
+}
+
+export function identifyRequestType(secFetchDest: string | null, xFragmentMode: string | null): WFRequestType {
+	switch (secFetchDest) {
+		case 'document':
+			return 'hardNav';
+		case 'iframe':
+			return 'iframe';
+		case 'empty':
+			return xFragmentMode === 'embedded' ? 'softNav' : 'data';
+		default:
+			return 'asset';
+	}
 }

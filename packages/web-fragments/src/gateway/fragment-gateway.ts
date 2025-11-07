@@ -111,7 +111,11 @@ export class FragmentGateway {
 		});
 	}
 
-	matchRequestToFragment(urlPath: string, requestFragmentId?: string) {
+	matchRequestToFragment(
+		urlPath: string,
+		requestType: WFRequestType,
+		requestFragmentId?: string,
+	): FragmentConfig | null {
 		// TODO: path matching needs to take pattern specificity into account
 		// such that more specific patterns are matched before less specific ones
 		//   e.g. given route patterns `['/:accountId', '/:accountId/workers']` and a request path of `/abc123/workers/foo`,
@@ -119,14 +123,16 @@ export class FragmentGateway {
 		const matches = [...this.routeMap.keys()].filter((matcher) => matcher(urlPath));
 
 		for (const match of matches) {
-			const fragmentConfig = this.routeMap.get(match) ?? null;
+			const fragmentConfig = this.routeMap.get(match)!;
 
-			if (!requestFragmentId) {
+			// asset is the only request type that we can match without a fragmentId specified
+			// this is because assets are often requested by the browser natively and these requests don't contain the fragmentId header
+			if (requestType === 'asset' && !requestFragmentId) {
 				// if no fragmentId was not specified in the request, return the first matching fragment config
 				return fragmentConfig;
 			}
 
-			if (requestFragmentId === fragmentConfig?.fragmentId) {
+			if (requestFragmentId === fragmentConfig.fragmentId) {
 				return fragmentConfig;
 			}
 		}
@@ -134,7 +140,7 @@ export class FragmentGateway {
 		// for backwards compatibility if we have a path match, but fragment id doesn't match any of the routes, return the first match
 		// TODO: remove this to increase security and resiliency once we have better request type identification
 		if (matches.length) {
-			return this.routeMap.get(matches[0]);
+			return this.routeMap.get(matches[0]) ?? null;
 		}
 
 		return null;
@@ -232,3 +238,5 @@ export interface FragmentMiddlewareOptions {
 	additionalHeaders?: HeadersInit;
 	mode?: 'production' | 'development';
 }
+
+export type WFRequestType = 'hardNav' | 'softNav' | 'data' | 'asset' | 'iframe';

@@ -4,13 +4,13 @@ import { initializeMainContext } from './main-patches';
 import { executeScriptsInPiercedFragment } from './script-execution';
 import { WebFragmentError } from './utils/web-fragment-error';
 
-type ReframedOptions = {
+export type ReframedOptions = {
 	pierced: boolean;
 	shadowRoot: ShadowRoot;
 	wfDocumentElement: HTMLElement;
-	bound: boolean;
+	boundNavigation: boolean;
 	headers?: HeadersInit;
-	name: string;
+	fragmentId: string;
 };
 
 /**
@@ -31,7 +31,7 @@ export function reframed(
 	iframe: HTMLIFrameElement;
 	ready: Promise<void>;
 } {
-	initializeMainContext(options.bound);
+	initializeMainContext(options.boundNavigation);
 
 	const wfDocumentElement = options.wfDocumentElement;
 
@@ -45,7 +45,7 @@ export function reframed(
 	const iframe = document.createElement('iframe');
 	iframe.hidden = true;
 	iframe.src = reframedSrc;
-	iframe.name = `wf:${options.name}`;
+	iframe.name = `wf:${options.fragmentId}`;
 	// We can append the iframe to the main document only once the iframe[src] is set.
 	// This is especially the case in Firefox where an extra history record is created for iframes
 	// appended for at least one turn of the event loop (a task), which then have their src is set.
@@ -75,7 +75,7 @@ export function reframed(
 			// iframe reload detected!
 			// this means that the fragment app attempted to reload or hard navigate to a different url
 
-			if (options.bound) {
+			if (options.boundNavigation) {
 				// Workaround for a weird Safari (v26) bug
 				// - In Safari, if we hard navigate away from the host page, for example from /foo to /bar
 				// - and then hit the back button
@@ -127,7 +127,7 @@ export function reframed(
 			);
 		}
 
-		initializeIFrameContext(iframe, reframedShadowRoot, wfDocumentElement, options.bound);
+		initializeIFrameContext(iframe, options);
 		resolveIframeReady(iframe);
 	});
 
