@@ -1,0 +1,26 @@
+{
+	"compilerOptions": {
+		// module resolution & module system
+		"baseUrl": ".",
+		"moduleResolution": "bundler",
+		"allowJs": true,
+		"module": "es2022",
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		// emit
+		"outDir": "dist",
+		"declaration": true,
+		"noEmit": true,
+		"target": "es2023",
+		"useDefineForClassFields": true,
+		"esModuleInterop": false,
+		"allowSyntheticDefaultImports": true,
+		// type check
+		"skipLibCheck": true,
+		"strict": true,
+		"forceConsistentCasingInFileNames": true,
+		// global ambient types
+		"lib": ["ES2023"],
+		"types": []
+	}
+}
