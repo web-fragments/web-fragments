@@ -64,7 +64,7 @@
 		"@types/node": "^20.12.7",
 		"path-to-regexp": "^6.2.2",
 		"ts-node-dev": "^2.0.0",
-		"writable-dom": "github:web-fragments/writable-dom#build-improvements",
+		"writable-dom": "^1.0.6",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
