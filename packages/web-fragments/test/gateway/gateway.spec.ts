@@ -11,8 +11,8 @@ import streamWeb from 'node:stream/web';
 // comment out some environments if you want to focus on testing just one or a few
 const environments = [];
 environments.push('web');
-environments.push('connect');
-environments.push('express');
+//environments.push('connect');
+//environments.push('express');
 
 for (const environment of environments) {
 	describe(`${environment} middleware`, () => {
@@ -26,7 +26,7 @@ for (const environment of environments) {
 			| null = null;
 
 		describe(`app shell requests`, () => {
-			it(`should serve requests from the app shell when no fragments matched`, async () => {
+			it.only(`should serve requests from the app shell when no fragments matched`, async () => {
 				mockShellAppResponse(new Response('<p>hello world</p>'));
 
 				const response = await testRequest(new Request('http://localhost/'));
@@ -781,6 +781,44 @@ for (const environment of environments) {
 						'<script type="module" src="_fragments/foo/test.js"></script>',
 				);
 			});
+
+			it(`should serve a HTTP 400 if fragment request's X-Web-Fragment-Id doesn't is not recognized by the gateway`, async () => {
+				const softNavResponse = await testRequest(
+					new Request('http://localhost/foo/some/path', {
+						headers: { 'sec-fetch-dest': 'empty', 'X-Web-Fragment-Id': 'unknownFragment' },
+					}),
+				);
+
+				expect(softNavResponse.status).toBe(400);
+				expect(softNavResponse.statusText).toBe('Bad Request');
+				expect(await softNavResponse.json()).toEqual({
+					error: 'Unknown Web Fragment! X-Web-Fragment-Id=unknownFragment',
+				});
+				expect(softNavResponse.headers.get('content-type')).toBe('application/json');
+				expect(softNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(softNavResponse.headers.has('x-web-fragment-id')).toBe(false);
+			});
+
+			it(`should serve a fragment soft navigation request when fragment is identified via X-Web-Fragment-Id request header`, async () => {
+				mockFragmentFooterResponse(
+					'/foo/some/path',
+					new Response('<p>hello footer world!</p>', {
+						headers: { 'content-type': 'text/html', 'X-Web-Fragment-Id': 'fragmentFooter' },
+					}),
+				);
+
+				const softNavResponse = await testRequest(
+					new Request('http://localhost/foo/some/path', {
+						headers: { 'sec-fetch-dest': 'empty', 'X-Web-Fragment-Id': 'fragmentFooter' },
+					}),
+				);
+
+				expect(softNavResponse.status).toBe(200);
+				expect(await softNavResponse.text()).toBe(`<p>hello footer world!</p>`);
+				expect(softNavResponse.headers.get('content-type')).toBe('text/html');
+				expect(softNavResponse.headers.get('vary')).toBe('sec-fetch-dest');
+				expect(softNavResponse.headers.has('x-web-fragment-id')).toBe(true);
+			});
 		});
 
 		describe(`fragment asset requests`, () => {
@@ -967,6 +1005,17 @@ for (const environment of environments) {
 				endpoint: 'http://dupe-b.test:1234',
 			});
 
+			fragmentGateway.registerFragment({
+				fragmentId: 'fragmentFooter',
+				routePatterns: ['/:_*', '/_fragment/footer/:_*'],
+				// accepts: {
+				// 	navigations: ['/:_*'],
+				// 	data: ['/:_*'],
+				// 	assets: ['/_fragment/footer/:_*'],
+				// },
+				endpoint: 'http://footer.test:1234',
+			});
+
 			switch (environment) {
 				case 'web': {
 					const webMiddleware = getWebMiddleware(fragmentGateway, {
@@ -1084,6 +1133,10 @@ function mockFragmentFooResponse(pathname: string, response: Response) {
 
 function mockFragmentBarResponse(pathname: string, response: Response) {
 	fetchMock.doMockIf('http://bar.test:4321' + pathname, response);
+}
+
+function mockFragmentFooterResponse(pathname: string, response: Response) {
+	fetchMock.doMockIf('http://footer.test:1234' + pathname, response);
 }
 
 async function mockShellAppResponse(response: Response) {

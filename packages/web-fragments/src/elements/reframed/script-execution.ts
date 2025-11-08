@@ -1,4 +1,4 @@
-import { assert } from './utils/assert';
+import { assert } from '../../_utils/assert';
 import { getInternalReference } from './iframe-patches';
 
 export function reframedDomInsertion<T extends Node>(
