@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Fragment Redirects Test</title>
+	</head>
+	<body>
+		<h2>Fragment Redirects Test</h2>
+		<p>This fragment should redirect and not be visible if redirects are handled correctly.</p>
+		<p id="status">Fragment loaded successfully</p>
+
+		<script>
+			// This script should not run if the redirect is handled properly
+			document.getElementById('status').textContent = 'ERROR: Fragment should have redirected!';
+			document.getElementById('status').style.color = 'red';
+		</script>
+	</body>
+</html>

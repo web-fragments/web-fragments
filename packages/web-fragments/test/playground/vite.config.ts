@@ -5,6 +5,18 @@ import path from 'node:path';
 import { FragmentGateway } from '../../src/gateway';
 import { getNodeMiddleware } from '../../src/gateway/middleware/node';
 
+function createRedirectFetch(redirectUrl: string): typeof fetch {
+	return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+		// Return a redirect response
+		return new Response('', {
+			status: 302,
+			headers: {
+				Location: redirectUrl,
+			},
+		});
+	};
+}
+
 export default defineConfig({
 	appType: 'mpa',
 	resolve: {
@@ -134,12 +146,24 @@ async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 				fragmentConfig.iframeHeaders = {
 					'Content-Security-Policy': `
 							connect-src 'self';
-							object-src 'none'; 
+							object-src 'none';
 							script-src 'self' 'unsafe-inline';
 							base-uri 'self';`
-						.replaceAll('\n', '')
+						.replaceAll('\n', ' ')
 						.replaceAll('  ', ' '),
 				};
+				break;
+			case 'fragment-redirects-unbound':
+				fragmentConfig.endpoint = createRedirectFetch('/fragment-redirects/redirected-unbound');
+				fragmentConfig.routePatterns = ['/fragment-redirects/unbound/:_*'];
+				break;
+			case 'fragment-redirects-piercing-disabled':
+				fragmentConfig.endpoint = createRedirectFetch('/fragment-redirects/redirected-piercing-disabled');
+				fragmentConfig.piercing = false;
+				break;
+			case 'fragment-redirects-pierced-bound':
+				fragmentConfig.endpoint = createRedirectFetch('/fragment-redirects/redirected-pierced-bound');
+				fragmentConfig.piercing = true;
 				break;
 		}
 
