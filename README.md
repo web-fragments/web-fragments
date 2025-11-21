@@ -48,7 +48,12 @@ In this way Web Fragments enable scaling and incremental modernization of the fr
 
 The best way to learn more is going to [our official documentation](https://web-fragments.dev/documentation/getting-started/).
 
-You can also check out the [demos present in this repository](./e2e/) where you can find examples [e2e/pierced-react/README.md](./e2e/pierced-react/README.md) for platforms supporting [Web Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API) like Cloudflare or Netlify, or [e2e/node-servers/README.md](./e2e/node-servers/README.md) for platforms supporting Node.js runtimes.
+You can also check out the [sample demos present in this repository](./samples/):
+
+| Link to sample | Runtime | API | Platforms |
+| --- | --- | --- | --- |
+| [Pierced React host](./samples/pierced-react/README.md) | Edge worker | [Web Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API) | Cloudflare Workers, Netlify Edge |
+| [Node server samples](./samples/node-servers/README.md) | Node.js server | Node.js HTTP APIs (Express, Connect) | Any Node.js runtime |
 
 ## More resources
 

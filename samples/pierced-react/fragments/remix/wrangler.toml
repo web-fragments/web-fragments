@@ -1,0 +1,11 @@
+name = "pierced-react-remix-fragment"
+main = "worker.ts"
+compatibility_date = "2024-05-02"
+
+assets = { binding = "ASSETS", directory = "build/client" }
+
+[vars]
+DEV_MODE = "false"
+
+[env.dev.vars]
+DEV_MODE = "true"
