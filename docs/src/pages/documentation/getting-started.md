@@ -111,7 +111,7 @@ const middleware = getWebMiddleware(myGateway);
 // - Hono: https://hono.dev/docs/guides/middleware
 ```
 
-See also: [Cloudflare Pages example](https://github.com/web-fragments/web-fragments/blob/main/e2e/pierced-react/functions/_middleware.ts)
+See also: [Cloudflare Pages example](https://github.com/web-fragments/web-fragments/blob/main/samples/pierced-react/functions/_middleware.ts)
 
 For Node.js-based middleware systems like `express` or `connect` obtain a Node-compatible middleware function and integrate it into
 
@@ -123,7 +123,7 @@ const app = express();
 app.use(getNodeMiddleware(myGateway));
 ```
 
-See also: [express example](https://github.com/web-fragments/web-fragments/blob/main/e2e/node-servers/app/server/src/express.ts) or [connect example](https://github.com/web-fragments/web-fragments/blob/main/e2e/node-servers/app/server/src/connect.ts)
+See also: [express example](https://github.com/web-fragments/web-fragments/blob/main/samples/node-servers/app/server/src/express.ts) or [connect example](https://github.com/web-fragments/web-fragments/blob/main/samples/node-servers/app/server/src/connect.ts)
 
 ### f. Build and deploy
 
