@@ -50,10 +50,10 @@ The best way to learn more is going to [our official documentation](https://web-
 
 You can also check out the [sample demos present in this repository](./samples/):
 
-| Link to sample | Runtime | API | Platforms |
-| --- | --- | --- | --- |
-| [Pierced React host](./samples/pierced-react/README.md) | Edge worker | [Web Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API) | Cloudflare Workers, Netlify Edge |
-| [Node server samples](./samples/node-servers/README.md) | Node.js server | Node.js HTTP APIs (Express, Connect) | Any Node.js runtime |
+| Link to sample                                          | Runtime        | API                                                                   | Platforms                        |
+| ------------------------------------------------------- | -------------- | --------------------------------------------------------------------- | -------------------------------- |
+| [Pierced React host](./samples/pierced-react/README.md) | Edge worker    | [Web Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API) | Cloudflare Workers, Netlify Edge |
+| [Node server samples](./samples/node-servers/README.md) | Node.js server | Node.js HTTP APIs (Express, Connect)                                  | Any Node.js runtime              |
 
 ## More resources
 
