@@ -43,6 +43,7 @@ This fragment is integrated into:
 2. **node-servers sample** - Available at `/rr-page` route
 
 The fragment endpoint is registered as:
+
 - Fragment ID: `react-router`
 - Route patterns: `/rr-page/:_*`, `/_fragment/react-router/:_*`
 - Endpoint: `http://localhost:3001`

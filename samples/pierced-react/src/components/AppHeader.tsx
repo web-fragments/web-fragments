@@ -29,7 +29,12 @@ function AppHeader() {
 						const isActive = location.pathname === matchPath || location.pathname.startsWith(`${matchPath}/`);
 
 						return (
-							<Link key={to} to={to} className={isActive ? 'active' : undefined} aria-current={isActive ? 'page' : undefined}>
+							<Link
+								key={to}
+								to={to}
+								className={isActive ? 'active' : undefined}
+								aria-current={isActive ? 'page' : undefined}
+							>
 								{label}
 							</Link>
 						);

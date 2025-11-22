@@ -1,6 +1,6 @@
-import type { Config } from "react-router";
+import type { Config } from 'react-router';
 
 export default {
-  ssr: true,
-  prerender: false,
+	ssr: true,
+	prerender: false,
 } satisfies Config;
