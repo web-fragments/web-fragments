@@ -74,8 +74,8 @@ function App() {
 						maxWidth: '760px',
 					}}
 				>
-					Note: Clicking this button should update the fragment UI and the main window URL. However, the host application
-					is still rendering the same page (there is only one route defined at /remix-page/*)
+					Note: Clicking this button should update the fragment UI and the main window URL. However, the host
+					application is still rendering the same page (there is only one route defined at /remix-page/*)
 				</p>
 				<div className="card">
 					<button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
