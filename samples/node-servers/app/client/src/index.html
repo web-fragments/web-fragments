@@ -3,25 +3,51 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Web Fragments - Node.js Server Demo</title>
+		<title>Web Fragments – Node.js Server Host</title>
 		<link rel="stylesheet" href="styles.css" />
 	</head>
 	<body>
-		<main>
-			<section>
-				<img src="/assets/favicon.svg" alt="Web Fragments Logo" width="100" />
-				<h1>Welcome to Web Fragments Node.js Servers Example</h1>
-				<p>
-					This is a simple example of an Node.js server that serves fragments of a page using our Node.js adapter, on
-					top of our Web Standard middleware.
-				</p>
-				<p>Click on the links below to load the fragments:</p>
-				<ul>
-					<li><a class="button" href="/remix-page">Remix fragment</a></li>
-					<li><a class="button" href="/qwik-page">Qwik fragment</a></li>
-				</ul>
-			</section>
-			<script type="module" src="main.ts"></script>
-		</main>
+		<header class="app-header">
+			<div class="header-inner">
+				<a class="brand" href="/">
+					<img class="brand-logo" src="/webfragmentslogo.svg" alt="web fragments logo" />
+					<span>Node Server Host</span>
+				</a>
+				<nav class="nav-links" aria-label="Fragment navigation">
+					<a href="/" data-nav="home">Home</a>
+					<a href="/remix-page" data-nav="remix">Remix</a>
+					<a href="/qwik-page" data-nav="qwik">Qwik</a>
+				</nav>
+			</div>
+		</header>
+		<div class="app-shell">
+			<main class="app-main">
+				<section class="hero-card">
+					<span class="hero-pill">Web API Middleware</span>
+					<h1>Node.js Server Web Fragments</h1>
+					<p>
+						This sample hosts independently deployed Remix and Qwik experiences inside an Express/Connect server using the
+							Web Fragments Node.js middleware.
+					</p>
+					<div class="cta-group">
+						<button id="preload-remix">Preload Remix fragment</button>
+						<p class="hint">The preload button updates the URL without re-rendering so you can inspect piercing behavior.</p>
+						<div class="link-group">
+							<a class="link-button" href="/remix-page">Open Remix Fragment</a>
+							<a class="link-button secondary" href="/qwik-page">Open Qwik Fragment</a>
+						</div>
+					</div>
+					<p class="runtime-note">Fragments run wherever the Web Fetch API is supported natively.</p>
+				</section>
+			</main>
+			<footer class="app-footer">
+				Sample built by the
+				<a href="https://github.com/web-fragments/web-fragments/graphs/contributors" target="_blank" rel="noopener noreferrer">
+					web-fragments contributors
+				</a>
+				.
+			</footer>
+		</div>
+		<script type="module" src="main.ts"></script>
 	</body>
 </html>

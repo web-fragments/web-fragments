@@ -16,7 +16,7 @@ function Root() {
 						<h1>Pierced React Sample </h1>
 						<p>
 							This sample showcases two independently built and deployed Remix and Qwik experiences, pierced inside this React host.
-							Choose a fragment to see how web-fragments in action!
+							Choose a framework to see web-fragments in action!
 						</p>
 						<div className="cta-group">
 							<button
