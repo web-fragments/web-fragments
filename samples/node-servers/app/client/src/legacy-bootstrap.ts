@@ -1,40 +1,86 @@
 import { initializeWebFragments } from 'web-fragments';
 
+const webFragmentsLogo = '/webfragmentslogo.svg';
+const remixLogo = new URL('./assets/remix.svg', import.meta.url).href;
+const qwikLogo = new URL('./assets/qwik.svg', import.meta.url).href;
+
 initializeWebFragments();
 
-function counter(): { increment: () => number } {
+function counter() {
 	let count = 0;
 
 	return {
 		increment() {
-			count++;
+			count += 1;
 			return count;
 		},
 	};
 }
 
+type FragmentMeta = {
+	heading: string;
+	note: string;
+	logos: Array<{ src: string; alt: string }>;
+};
+
+const fragmentMeta: Record<string, FragmentMeta> = {
+	remix: {
+		heading: 'Web Fragments + Remix',
+		note:
+			'Click the counter or navigate to Remix routes; the Node.js host stays mounted while the fragment handles the new view.',
+		logos: [
+			{ src: webFragmentsLogo, alt: 'Web Fragments logo' },
+			{ src: remixLogo, alt: 'Remix logo' },
+		],
+	},
+	qwik: {
+		heading: 'Web Fragments + Qwik',
+		note:
+			'Interactive state updates here are isolated from the Qwik fragment, showcasing safe composition inside the Node.js host.',
+		logos: [
+			{ src: webFragmentsLogo, alt: 'Web Fragments logo' },
+			{ src: qwikLogo, alt: 'Qwik logo' },
+		],
+	},
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-	const fwName = new URL(location.href).pathname.match(/\/(?<fwName>[^-]+)-page/)?.groups?.fwName;
-	const main = document.querySelector('main') as HTMLElement;
-	main.innerHTML = `<button title="This is an independent JavaScript component" class="button counter" id="counter">click to count: 0</button>
-    <section>
-        <div class="wrapper">
-            <div class="fragment-container">
-                <h2>Pierced fragment</h2>
-                <web-fragment fragment-id="${fwName}"></web-fragment>
-            </div>
-            <div class="fragment-container">
-                <h2>Fetched fragment</h2>
-                <button class="button" id="toggle-host">Toggle Host</button>
-                <div class="host-wrapper">
-                </div>
-            </div>
-        </div>
-    </section>`;
+	const fwSlug = new URL(window.location.href).pathname.match(/\/(?<fwName>[^-]+)-page/)?.groups?.fwName ?? 'remix';
+	const meta = fragmentMeta[fwSlug] ?? fragmentMeta.remix;
+	const main = document.querySelector<HTMLElement>('main.fragment-main') ?? document.querySelector<HTMLElement>('main');
+
+	if (!main) {
+		return;
+	}
+
+	main.innerHTML = `
+		<div class="page-shell fragment-page">
+			<div class="fragment-page__logos">
+				${meta.logos
+					.map((logo) => `<img src="${logo.src}" alt="${logo.alt}" loading="lazy" decoding="async" />`)
+					.join('')}
+			</div>
+			<h1>${meta.heading}</h1>
+			<p class="hint">${meta.note}</p>
+			<div class="card">
+				<button title="This is an independent JavaScript component" class="counter" id="counter">click to count: 0</button>
+			</div>
+			<section class="fragment-showcase">
+				<div class="fragment-container pierced">
+					<h2>Pierced fragment</h2>
+					<web-fragment fragment-id="${fwSlug}"></web-fragment>
+				</div>
+				<div class="fragment-container">
+					<h2>Fetched fragment</h2>
+					<button id="toggle-host">Toggle host</button>
+					<div class="host-wrapper"></div>
+				</div>
+			</section>
+		</div>
+	`;
 
 	const counterButton = document.getElementById('counter');
 	const counterInstance = counter();
-
 	const toggle = document.getElementById('toggle-host');
 
 	if (counterButton) {
@@ -49,11 +95,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		let toggled = false;
 
 		toggle.addEventListener('click', () => {
-			const hostWrapper = document.querySelector('.host-wrapper') as HTMLElement;
+			const hostWrapper = document.querySelector<HTMLElement>('.host-wrapper');
+			if (!hostWrapper) {
+				return;
+			}
 			if (!toggled) {
 				toggled = true;
 				const fragment = document.createElement('web-fragment');
-				fragment.setAttribute('fragment-id', `${fwName}2`);
+				fragment.setAttribute('fragment-id', `${fwSlug}2`);
 				hostWrapper.appendChild(fragment);
 			} else {
 				toggled = false;

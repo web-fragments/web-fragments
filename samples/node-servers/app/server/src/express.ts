@@ -55,7 +55,7 @@ gateway.registerFragment({
     }),
 });
 
-app.use(getNodeMiddleware(gateway, { mode: 'development' }));
+app.use(getNodeMiddleware(gateway, { mode: 'production' }));
 
 app.use(express.static(distPath));
 console.log('Serving static files from:', distPath);
