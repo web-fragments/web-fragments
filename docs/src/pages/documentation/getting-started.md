@@ -11,10 +11,10 @@ Getting started with Web Fragments is easy.
 
 You can explore the sample demos bundled with this repository to see Web Fragments in action:
 
-| Link to sample | Runtime | API | Platforms |
-| --- | --- | --- | --- |
-| [Pierced React host](https://github.com/web-fragments/web-fragments/blob/main/samples/pierced-react/README.md) | Edge worker | [Web Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API) | Cloudflare Workers, Netlify Edge |
-| [Node server samples](https://github.com/web-fragments/web-fragments/blob/main/samples/node-servers/README.md) | Node.js server | Node.js HTTP APIs (Express, Connect) | Any Node.js runtime |
+| Link to sample                                                                                                 | Runtime        | API                                                                   | Platforms                        |
+| -------------------------------------------------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------- | -------------------------------- |
+| [Pierced React host](https://github.com/web-fragments/web-fragments/blob/main/samples/pierced-react/README.md) | Edge worker    | [Web Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API) | Cloudflare Workers, Netlify Edge |
+| [Node server samples](https://github.com/web-fragments/web-fragments/blob/main/samples/node-servers/README.md) | Node.js server | Node.js HTTP APIs (Express, Connect)                                  | Any Node.js runtime              |
 
 ## 1. Create a new web fragment
 
