@@ -11,6 +11,7 @@ const navLinks: NavLink[] = [
 	{ label: 'Home', to: '/', matchPath: '/' },
 	{ label: 'Remix', to: '/remix-page', matchPath: '/remix-page' },
 	{ label: 'Qwik', to: '/qwik-page', matchPath: '/qwik-page' },
+	{ label: 'React Router', to: '/rr-page', matchPath: '/rr-page' },
 ];
 
 function AppHeader() {

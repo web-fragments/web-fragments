@@ -1,6 +1,7 @@
-name = "pierced-react-remix-fragment"
+name = "pierced-react-react-router-fragment"
 main = "worker.ts"
 compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 
 assets = { binding = "ASSETS", directory = "build/client" }
 

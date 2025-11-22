@@ -41,6 +41,18 @@ gateway.registerFragment({
 	}),
 });
 
+gateway.registerFragment({
+	fragmentId: 'react-router',
+	piercingClassNames: ['react-router'],
+	routePatterns: ['/rr-page/:_*', '/_fragment/react-router/:_*'],
+	endpoint: 'http://localhost:3001',
+	onSsrFetchError: () => ({
+		response: new Response('<p>React Router fragment not found</p>', {
+			headers: { 'content-type': 'text/html' },
+		}),
+	}),
+});
+
 const middlewareByMode = {
 	development: getWebMiddleware(gateway, { mode: 'development' }),
 	production: getWebMiddleware(gateway, { mode: 'production' }),

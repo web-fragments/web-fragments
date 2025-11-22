@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Web Fragments – Node.js Server Host</title>
+		<title>Web Fragments – React Router Fragment</title>
 		<link rel="stylesheet" href="styles.css" />
 	</head>
 	<body>
@@ -22,28 +22,7 @@
 			</div>
 		</header>
 		<div class="app-shell">
-			<main class="app-main">
-				<section class="hero-card">
-					<span class="hero-pill">__SERVER_LABEL__</span>
-					<h1>Node.js Server Web Fragments</h1>
-					<p>
-						This sample hosts independently deployed Remix, Qwik, and React Router experiences inside an Express/Connect
-						server using the Web Fragments Node.js middleware.
-					</p>
-					<div class="cta-group">
-						<button id="preload-remix">Preload Remix fragment</button>
-						<p class="hint">
-							The preload button updates the URL without re-rendering so you can inspect piercing behavior.
-						</p>
-						<div class="link-group">
-							<a class="link-button" href="/remix-page">Open Remix Fragment</a>
-							<a class="link-button secondary" href="/qwik-page">Open Qwik Fragment</a>
-							<a class="link-button secondary" href="/rr-page">Open React Router Fragment</a>
-						</div>
-					</div>
-					<p class="runtime-note">Fragments run wherever the Web Fetch API is supported natively.</p>
-				</section>
-			</main>
+			<main class="app-main fragment-main"></main>
 			<footer class="app-footer">
 				Sample built by the
 				<a
@@ -57,5 +36,6 @@
 			</footer>
 		</div>
 		<script type="module" src="main.ts"></script>
+		<script type="module" src="../src/legacy-bootstrap.ts"></script>
 	</body>
 </html>

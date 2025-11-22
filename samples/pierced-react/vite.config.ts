@@ -9,8 +9,8 @@ const shouldSpawnFragments =
 if (shouldSpawnFragments) {
 	buildAndServeFragment('qwik');
 	buildAndServeFragment('remix');
+	buildAndServeFragment('react-router');
 
-	// let's sleep for a bit in an effort to make the vite output the last one
 	spawnSync('sleep', ['5']);
 }
 
@@ -45,17 +45,15 @@ function wranglerDevWithReload(): Plugin[] {
 		{
 			name: 'worker-external-hot-reload',
 			buildStart() {
-				// we want to watch for changes in the web-fragments/gateway entrypoint
 				this.addWatchFile('../../packages/web-fragments/src/gateway');
 				this.addWatchFile('src/worker.ts');
-				// after each change lets re-run wrangler dev
 				runWranglerDev();
 			},
 		},
 	];
 }
 
-function buildAndServeFragment(fragment: 'remix' | 'qwik') {
+function buildAndServeFragment(fragment: 'remix' | 'qwik' | 'react-router') {
 	spawn('pnpm', ['--filter', `pierced-react___${fragment}-fragment`, 'buildAndServe'], {
 		stdio: ['ignore', 'inherit', 'inherit'],
 		env: { ...process.env, NODE_ENV: 'production' },

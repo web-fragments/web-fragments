@@ -8,6 +8,14 @@ const app = express();
 const PORT = process.env.PORT || 3005;
 
 const distPath = path.resolve('dist');
+const SERVER_LABEL = 'Node.js (Express) Middleware';
+
+const renderPage = (file: string) =>
+  fs.readFileSync(path.join(distPath, file), 'utf-8').replace(/__SERVER_LABEL__/g, SERVER_LABEL);
+
+const sendPage = (res: express.Response, file: string) => {
+  res.status(200).type('html').send(renderPage(file));
+};
 
 
 // Initialize the FragmentGateway
@@ -31,28 +39,40 @@ const gateway = new FragmentGateway({
 
 // Register fragments
 gateway.registerFragment({
-    fragmentId: 'remix',
-    prePiercingClassNames: ['remix'],
-    routePatterns: ['/remix-page/:_*', '/_fragment/remix/:_*'],
-    endpoint: 'http://localhost:3000',
-    onSsrFetchError: () => ({
-        response: new Response('<p>Remix fragment not found</p>', {
-            headers: { 'content-type': 'text/html' },
-        }),
-    }),
+	fragmentId: 'remix',
+	piercingClassNames: ['remix'],
+	routePatterns: ['/remix-page/:_*', '/_fragment/remix/:_*'],
+	endpoint: 'http://localhost:3000',
+	onSsrFetchError: () => ({
+		response: new Response('<p>Remix fragment not found</p>', {
+			headers: { 'content-type': 'text/html' },
+		}),
+	}),
 });
 
 gateway.registerFragment({
-    fragmentId: 'qwik',
-    prePiercingClassNames: ['qwik'],
-    routePatterns: ['/qwik-page/:_*', '/_fragment/qwik/:_*'],
-    endpoint: 'http://localhost:8123',
-    forwardFragmentHeaders: ['x-fragment-name'],
-    onSsrFetchError: () => ({
-        response: new Response('<p>Qwik fragment not found</p>', {
-            headers: { 'content-type': 'text/html' },
-        }),
-    }),
+	fragmentId: 'qwik',
+	piercingClassNames: ['qwik'],
+	routePatterns: ['/qwik-page/:_*', '/_fragment/qwik/:_*'],
+	endpoint: 'http://localhost:8123',
+	forwardFragmentHeaders: ['x-fragment-name'],
+	onSsrFetchError: () => ({
+		response: new Response('<p>Qwik fragment not found</p>', {
+			headers: { 'content-type': 'text/html' },
+		}),
+	}),
+});
+
+gateway.registerFragment({
+	fragmentId: 'react-router',
+	piercingClassNames: ['react-router'],
+	routePatterns: ['/rr-page/:_*', '/_fragment/react-router/:_*'],
+	endpoint: 'http://localhost:3001',
+	onSsrFetchError: () => ({
+		response: new Response('<p>React Router fragment not found</p>', {
+			headers: { 'content-type': 'text/html' },
+		}),
+	}),
 });
 
 app.use(getNodeMiddleware(gateway, { mode: 'production' }));
@@ -62,23 +82,22 @@ console.log('Serving static files from:', distPath);
 
 app.use((req, res, next) => {
   if (req.url === '/' || req.url === '/index.html') {
-	res.writeHead(200, { 'Content-Type': 'text/html' });
-	res.end(fs.readFileSync(path.join(distPath, 'index.html')));
+    sendPage(res, 'index.html');
   } else {
-	next();
+    next();
   }
 });
 
 // Serve other pages manually
 app.use((req, res, next) => {
   if (req.url.startsWith('/remix-page')) {
-	  res.writeHead(200, { 'Content-Type': 'text/html' });
-	  res.end(fs.readFileSync(path.join(distPath, 'remix-page.html')));
+    sendPage(res, 'remix-page.html');
   } else if (req.url.startsWith('/qwik-page')) {
-	  res.writeHead(200, { 'Content-Type': 'text/html' });
-	  res.end(fs.readFileSync(path.join(distPath, 'qwik-page.html')));
+    sendPage(res, 'qwik-page.html');
+  } else if (req.url.startsWith('/rr-page')) {
+    sendPage(res, 'rr-page.html');
   } else {
-  	next();
+  next();
   }
 });
 

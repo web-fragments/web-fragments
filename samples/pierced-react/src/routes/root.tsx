@@ -34,6 +34,9 @@ function Root() {
 								<Link className="link-button secondary" to="/qwik-page">
 									Open Qwik Fragment
 								</Link>
+								<Link className="link-button" to="/rr-page">
+									Open React Router Fragment
+								</Link>
 							</div>
 						</div>
 						<p className="runtime-note">This fragment runs in runtimes that support Web Fetch API natively.</p>
