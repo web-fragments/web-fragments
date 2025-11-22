@@ -346,7 +346,7 @@ export function initializeIFrameContext(
 		},
 
 		hasChildNodes: {
-			value(id: string) {
+			value() {
 				return wfDocumentElement.hasChildNodes();
 			},
 		},

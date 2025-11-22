@@ -79,7 +79,7 @@ function monkeyPatchDOMInsertionMethods() {
 
 	Element.prototype.insertAdjacentElement = function after<T extends Element>(
 		this: Element,
-		where: InsertPosition,
+		_where: InsertPosition,
 		element: T,
 	): T | null {
 		const doInsertTheNode = () => unpatchedElementProto.insertAdjacentElement.apply(this, arguments as any) as T;
