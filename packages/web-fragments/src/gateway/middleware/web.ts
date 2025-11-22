@@ -132,6 +132,7 @@ export function getWebMiddleware(
 			const fragmentSoftNavResponse = new Response(fragmentResponse.body, fragmentResponse);
 			fragmentSoftNavResponse.headers.append('vary', 'sec-fetch-dest');
 			fragmentSoftNavResponse.headers.append('x-web-fragment-id', matchedFragment.fragmentId);
+			enforceIdentityEncoding(fragmentSoftNavResponse);
 
 			return prefixHtmlHeadBody(fragmentSoftNavResponse);
 		}
@@ -144,6 +145,7 @@ export function getWebMiddleware(
 		 */
 		const fragmentAssetResponse = new Response(fragmentResponse.body, fragmentResponse);
 		fragmentAssetResponse.headers.append('x-web-fragment-id', matchedFragment.fragmentId);
+		enforceIdentityEncoding(fragmentAssetResponse);
 
 		if (mode === 'development' && ['gzip', 'br'].includes(fragmentAssetResponse.headers.get('content-encoding')!)) {
 			// Due to a bug in miniflare which doesn't pass through compressed responses correctly,
@@ -160,7 +162,7 @@ export function getWebMiddleware(
 		return fragmentAssetResponse;
 
 		async function handleFetchErrors(fragmentResponseOrError: Response | Error) {
-			const { endpoint, onSsrFetchError = defaultOnSsrFetchError } = matchedFragment!;
+			const { onSsrFetchError = defaultOnSsrFetchError } = matchedFragment!;
 
 			let onSsrFetchErrorResponse;
 			try {
@@ -389,6 +391,22 @@ export function getWebMiddleware(
 				.transform(appShellResponse);
 		}
 	}
+}
+
+function enforceIdentityEncoding(response: Response) {
+	// Normalizes fragment responses to advertise identity encoding. This prevents browsers from
+	// attempting to decompress bodies that Node/Miniflare already expanded on our behalf, which would
+	// otherwise trigger `ERR_CONTENT_DECODING_FAILED` during iframe bootstraps and dynamic imports.
+	// It also avoids stale Content-Length headers that no longer match the uncompressed payload when
+	// fragments are served through reverse proxies that transparently decode gzip/br streams.
+	const contentEncoding = response.headers.get('content-encoding');
+	if (contentEncoding && contentEncoding !== 'identity') {
+		response.headers.set('content-encoding', 'identity');
+	}
+	if (!response.headers.has('content-encoding')) {
+		response.headers.set('content-encoding', 'identity');
+	}
+	response.headers.delete('content-length');
 }
 
 /**
