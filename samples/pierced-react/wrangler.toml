@@ -2,11 +2,12 @@
 name = "pierced-react"
 main = "src/worker.ts"
 compatibility_date = "2024-06-14"
+compatibility_flags = ["nodejs_compat"]
 
 assets = { directory = "dist", binding = "ASSETS" }
 
 [vars]
 DEV_MODE = "false"
 
-[build]
-command = "pnpm --filter pierced-react build"
+[env.dev.vars]
+DEV_MODE = "true"

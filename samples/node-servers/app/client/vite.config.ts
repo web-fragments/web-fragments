@@ -12,6 +12,7 @@ export default defineConfig({
 				main: path.resolve(__dirname, 'src/index.html'),
 				qwikPage: path.resolve(__dirname, 'src/qwik-page.html'),
 				remixPage: path.resolve(__dirname, 'src/remix-page.html'),
+				rrPage: path.resolve(__dirname, 'src/rr-page.html'),
 			},
 		},
 	},

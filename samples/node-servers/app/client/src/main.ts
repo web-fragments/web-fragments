@@ -1,9 +1,10 @@
-type NavKey = 'home' | 'remix' | 'qwik';
+type NavKey = 'home' | 'remix' | 'qwik' | 'react-router';
 
 const navTargets: Record<NavKey, string> = {
 	home: '/',
 	remix: '/remix-page',
 	qwik: '/qwik-page',
+	'react-router': '/rr-page',
 };
 
 const normalizePath = (path: string) => {

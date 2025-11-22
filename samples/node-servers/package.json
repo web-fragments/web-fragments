@@ -3,8 +3,9 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev:express": "node --loader ts-node/esm app/server/src/express.ts",
-		"dev:connect": "node --loader ts-node/esm app/server/src/connect.ts",
+		"dev": "pnpm dev:express",
+		"dev:express": "node scripts/dev-with-fragments.mjs express",
+		"dev:connect": "node scripts/dev-with-fragments.mjs connect",
 		"start:express": "node dist/express.js",
 		"start:connect": "node dist/connect.js",
 		"build": "tsc -p tsconfig.json && cd app/client && npm run build && cd ../..",

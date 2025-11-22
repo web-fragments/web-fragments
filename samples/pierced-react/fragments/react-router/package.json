@@ -1,0 +1,36 @@
+{
+	"name": "pierced-react___react-router-fragment",
+	"private": true,
+	"sideEffects": false,
+	"type": "module",
+	"scripts": {
+		"build": "react-router build",
+		"dev": "react-router dev",
+		"serve": "wrangler dev --local --port 3001 --var DEV_MODE=true --inspector-port=9230",
+		"start": "pnpm serve",
+		"buildAndServe": "pnpm build && pnpm serve",
+		"deploy": "wrangler deploy",
+		"types:check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@react-router/cloudflare": "^7.1.2",
+		"@react-router/node": "^7.1.2",
+		"isbot": "^5.1.19",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"react-router": "^7.1.2"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20250115.0",
+		"@react-router/dev": "^7.1.2",
+		"@types/react": "^18.3.18",
+		"@types/react-dom": "^18.3.5",
+		"typescript": "^5.7.3",
+		"vite": "^6.0.11",
+		"vite-tsconfig-paths": "^5.1.4",
+		"wrangler": "^4.50.0"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	}
+}

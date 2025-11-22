@@ -7,9 +7,9 @@
 		"build": "NODE_ENV=production remix vite:build",
 		"dev": "remix vite:dev",
 		"lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
-		"serve": "wrangler dev --local --var DEV_MODE=true",
-		"start": "pnpm serve --port 3000",
-		"buildAndServe": "pnpm build && pnpm serve --port 3000",
+		"serve": "wrangler dev --local --port 3000 --var DEV_MODE=true --inspector-port=9231",
+		"start": "pnpm serve",
+		"buildAndServe": "pnpm build && pnpm serve",
 		"deploy": "wrangler deploy",
 		"types:check": "tsc --noEmit"
 	},
