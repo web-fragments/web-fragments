@@ -8,8 +8,5 @@ export default defineConfig({
 		minify: false,
 		assetsDir: '_fragment/react-router/assets',
 	},
-	plugins: [
-		reactRouter(),
-		tsconfigPaths(),
-	],
+	plugins: [reactRouter(), tsconfigPaths()],
 });

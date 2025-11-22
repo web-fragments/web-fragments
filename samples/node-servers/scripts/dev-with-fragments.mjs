@@ -90,22 +90,17 @@ if (process.stdin) {
 
 console.log('Starting fragments in parallel...');
 for (const fragment of fragments) {
-	spawnProcess(
-		`fragment:${fragment.id}`,
-		PNPM_COMMAND,
-		['--filter', fragment.filter, 'serve'],
-		{ cwd: workspaceRoot, env: { ...process.env, NODE_ENV: 'development' } },
-	);
+	spawnProcess(`fragment:${fragment.id}`, PNPM_COMMAND, ['--filter', fragment.filter, 'serve'], {
+		cwd: workspaceRoot,
+		env: { ...process.env, NODE_ENV: 'development' },
+	});
 }
 
 const serverEntry = serverEntries[serverTarget];
 console.log(`Launching ${serverTarget} server...`);
-const serverProcess = spawnProcess(
-	`server:${serverTarget}`,
-	'node',
-	['--loader', 'ts-node/esm', serverEntry],
-	{ cwd: nodeServersRoot },
-);
+const serverProcess = spawnProcess(`server:${serverTarget}`, 'node', ['--loader', 'ts-node/esm', serverEntry], {
+	cwd: nodeServersRoot,
+});
 
 serverProcess.on('exit', (code, signal) => {
 	if (!shuttingDown) {

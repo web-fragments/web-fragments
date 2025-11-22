@@ -15,8 +15,8 @@ function Root() {
 						<span className="hero-pill">Web API Middleware</span>
 						<h1>Pierced React Sample </h1>
 						<p>
-							This sample showcases two independently built and deployed Remix and Qwik experiences, pierced inside this React host.
-							Choose a framework to see web-fragments in action!
+							This sample showcases two independently built and deployed Remix and Qwik experiences, pierced inside this
+							React host. Choose a framework to see web-fragments in action!
 						</p>
 						<div className="cta-group">
 							<button
@@ -26,7 +26,9 @@ function Root() {
 							>
 								Preload Remix fragment
 							</button>
-							<p className="hint">the history button updates the url without re-rendering, so you can observe piercing behavior.</p>
+							<p className="hint">
+								the history button updates the url without re-rendering, so you can observe piercing behavior.
+							</p>
 							<div className="link-group">
 								<Link className="link-button" to="/remix-page">
 									Open Remix Fragment
@@ -44,7 +46,11 @@ function Root() {
 				</main>
 				<footer className="app-footer">
 					Sample built by the{' '}
-					<a href="https://github.com/web-fragments/web-fragments/graphs/contributors" target="_blank" rel="noopener noreferrer">
+					<a
+						href="https://github.com/web-fragments/web-fragments/graphs/contributors"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
 						web-fragments contributors
 					</a>
 					.
