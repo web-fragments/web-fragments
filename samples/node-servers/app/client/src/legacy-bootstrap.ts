@@ -26,8 +26,7 @@ type FragmentMeta = {
 const fragmentMeta: Record<string, FragmentMeta> = {
 	remix: {
 		heading: 'Web Fragments + Remix',
-		note:
-			'Click the counter or navigate to Remix routes; the Node.js host stays mounted while the fragment handles the new view.',
+		note: 'Click the counter or navigate to Remix routes; the Node.js host stays mounted while the fragment handles the new view.',
 		logos: [
 			{ src: webFragmentsLogo, alt: 'Web Fragments logo' },
 			{ src: remixLogo, alt: 'Remix logo' },
@@ -35,8 +34,7 @@ const fragmentMeta: Record<string, FragmentMeta> = {
 	},
 	qwik: {
 		heading: 'Web Fragments + Qwik',
-		note:
-			'Interactive state updates here are isolated from the Qwik fragment, showcasing safe composition inside the Node.js host.',
+		note: 'Interactive state updates here are isolated from the Qwik fragment, showcasing safe composition inside the Node.js host.',
 		logos: [
 			{ src: webFragmentsLogo, alt: 'Web Fragments logo' },
 			{ src: qwikLogo, alt: 'Qwik logo' },
@@ -56,9 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	main.innerHTML = `
 		<div class="page-shell fragment-page">
 			<div class="fragment-page__logos">
-				${meta.logos
-					.map((logo) => `<img src="${logo.src}" alt="${logo.alt}" loading="lazy" decoding="async" />`)
-					.join('')}
+				${meta.logos.map((logo) => `<img src="${logo.src}" alt="${logo.alt}" loading="lazy" decoding="async" />`).join('')}
 			</div>
 			<h1>${meta.heading}</h1>
 			<p class="hint">${meta.note}</p>
