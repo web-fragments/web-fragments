@@ -1,4 +1,4 @@
-import { MatchFunction, match } from 'path-to-regexp';
+import { match } from 'path-to-regexp';
 
 export class FragmentGateway {
 	private fragmentConfigs: Map<string, FragmentConfig> = new Map();
