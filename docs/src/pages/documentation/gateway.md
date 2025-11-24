@@ -1,6 +1,6 @@
 ---
-title: "Gateway"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Gateway'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: March 19, 2025
@@ -19,7 +19,7 @@ The fragment gateway is implemented as a lightweight middleware that is compatib
 Before a gateway can be installed as a middleware, it needs to be configured.
 
 ```javascript
-import { FragmentGateway } from "web-fragments/gateway";
+import { FragmentGateway } from 'web-fragments/gateway';
 
 const gateway = new FragmentGateway(config);
 ```
@@ -47,10 +47,10 @@ For example a shopping cart application fragment hosted remotely and being fetch
 
 ```javascript
 gateway.registerFragment({
-	fragmentId: "cart",
-	piercingClassNames: ["cart"],
-	routePatterns: ["/_fragment/cart/:_*", "/shop/:_*"],
-	endpoint: "https://mycart.example.com",
+	fragmentId: 'cart',
+	piercingClassNames: ['cart'],
+	routePatterns: ['/_fragment/cart/:_*', '/shop/:_*'],
+	endpoint: 'https://mycart.example.com',
 });
 ```
 

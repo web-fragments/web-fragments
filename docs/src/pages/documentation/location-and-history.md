@@ -1,6 +1,6 @@
 ---
-title: "Shared Location API and History API"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Shared Location API and History API'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: March 17, 2025

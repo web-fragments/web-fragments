@@ -1,59 +1,111 @@
 ---
-import type { ItemGrid as Props } from "~/types";
 import { Icon } from "astro-icon/components";
 import { twMerge } from "tailwind-merge";
 import Button from "./Button.astro";
 
-const { items = [], columns, defaultIcon = "", classes = {} } = Astro.props;
+// ⭐ Add a proper type for itemClasses
+interface ItemClasses {
+  panel?: string;
+  title?: string;
+  description?: string;
+  icon?: string;
+}
+
+interface Item {
+  title?: string;
+  description?: string;
+  icon?: string;
+  callToAction?: any;
+  classes?: ItemClasses;
+}
+
+interface Props {
+  items?: Item[];
+  columns?: number;
+  defaultIcon?: string;
+  classes?: {
+    container?: string;
+    panel?: string;
+    title?: string;
+    description?: string;
+    icon?: string;
+  };
+}
 
 const {
-	container: containerClass = "",
-	// container: containerClass = "sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-	panel: panelClass = "",
-	title: titleClass = "",
-	description: descriptionClass = "",
-	icon: defaultIconClass = "text-primary",
+  items = [],
+  columns,
+  defaultIcon = "",
+  classes = {}
+}: Props = Astro.props;
+
+const {
+  container: containerClass = "full-grid",
+  panel: panelClass = "",
+  title: titleClass = "",
+  description: descriptionClass = "",
+  icon: defaultIconClass = "text-primary",
 } = classes;
+
+const gridClasses = twMerge(
+  `grid grid-cols-1 gap-[20px] ${
+    columns === 4
+      ? "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+      : columns === 3
+        ? "sm:grid-cols-2 lg:grid-cols-3"
+        : columns === 2
+          ? "sm:grid-cols-2"
+          : ""
+  }`,
+  containerClass
+);
+
 ---
 
-{
-	items && (
-		<div
-			class={twMerge(
-				`grid gap-8 gap-x-12 sm:gap-y-8 ${
-					columns === 4
-						? "lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2"
-						: columns === 3
-							? "lg:grid-cols-3 sm:grid-cols-2"
-							: columns === 2
-								? "sm:grid-cols-2 "
-								: ""
-				}`,
-				containerClass,
-			)}
-		>
-			{items.map(({ title, description, icon, callToAction, classes: itemClasses = {} }) => (
-				<div
-					class={twMerge(
-						"relative flex flex-col intersect-once intersect-quarter intercept-no-queue motion-safe:md:opacity-0 motion-safe:md:intersect:animate-fade",
-						panelClass,
-						itemClasses?.panel,
-					)}
-				>
-					{(icon || defaultIcon) && (
-						<Icon name={icon || defaultIcon} class={twMerge("mb-2 w-10 h-10", defaultIconClass, itemClasses?.icon)} />
-					)}
-					<div class={twMerge("text-xl font-bold", titleClass, itemClasses?.title)}>{title}</div>
-					{description && (
-						<p class={twMerge("text-muted mt-2", descriptionClass, itemClasses?.description)} set:html={description} />
-					)}
-					{callToAction && (
-						<div class="mt-2">
-							<Button {...callToAction} />
-						</div>
-					)}
-				</div>
-			))}
-		</div>
-	)
-}
+<div class={gridClasses}>
+  <!-- Render children -->
+  <slot />
+
+  <!-- Render items[] if provided -->
+  {items.length > 0 &&
+    items.map((item) => {
+      const itemClasses: ItemClasses = item.classes ?? {};
+
+      return (
+        <div
+          class={twMerge(
+            "relative flex flex-col intersect-once intersect-quarter intercept-no-queue motion-safe:md:opacity-0 motion-safe:md:intersect:animate-fade",
+            panelClass,
+            itemClasses.panel
+          )}
+        >
+          {(item.icon || defaultIcon) && (
+            <Icon
+              name={item.icon || defaultIcon}
+              class={twMerge("mb-2 w-10 h-10", defaultIconClass, itemClasses.icon)}
+            />
+          )}
+
+          {item.title && (
+            <div class={twMerge("text-xl font-bold", titleClass, itemClasses.title)}>
+              {item.title}
+            </div>
+          )}
+
+          {item.description && (
+            <p
+              class={twMerge("text-muted mt-2", descriptionClass, itemClasses.description)}
+              set:html={item.description}
+            />
+          )}
+
+          {item.callToAction && (
+            <div class="mt-2">
+              <Button {...item.callToAction} />
+            </div>
+          )}
+        </div>
+      );
+    })
+  }
+</div>

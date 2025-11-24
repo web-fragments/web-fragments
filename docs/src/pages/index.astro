@@ -7,6 +7,9 @@ import Features from "~/components/widgets/Features.astro";
 import Features2 from "~/components/widgets/Features2.astro";
 import Steps from "~/components/widgets/Steps.astro";
 import CallToAction from "~/components/widgets/CallToAction.astro";
+import { YouTube } from '@astro-community/astro-embed-youtube';
+import ItemGrid2 from '~/components/ui/ItemGrid2.astro';
+
 
 const metadata = {
 	title: "Web Fragments - A radically new way to do micro-frontends.",
@@ -28,23 +31,28 @@ const metadata = {
 			},
 			{ text: "Why Web Fragments?", href: "#features" },
 		]}
-		image={{
-			src: "~/assets/images/wf_cubes_clean_1024_72.webp",
-			alt: "Web Fragments Hero Image",
-		}}
+
 	>
 		<Fragment slot="title"> Web Fragments are a radically new architecture for micro-frontends. </Fragment>
 
 		<Fragment slot="subtitle">
 			<span class="hidden sm:inline">
-				<span class="font-semibold">Web Fragments</span> allow you to decouple and incrementally migrate a user interface
+				<span class="font-semibold">Web Fragments</span> allow you to decouple and <b>incrementally migrate</b> a user interface
 				to a new stack, in a truly encapsulated, independently deployable and <span class="font-semibold"
 					>fate-sharing-free</span
 				> way.
 			</span>
 		</Fragment>
 	</Hero>
-
+	<ItemGrid2 columns={3}>
+		<YouTube id="JY2Yjy2020I" title="Web Fragments at Scale">
+		</YouTube>
+		<YouTube id="sneufVyPfiY" params="start=5014&end=13637" title="Web-Fragments: Micro-frontends done right?">
+		</YouTube>
+		<YouTube id="Bp_ifR8ljN8" title="A conversation with Red Monk">
+		</YouTube>
+	</ItemGrid2>
+	
 	<!-- Note Widget ******************* -->
 
 	<Note />

@@ -1,6 +1,6 @@
 ---
-title: "Glossary"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Glossary'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 Learning a new framework comes with a lot of new terminology to learn. To make it easier, we have compiled a glossary of terms that are present in our documentation and other content.

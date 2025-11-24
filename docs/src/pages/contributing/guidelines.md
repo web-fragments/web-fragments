@@ -1,6 +1,6 @@
 ---
-title: "Web Fragments Contribution Guidelines"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Web Fragments Contribution Guidelines'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: December 8, 2024

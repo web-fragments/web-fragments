@@ -1,6 +1,6 @@
 ---
-title: "Web Fragments Rationale"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Web Fragments Rationale'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: March 18, 2025

@@ -102,3 +102,8 @@ body section table td code {
 	padding-inline-end: 0.75rem;
 	padding-inline-start: 0.75rem;
 }
+
+.grid.full-grid {
+	max-width: 80%;
+	margin: 0 auto;
+}

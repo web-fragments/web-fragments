@@ -1,6 +1,6 @@
 ---
-title: "Elements"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Elements'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: March 17, 2025
@@ -14,7 +14,7 @@ Additionally, all scripts of the fragment application execute in an isolated Jav
 Before using the Web Fragments on the client-side of an application, the library needs to be initialized via exported `initializeWebFragments()` function:
 
 ```javascript
-import { initializeWebFragments } from "web-fragments";
+import { initializeWebFragments } from 'web-fragments';
 
 initializeWebFragments();
 ```
