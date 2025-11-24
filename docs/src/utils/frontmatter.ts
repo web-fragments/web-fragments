@@ -1,7 +1,7 @@
-import getReadingTime from "reading-time";
-import { toString } from "mdast-util-to-string";
-import { visit } from "unist-util-visit";
-import type { MarkdownAstroData, RehypePlugin, RemarkPlugin } from "@astrojs/markdown-remark";
+import getReadingTime from 'reading-time';
+import { toString } from 'mdast-util-to-string';
+import { visit } from 'unist-util-visit';
+import type { MarkdownAstroData, RehypePlugin, RemarkPlugin } from '@astrojs/markdown-remark';
 
 export const readingTimeRemarkPlugin: RemarkPlugin = () => {
 	return function (tree, file) {
@@ -19,12 +19,12 @@ export const responsiveTablesRehypePlugin: RehypePlugin = () => {
 		for (let i = 0; i < tree.children.length; i++) {
 			const child = tree.children[i];
 
-			if (child.type === "element" && child.tagName === "table") {
+			if (child.type === 'element' && child.tagName === 'table') {
 				tree.children[i] = {
-					type: "element",
-					tagName: "div",
+					type: 'element',
+					tagName: 'div',
 					properties: {
-						style: "overflow:auto",
+						style: 'overflow:auto',
 					},
 					children: [child],
 				};
@@ -39,9 +39,9 @@ export const lazyImagesRehypePlugin: RehypePlugin = () => {
 	return function (tree) {
 		if (!tree.children) return;
 
-		visit(tree, "element", function (node) {
-			if (node.tagName === "img") {
-				node.properties.loading = "lazy";
+		visit(tree, 'element', function (node) {
+			if (node.tagName === 'img') {
+				node.properties.loading = 'lazy';
 			}
 		});
 	};

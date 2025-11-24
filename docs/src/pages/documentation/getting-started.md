@@ -1,6 +1,6 @@
 ---
-title: "Getting Started with Web Fragments"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Getting Started with Web Fragments'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: March 17, 2025
@@ -34,7 +34,7 @@ Note: Is your existing frontend app not an npm/JavaScript project? You can still
 Initialize the web fragments library in the bootstrap client-side code of your existing application:
 
 ```js
-import { initializeWebFragments } from "web-fragments";
+import { initializeWebFragments } from 'web-fragments';
 
 initializeWebFragments();
 ```
@@ -64,7 +64,7 @@ This enables us to reap the performance and maintenance benefits of operating th
 For the gateway to understand how to route your web fragment's requests, the fragment needs to be registered.
 
 ```js
-import { FragmentGateway } from "web-fragments/gateway";
+import { FragmentGateway } from 'web-fragments/gateway';
 
 // initialize the gateway
 const myGateway = new FragmentGateway();
@@ -72,14 +72,14 @@ const myGateway = new FragmentGateway();
 // register our fragment
 myGateway.registerFragment({
 	// a unique ID of the fragment
-	fragmentId: "party-button",
+	fragmentId: 'party-button',
 	piercingClassNames: [],
-	endpoint: "https://party-button.demos.web-fragments.dev",
+	endpoint: 'https://party-button.demos.web-fragments.dev',
 	routePatterns: [
 		// url pattern for fetching all assets of this fragment, this pattern is determined by the fragment and should be unique:
-		"/__wf/dev.web-fragments.demos.party-button/:_*",
+		'/__wf/dev.web-fragments.demos.party-button/:_*',
 		// routable url in the final application where this fragment will be initialized (adjust as needed per step 2c):
-		"/",
+		'/',
 	],
 });
 ```
@@ -99,7 +99,7 @@ If your existing application already has a middleware infrastructure, or it is d
 For Web ([Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)) based middleware systems obtain a Web compatible middleware function and integrate it into your application:
 
 ```js
-import { getWebMiddleware } from "web-fragments/middleware";
+import { getWebMiddleware } from 'web-fragments/middleware';
 
 const middleware = getWebMiddleware(myGateway);
 
@@ -116,7 +116,7 @@ See also: [Cloudflare Pages example](https://github.com/web-fragments/web-fragme
 For Node.js-based middleware systems like `express` or `connect` obtain a Node-compatible middleware function and integrate it into
 
 ```js
-import { getNodeMiddleware } from "web-fragments/gateway/node";
+import { getNodeMiddleware } from 'web-fragments/gateway/node';
 
 const app = express();
 

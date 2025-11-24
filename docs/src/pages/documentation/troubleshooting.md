@@ -1,6 +1,6 @@
 ---
-title: "Web Fragments Troubleshooting"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Web Fragments Troubleshooting'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: March 19, 2025

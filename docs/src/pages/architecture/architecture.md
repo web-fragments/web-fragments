@@ -1,6 +1,6 @@
 ---
-title: "Web Fragments Architecture"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Web Fragments Architecture'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: March 13, 2025

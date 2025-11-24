@@ -1,6 +1,6 @@
 ---
-title: "Broadcasting events and communicating state"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Broadcasting events and communicating state'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: March 13, 2025
@@ -19,8 +19,8 @@ Assume a catalog or product list as a first fragment and a shopping cart as a se
 
 ```javascript
 // fragment A - post (broadcast) message
-const bc = new BroadcastChannel("/cart");
-bc.postMessage({ type: "cart_cleared" });
+const bc = new BroadcastChannel('/cart');
+bc.postMessage({ type: 'cart_cleared' });
 bc.close();
 ```
 

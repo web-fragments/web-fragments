@@ -1,16 +1,16 @@
 site:
   name: Web Fragments
-  site: "https://github.com/web-fragments/web-fragments"
-  base: "/"
+  site: 'https://github.com/web-fragments/web-fragments'
+  base: '/'
   trailingSlash: false
 
-  googleSiteVerificationId: ""
+  googleSiteVerificationId: ''
 
 # Default SEO metadata
 metadata:
   title:
     default: Web Fragments
-    template: "%s"
+    template: '%s'
   description: "\U0001F680 An incremental, low-risk, high ROI approach, to building micro-frontends."
   robots:
     index: true
@@ -18,13 +18,13 @@ metadata:
   openGraph:
     site_name: Web Fragments
     images:
-      - url: "~/assets/images/wf_cubes_clean_1024_72.webp"
+      - url: '~/assets/images/wf_cubes_clean_1024_72.webp'
         width: 1200
         height: 628
     type: website
   twitter:
-    handle: "@IgorMinar"
-    site: "igor.dev"
+    handle: '@IgorMinar'
+    site: 'igor.dev'
     cardType: summary_large_image
 
 i18n:
@@ -39,4 +39,4 @@ analytics:
       id: null # or "G-XXXXXXXXXX"
 
 ui:
-  theme: "system" # Values: "system" | "light" | "dark" | "light:only" | "dark:only"
+  theme: 'system' # Values: "system" | "light" | "dark" | "light:only" | "dark:only"

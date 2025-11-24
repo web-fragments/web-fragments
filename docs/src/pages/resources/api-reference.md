@@ -1,6 +1,6 @@
 ---
-title: "Web Fragments full API reference"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Web Fragments full API reference'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: March 19, 2024

@@ -1,6 +1,6 @@
 ---
-title: "Reframing"
-layout: "~/layouts/MarkdownLayout.astro"
+title: 'Reframing'
+layout: '~/layouts/MarkdownLayout.astro'
 ---
 
 _Last updated_: Oct 26, 2025
