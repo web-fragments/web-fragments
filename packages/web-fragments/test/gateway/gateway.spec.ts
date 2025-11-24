@@ -853,9 +853,7 @@ for (const environment of environments) {
 					}),
 				);
 
-				const compressedResponse = await testRequest(
-					new Request('http://localhost/_fragment/foo/compressed.js'),
-				);
+				const compressedResponse = await testRequest(new Request('http://localhost/_fragment/foo/compressed.js'));
 
 				expect(compressedResponse.status).toBe(200);
 				expect(compressedResponse.headers.get('content-length')).toBe('128');
@@ -876,9 +874,7 @@ for (const environment of environments) {
 				);
 
 				try {
-					const normalizedResponse = await testRequest(
-						new Request('http://localhost/_fragment/foo/compressed.js'),
-					);
+					const normalizedResponse = await testRequest(new Request('http://localhost/_fragment/foo/compressed.js'));
 
 					expect(normalizedResponse.status).toBe(200);
 					expect(normalizedResponse.headers.get('content-encoding')).toBe('identity');
@@ -903,9 +899,7 @@ for (const environment of environments) {
 				);
 
 				try {
-					const guardedResponse = await testRequest(
-						new Request('http://localhost/_fragment/foo/compressed.js'),
-					);
+					const guardedResponse = await testRequest(new Request('http://localhost/_fragment/foo/compressed.js'));
 
 					expect(guardedResponse.status).toBe(200);
 					expect(guardedResponse.headers.get('content-length')).toBe('128');
@@ -925,9 +919,7 @@ for (const environment of environments) {
 					}),
 				);
 
-				const plainResponse = await testRequest(
-					new Request('http://localhost/_fragment/foo/plain.json'),
-				);
+				const plainResponse = await testRequest(new Request('http://localhost/_fragment/foo/plain.json'));
 
 				expect(plainResponse.status).toBe(200);
 				expect(plainResponse.headers.get('content-encoding')).toBeNull();
@@ -947,9 +939,7 @@ for (const environment of environments) {
 				);
 
 				try {
-					const plainResponse = await testRequest(
-						new Request('http://localhost/_fragment/foo/plain.json'),
-					);
+					const plainResponse = await testRequest(new Request('http://localhost/_fragment/foo/plain.json'));
 
 					expect(plainResponse.status).toBe(200);
 					expect(plainResponse.headers.get('content-encoding')).toBe('identity');
