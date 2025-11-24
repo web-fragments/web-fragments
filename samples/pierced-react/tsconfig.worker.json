@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"composite": true,
+		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.worker.tsbuildinfo",
+		"lib": ["ESNext"],
+		"skipLibCheck": true,
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"allowSyntheticDefaultImports": true,
+		"strict": true,
+		"noEmit": true,
+		"types": ["@cloudflare/workers-types"]
+	},
+	"include": ["src/worker.ts"]
+}

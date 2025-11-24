@@ -1,9 +1,9 @@
 packages:
   - docs
   - packages/**
-  - e2e/*
-  - e2e/*/fragments/*
-  - e2e/node-servers/**/*
+  - samples/*
+  - samples/*/fragments/*
+  - samples/node-servers/**/*
 
 catalog:
   typescript: 5.5.4

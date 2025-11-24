@@ -7,6 +7,15 @@ _Last updated_: March 17, 2025
 
 Getting started with Web Fragments is easy.
 
+### Explore sample demos
+
+You can explore the sample demos bundled with this repository to see Web Fragments in action:
+
+| Link to sample                                                                                                 | Runtime        | API                                                                   | Platforms                        |
+| -------------------------------------------------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------- | -------------------------------- |
+| [Pierced React host](https://github.com/web-fragments/web-fragments/blob/main/samples/pierced-react/README.md) | Edge worker    | [Web Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API) | Cloudflare Workers, Netlify Edge |
+| [Node server samples](https://github.com/web-fragments/web-fragments/blob/main/samples/node-servers/README.md) | Node.js server | Node.js HTTP APIs (Express, Connect)                                  | Any Node.js runtime              |
+
 ## 1. Create a new web fragment
 
 Web fragment is a standalone application built with any web tech stack and deployed anywhere as a regular HTTP endpoint that serves HTML, static assets, and if required by the application, also handles form submissions, data requests, and other kinds of HTTP requests.
@@ -111,7 +120,7 @@ const middleware = getWebMiddleware(myGateway);
 // - Hono: https://hono.dev/docs/guides/middleware
 ```
 
-See also: [Cloudflare Pages example](https://github.com/web-fragments/web-fragments/blob/main/e2e/pierced-react/functions/_middleware.ts)
+See also: [Cloudflare Pages example](https://github.com/web-fragments/web-fragments/blob/main/samples/pierced-react/functions/_middleware.ts)
 
 For Node.js-based middleware systems like `express` or `connect` obtain a Node-compatible middleware function and integrate it into
 
@@ -123,7 +132,7 @@ const app = express();
 app.use(getNodeMiddleware(myGateway));
 ```
 
-See also: [express example](https://github.com/web-fragments/web-fragments/blob/main/e2e/node-servers/app/server/src/express.ts) or [connect example](https://github.com/web-fragments/web-fragments/blob/main/e2e/node-servers/app/server/src/connect.ts)
+See also: [express example](https://github.com/web-fragments/web-fragments/blob/main/samples/node-servers/app/server/src/express.ts) or [connect example](https://github.com/web-fragments/web-fragments/blob/main/samples/node-servers/app/server/src/connect.ts)
 
 ### f. Build and deploy
 
