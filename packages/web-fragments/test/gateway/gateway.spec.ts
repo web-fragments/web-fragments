@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FragmentGateway } from '../../src/gateway/fragment-gateway';
 import { getNodeMiddleware } from '../../src/gateway/middleware/node';
-import { getWebMiddleware } from '../../src/gateway/middleware/web';
+import * as webMiddlewareModule from '../../src/gateway/middleware/web';
 import connect from 'connect';
 import express from 'express';
 import http from 'node:http';
 import stream from 'node:stream';
 import streamWeb from 'node:stream/web';
+
+const { getWebMiddleware } = webMiddlewareModule;
 
 // comment out some environments if you want to focus on testing just one or a few
 const environments = [];
@@ -837,6 +839,124 @@ for (const environment of environments) {
 				expect(await barImgResponse.text()).toBe(`bar cat img`);
 				expect(barImgResponse.headers.get('content-type')).toBe('image/jpeg');
 				expect(barImgResponse.headers.get('x-web-fragment-id')).toBe('fragmentBar');
+			});
+
+			it(`should preserve compressed fragment asset content-length by default`, async () => {
+				mockFragmentFooResponse(
+					'/_fragment/foo/compressed.js',
+					new Response('console.log("compressed")', {
+						headers: {
+							'content-type': 'application/javascript',
+							'content-encoding': 'gzip',
+							'content-length': '128',
+						},
+					}),
+				);
+
+				const compressedResponse = await testRequest(
+					new Request('http://localhost/_fragment/foo/compressed.js'),
+				);
+
+				expect(compressedResponse.status).toBe(200);
+				expect(compressedResponse.headers.get('content-length')).toBe('128');
+				expect(compressedResponse.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
+			});
+
+			it(`should normalize compressed fragment assets when eager decoding guard returns true`, async () => {
+				webMiddlewareModule.setEagerDecodingRuntimeOverride(true);
+				mockFragmentFooResponse(
+					'/_fragment/foo/compressed.js',
+					new Response('console.log("compressed")', {
+						headers: {
+							'content-type': 'application/javascript',
+							'content-encoding': 'gzip',
+							'content-length': '128',
+						},
+					}),
+				);
+
+				try {
+					const normalizedResponse = await testRequest(
+						new Request('http://localhost/_fragment/foo/compressed.js'),
+					);
+
+					expect(normalizedResponse.status).toBe(200);
+					expect(normalizedResponse.headers.get('content-encoding')).toBe('identity');
+					expect(normalizedResponse.headers.get('content-length')).toBeNull();
+					expect(normalizedResponse.headers.get('x-web-fragment-id')).toBe('fragmentFoo');
+				} finally {
+					webMiddlewareModule.setEagerDecodingRuntimeOverride(null);
+				}
+			});
+
+			it(`should keep fragment encoding when eager decoding guard override is false`, async () => {
+				webMiddlewareModule.setEagerDecodingRuntimeOverride(false);
+				mockFragmentFooResponse(
+					'/_fragment/foo/compressed.js',
+					new Response('console.log("compressed")', {
+						headers: {
+							'content-type': 'application/javascript',
+							'content-encoding': 'gzip',
+							'content-length': '128',
+						},
+					}),
+				);
+
+				try {
+					const guardedResponse = await testRequest(
+						new Request('http://localhost/_fragment/foo/compressed.js'),
+					);
+
+					expect(guardedResponse.status).toBe(200);
+					expect(guardedResponse.headers.get('content-length')).toBe('128');
+				} finally {
+					webMiddlewareModule.setEagerDecodingRuntimeOverride(null);
+				}
+			});
+
+			it(`should leave fragment encoding unset by default when the origin omits it`, async () => {
+				mockFragmentFooResponse(
+					'/_fragment/foo/plain.json',
+					new Response('{"ok":true}', {
+						headers: {
+							'content-type': 'application/json',
+							'cache-control': 'max-age=60',
+						},
+					}),
+				);
+
+				const plainResponse = await testRequest(
+					new Request('http://localhost/_fragment/foo/plain.json'),
+				);
+
+				expect(plainResponse.status).toBe(200);
+				expect(plainResponse.headers.get('content-encoding')).toBeNull();
+				expect(plainResponse.headers.get('content-length')).toBeNull();
+			});
+
+			it(`should advertise identity encoding when fragments omit it and eager decoding guard returns true`, async () => {
+				webMiddlewareModule.setEagerDecodingRuntimeOverride(true);
+				mockFragmentFooResponse(
+					'/_fragment/foo/plain.json',
+					new Response('{"ok":true}', {
+						headers: {
+							'content-type': 'application/json',
+							'cache-control': 'max-age=60',
+						},
+					}),
+				);
+
+				try {
+					const plainResponse = await testRequest(
+						new Request('http://localhost/_fragment/foo/plain.json'),
+					);
+
+					expect(plainResponse.status).toBe(200);
+					expect(plainResponse.headers.get('content-encoding')).toBe('identity');
+					expect(plainResponse.headers.get('content-length')).toBeNull();
+				} finally {
+					webMiddlewareModule.setEagerDecodingRuntimeOverride(null);
+				}
 			});
 
 			it(`should serve unmodified redirect responses`, async () => {
