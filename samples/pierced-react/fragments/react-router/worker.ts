@@ -62,7 +62,10 @@ export default {
 			waitUntil: ctx.waitUntil.bind(ctx),
 			passThroughOnException: ctx.passThroughOnException.bind(ctx),
 			next: ((input?: Request | string, init?: RequestInit) =>
-				fetch((input ?? request) as unknown as globalThis.RequestInfo, init as unknown as globalThis.RequestInit)) as unknown as CloudflareEvent['next'],
+				fetch(
+					(input ?? request) as unknown as globalThis.RequestInfo,
+					init as unknown as globalThis.RequestInit,
+				)) as unknown as CloudflareEvent['next'],
 			env: {
 				...env,
 				ASSETS: {
