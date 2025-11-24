@@ -393,12 +393,29 @@ export function getWebMiddleware(
 	}
 }
 
+let eagerDecodingRuntimeOverride: boolean | null = null;
+
+export function setEagerDecodingRuntimeOverride(value: boolean | null): void {
+	eagerDecodingRuntimeOverride = value;
+}
+
+export function isEagerDecodingRuntime(): boolean {
+	if (eagerDecodingRuntimeOverride !== null) {
+		return eagerDecodingRuntimeOverride;
+	}
+	return false;
+}
+
 function enforceIdentityEncoding(response: Response) {
+	if (!isEagerDecodingRuntime()) {
+		return;
+	}
 	// Normalizes fragment responses to advertise identity encoding. This prevents browsers from
 	// attempting to decompress bodies that Node/Miniflare already expanded on our behalf, which would
 	// otherwise trigger `ERR_CONTENT_DECODING_FAILED` during iframe bootstraps and dynamic imports.
+
 	// It also avoids stale Content-Length headers that no longer match the uncompressed payload when
-	// fragments are served through reverse proxies that transparently decode gzip/br streams.
+	// fragments are served through reverse proxies that transparently decode gzip/br streams (please note that Node.js Undici and Miniflare both eagerly uncompress but do not update the header, leading to a duplicated decompression attempt from the browser).
 	const contentEncoding = response.headers.get('content-encoding');
 	if (contentEncoding && contentEncoding !== 'identity') {
 		response.headers.set('content-encoding', 'identity');
