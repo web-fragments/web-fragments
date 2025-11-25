@@ -1,9 +1,8 @@
 ---
 title: 'Web Fragments Troubleshooting'
 layout: '~/layouts/MarkdownLayout.astro'
+updateDate: 2025-03-19
 ---
-
-_Last updated_: March 19, 2025
 
 ## Common errors
 

@@ -1,9 +1,8 @@
 ---
 title: 'Getting Started with Web Fragments'
 layout: '~/layouts/MarkdownLayout.astro'
+updateDate: 2025-03-17
 ---
-
-_Last updated_: March 17, 2025
 
 Getting started with Web Fragments is easy.
 

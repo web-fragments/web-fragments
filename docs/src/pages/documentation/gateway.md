@@ -1,9 +1,8 @@
 ---
 title: 'Gateway'
 layout: '~/layouts/MarkdownLayout.astro'
+updateDate: 2025-03-19
 ---
-
-_Last updated_: March 19, 2025
 
 ## What is the Fragments Gateway
 

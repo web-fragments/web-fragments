@@ -1,9 +1,8 @@
 ---
 title: 'Elements'
 layout: '~/layouts/MarkdownLayout.astro'
+updateDate: 2025-03-17
 ---
-
-_Last updated_: March 17, 2025
 
 Web Fragments uses `custom elements` as an implementation detail to embed applications in an existing user-interface. By using custom elements keep the implementation lightweight and benefit from using `shadowRoot` for style encapsulation.
 

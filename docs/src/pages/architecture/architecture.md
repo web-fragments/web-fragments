@@ -1,9 +1,8 @@
 ---
 title: 'Web Fragments Architecture'
 layout: '~/layouts/MarkdownLayout.astro'
+updateDate: 2025-03-13
 ---
-
-_Last updated_: March 13, 2025
 
 The Web Fragments architecture aims to be lightweight and do the minimum to enable composition and isolation of Web UIs.
 
