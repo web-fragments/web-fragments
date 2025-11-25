@@ -1,9 +1,9 @@
 ---
-import { Icon } from "astro-icon/components";
-import Layout from "~/layouts/PageLayout.astro";
-import { getFormattedDate } from "~/utils/utils";
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import { getFormattedDate } from '~/utils/utils';
 
-import type { MetaData } from "~/types";
+import type { MetaData } from '~/types';
 
 export interface Props {
 	frontmatter: {
@@ -36,18 +36,14 @@ const updateDate = frontmatter.updateDate ? new Date(frontmatter.updateDate) : u
 						<p class="flex items-center gap-1">
 							<Icon name="tabler:calendar" class="w-4 h-4" />
 							<span>Published: </span>
-							<time datetime={String(publishDate)}>
-								{getFormattedDate(publishDate)}
-							</time>
+							<time datetime={String(publishDate)}>{getFormattedDate(publishDate)}</time>
 						</p>
 					)}
 					{updateDate && (
 						<p class="flex items-center gap-1">
 							<Icon name="tabler:refresh" class="w-4 h-4" />
 							<span>Updated: </span>
-							<time datetime={String(updateDate)}>
-								{getFormattedDate(updateDate)}
-							</time>
+							<time datetime={String(updateDate)}>{getFormattedDate(updateDate)}</time>
 						</p>
 					)}
 				</div>
