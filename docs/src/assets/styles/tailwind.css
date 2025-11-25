@@ -26,16 +26,98 @@
 	}
 
 	.btn-primary {
-		@apply btn font-semibold bg-primary text-white border-primary hover:bg-secondary hover:border-secondary hover:text-white dark:text-white dark:bg-primary dark:border-primary dark:hover:border-secondary dark:hover:bg-secondary;
+		@apply btn font-semibold text-white border-0 dark:text-white;
+		border: 1px solid rgba(90, 184, 255, 0.35);
+		background: linear-gradient(120deg, var(--aw-color-primary) 0%, var(--aw-color-accent) 100%);
+		box-shadow: 0 18px 30px rgba(1, 84, 207, 0.42);
+		transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+	}
+
+	.btn-primary:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 26px 40px rgba(1, 84, 207, 0.45);
+		filter: brightness(1.05);
+		background: linear-gradient(120deg, var(--aw-color-primary) 0%, var(--aw-color-accent) 100%);
+	}
+
+	.btn-primary:focus,
+	.btn-primary:focus-visible {
+		outline: 3px solid rgba(1, 97, 239, 0.55);
+		outline-offset: 2px;
 	}
 
 	.btn-secondary {
-		@apply btn;
+		@apply btn relative;
+		z-index: 1;
+	}
+
+	.btn-secondary::before {
+		content: '';
+		position: absolute;
+		inset: -2px;
+		background: linear-gradient(120deg, var(--aw-color-primary) 0%, var(--aw-color-accent) 100%);
+		border-radius: 9999px;
+		z-index: -1;
+		opacity: 0.4;
+		filter: blur(12px);
+		transition: opacity 0.2s ease, filter 0.2s ease;
+	}
+
+	.btn-secondary:hover::before {
+		opacity: 0.6;
+		filter: blur(16px);
 	}
 
 	.btn-tertiary {
 		@apply btn border-none shadow-none text-muted hover:text-gray-900 dark:text-gray-400 dark:hover:text-white;
 	}
+
+	/* Gradient background utility */
+	.bg-gradient-primary {
+		background: linear-gradient(120deg, var(--aw-color-primary) 0%, var(--aw-color-accent) 100%);
+	}
+
+	/* Glow panel for Features2 tiles */
+	.glow-panel {
+		position: relative;
+	}
+
+	.glow-panel::before {
+		content: '';
+		position: absolute;
+		inset: -4px;
+		background: linear-gradient(120deg, var(--aw-color-primary) 0%, var(--aw-color-accent) 100%);
+		border-radius: 12px;
+		z-index: -1;
+		opacity: 0.25;
+		filter: blur(16px);
+		transition: opacity 0.3s ease, filter 0.3s ease;
+	}
+
+	.glow-panel:hover::before {
+		opacity: 0.4;
+		filter: blur(20px);
+	}
+}
+
+/* Header glow effect */
+#header::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 60%;
+	height: 100%;
+	background: linear-gradient(120deg, var(--aw-color-primary) 0%, var(--aw-color-accent) 100%);
+	opacity: 0.15;
+	filter: blur(40px);
+	z-index: -1;
+	pointer-events: none;
+}
+
+.dark #header::before {
+	opacity: 0.25;
 }
 
 #header.scroll > div:first-child {
