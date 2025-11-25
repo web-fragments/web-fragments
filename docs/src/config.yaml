@@ -32,6 +32,8 @@ i18n:
   textDirection: ltr
 
 apps:
+  blog:
+    isEnabled: true
 
 analytics:
   vendors:
