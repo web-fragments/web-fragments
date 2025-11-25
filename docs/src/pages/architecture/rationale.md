@@ -1,9 +1,8 @@
 ---
 title: 'Web Fragments Rationale'
 layout: '~/layouts/MarkdownLayout.astro'
+updateDate: 2025-03-18
 ---
-
-_Last updated_: March 18, 2025
 
 ## What's radically different about Web Fragments?
 

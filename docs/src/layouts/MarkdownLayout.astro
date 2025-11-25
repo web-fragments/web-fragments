@@ -1,11 +1,15 @@
 ---
+import { Icon } from "astro-icon/components";
 import Layout from "~/layouts/PageLayout.astro";
+import { getFormattedDate } from "~/utils/utils";
 
 import type { MetaData } from "~/types";
 
 export interface Props {
 	frontmatter: {
 		title?: string;
+		publishDate?: Date | string;
+		updateDate?: Date | string;
 	};
 }
 
@@ -14,6 +18,10 @@ const { frontmatter } = Astro.props;
 const metadata: MetaData = {
 	title: frontmatter?.title,
 };
+
+// Convert string dates to Date objects
+const publishDate = frontmatter.publishDate ? new Date(frontmatter.publishDate) : undefined;
+const updateDate = frontmatter.updateDate ? new Date(frontmatter.updateDate) : undefined;
 ---
 
 <Layout metadata={metadata}>
@@ -21,6 +29,30 @@ const metadata: MetaData = {
 		<h1 class="font-bold font-heading text-4xl md:text-5xl leading-tighter tracking-tighter">
 			{frontmatter.title}
 		</h1>
+		{
+			(publishDate || updateDate) && (
+				<div class="flex items-center gap-4 mt-4 text-sm text-muted dark:text-slate-400">
+					{publishDate && (
+						<p class="flex items-center gap-1">
+							<Icon name="tabler:calendar" class="w-4 h-4" />
+							<span>Published: </span>
+							<time datetime={String(publishDate)}>
+								{getFormattedDate(publishDate)}
+							</time>
+						</p>
+					)}
+					{updateDate && (
+						<p class="flex items-center gap-1">
+							<Icon name="tabler:refresh" class="w-4 h-4" />
+							<span>Updated: </span>
+							<time datetime={String(updateDate)}>
+								{getFormattedDate(updateDate)}
+							</time>
+						</p>
+					)}
+				</div>
+			)
+		}
 		<div
 			class="mx-auto prose prose-lg max-w-4xl dark:prose-invert dark:prose-headings:text-slate-300 prose-md prose-headings:font-heading prose-headings:leading-tighter prose-headings:tracking-tighter prose-headings:font-bold prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-img:rounded-md prose-img:shadow-lg mt-8"
 		>

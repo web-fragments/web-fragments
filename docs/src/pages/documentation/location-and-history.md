@@ -1,9 +1,8 @@
 ---
 title: 'Shared Location API and History API'
 layout: '~/layouts/MarkdownLayout.astro'
+updateDate: 2025-03-17
 ---
-
-_Last updated_: March 17, 2025
 
 ## Web fragments and browser location and history
 

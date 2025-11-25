@@ -1,9 +1,8 @@
 ---
 title: 'Reframing'
 layout: '~/layouts/MarkdownLayout.astro'
+updateDate: 2025-10-26
 ---
-
-_Last updated_: Oct 26, 2025
 
 Reframing is a JavaScript and DOM virtualization technique unique to Web Fragments that provides isolation and encapsulation of an application running as a fragment, and prevents JavaScript collisions among fragments, and between the host application and fragments.
 
