@@ -75,6 +75,10 @@ export const footerData = {
 					text: 'Enterprise Sample',
 					href: 'https://github.com/anfibiacreativa/web-fragments-react-migration-path',
 				},
+				{
+					text: 'Join our Discord',
+					href: 'https://discord.com/invite/dcgA8YxyCb',
+				},
 				{ text: 'Microfrontend.dev', href: 'https://www.microfrontend.dev' },
 			],
 		},
@@ -98,6 +102,11 @@ export const footerData = {
 			ariaLabel: 'Github',
 			icon: 'tabler:brand-github',
 			href: 'https://github.com/web-fragments/web-fragments',
+		},
+		{
+			ariaLabel: 'Discord',
+			icon: 'tabler:brand-discord',
+			href: 'https://discord.com/invite/dcgA8YxyCb',
 		},
 	],
 	footNote: `
