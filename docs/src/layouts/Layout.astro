@@ -11,6 +11,7 @@ import Metadata from "~/components/common/Metadata.astro";
 import SiteVerification from "~/components/common/SiteVerification.astro";
 import Analytics from "~/components/common/Analytics.astro";
 import BasicScripts from "~/components/common/BasicScripts.astro";
+import CookieConsent from "~/components/common/CookieConsent.astro";
 
 // Comment the line below to disable View Transitions
 import { ViewTransitions } from "astro:transitions";
@@ -43,6 +44,7 @@ const { language, textDirection } = I18N;
 	<body class="antialiased text-default bg-page tracking-tight">
 		<slot />
 
+		<CookieConsent />
 		<BasicScripts />
 	</body>
 </html>

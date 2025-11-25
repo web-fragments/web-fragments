@@ -1,0 +1,64 @@
+---
+---
+
+<div
+  id="cookie-consent"
+  class="fixed bottom-4 right-4 z-50 max-w-sm bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 p-4 transform translate-y-full opacity-0 transition-all duration-300"
+>
+  <h3 class="font-bold text-lg mb-2 dark:text-white">Cookies</h3>
+  <p class="text-sm text-gray-600 dark:text-slate-300 mb-4">
+    This site uses minimal cookies purely for experience continuity. Choose Accept to continue or Decline to clear and disable them.
+  </p>
+  <div class="flex gap-2">
+    <button
+      id="cookie-accept"
+      class="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
+    >
+      Accept
+    </button>
+    <button
+      id="cookie-decline"
+      class="flex-1 px-4 py-2 bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-white rounded-md hover:bg-gray-300 dark:hover:bg-slate-500 transition-colors text-sm font-medium"
+    >
+      Decline
+    </button>
+  </div>
+</div>
+
+<script is:inline>
+  (function() {
+    const consent = localStorage.getItem('cookie-consent');
+    const banner = document.getElementById('cookie-consent');
+    
+    if (!consent && banner) {
+      // Show the banner with animation
+      setTimeout(() => {
+        banner.classList.remove('translate-y-full', 'opacity-0');
+      }, 1000);
+    }
+
+    document.getElementById('cookie-accept')?.addEventListener('click', () => {
+      localStorage.setItem('cookie-consent', 'accepted');
+      hideBanner();
+    });
+
+    document.getElementById('cookie-decline')?.addEventListener('click', () => {
+      localStorage.setItem('cookie-consent', 'declined');
+      // Clear any existing cookies
+      document.cookie.split(';').forEach((c) => {
+        document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
+      });
+      hideBanner();
+    });
+
+    function hideBanner() {
+      const banner = document.getElementById('cookie-consent');
+      if (banner) {
+        banner.classList.add('translate-y-full', 'opacity-0');
+        setTimeout(() => {
+          banner.style.display = 'none';
+        }, 300);
+      }
+    }
+  })();
+</script>
