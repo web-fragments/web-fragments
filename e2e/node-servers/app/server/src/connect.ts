@@ -54,6 +54,13 @@ gateway.registerFragment({
     }),
 });
 
+gateway.registerFragment({
+	fragmentId: 'party-button',
+	prePiercingClassNames: [],
+	routePatterns: ['/__wf/dev.web-fragments.demos.party-button/:_*'],
+	endpoint: 'https://party-button.demos.web-fragments.dev/',
+});
+
 app.use(getNodeMiddleware(gateway, { mode: 'development' }));
 
 
