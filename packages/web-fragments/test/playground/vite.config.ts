@@ -156,6 +156,18 @@ async function getFragmentGatewayMiddleware(getServerUrl: () => string) {
 		// Otherwise http request hang and no responses are ever sent in spite of the adapter flushing them to Node.
 		delete req.headers['accept-encoding'];
 
+		// Handle data-fetching API requests for testing reframedFetch headers
+		if (req.url === '/data-fetching/api') {
+			res.setHeader('Content-Type', 'application/json');
+			res.statusCode = 200;
+			const responseData = {
+				headers: req.headers,
+				timestamp: new Date().toISOString(),
+			};
+			res.end(JSON.stringify(responseData, null, 2));
+			return;
+		}
+
 		// If the request is from the gateway middleware then bypass the gateway middleware and serve the request from Vite directly.
 		// There isn't conclusive way to identify requests from the gateway, but this combo should do for now.
 
