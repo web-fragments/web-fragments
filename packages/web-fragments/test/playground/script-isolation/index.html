@@ -13,9 +13,8 @@
 		<h1>WF Playground: script-isolation</h1>
 		<hr />
 		<web-fragment fragment-id="script-isolation"></web-fragment>
-		<!-- TODO: disabled for now since we don't support standalone fragments -->
-		<!-- <web-fragment src="/script-isolation/fragment-b"></web-fragment> -->
 		<web-fragment fragment-id="script-isolation2"></web-fragment>
+		<web-fragment fragment-id="script-isolation3" src="/script-isolation/fragment-b"></web-fragment>
 		<script type="module">
 			import { initializeWebFragments } from 'web-fragments';
 			initializeWebFragments();
