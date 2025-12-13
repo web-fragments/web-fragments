@@ -4,6 +4,7 @@
 
 import { FragmentGateway, FragmentMiddlewareOptions, FragmentConfig, FragmentGatewayConfig } from '../fragment-gateway';
 import { HTMLRewriter } from 'htmlrewriter';
+import { WebFragmentError } from '../../_utils/web-fragment-error';
 
 const isNativeHtmlRewriter = HTMLRewriter.toString().endsWith('{ [native code] }');
 
@@ -23,6 +24,15 @@ export function getWebMiddleware(
 		const { pathname, search = '' } = new URL(request.url);
 		const requestFragmentId = request.headers.get('x-web-fragment-id') ?? undefined;
 		const matchedFragment = gateway.matchRequestToFragment(`${pathname}${search}`, requestFragmentId);
+
+		if (matchedFragment instanceof WebFragmentError) {
+			return Response.json(
+				{ error: matchedFragment.message },
+				{ status: 400, statusText: 'Bad Request', headers: { Vary: 'sec-fetch-dest' } },
+			);
+		}
+
+		console.log('matchedFragment', matchedFragment);
 
 		/**
 		 * Handle app shell (legacy app) requests
