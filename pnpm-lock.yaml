@@ -423,8 +423,8 @@ importers:
         specifier: 'catalog:'
         version: 3.0.5(@types/debug@4.1.12)(@types/node@20.14.10)(lightningcss@1.27.0)(terser@5.34.1)
       writable-dom:
-        specifier: github:web-fragments/writable-dom#build-improvements
-        version: https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6
+        specifier: ^1.0.6
+        version: 1.0.6
 
   packages/web-fragments/test/gateway:
     devDependencies:
@@ -9202,9 +9202,8 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6:
-    resolution: {tarball: https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6}
-    version: 1.0.0
+  writable-dom@1.0.6:
+    resolution: {integrity: sha512-sky15kmZw2kQXP9n4GOCeO8orSI61A9z9l6NGrbHRiWiUJnUVjHcSTrVKa9Av3lF97eYy87efFCmTnIg1dgRUg==}
 
   ws@7.5.10:
     resolution: {integrity: sha512-+dbF1tHwZpXcbOJdVOkzLDxZP1ailvSxM6ZweXTegylPny803bFhA+vqBYw4s31NSAk4S2Qz+AKXK9a4wkdjcQ==}
@@ -20071,7 +20070,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  writable-dom@https://codeload.github.com/web-fragments/writable-dom/tar.gz/5d461949c30843ffc79eb63a98c3c751aae985b6: {}
+  writable-dom@1.0.6: {}
 
   ws@7.5.10: {}
 
