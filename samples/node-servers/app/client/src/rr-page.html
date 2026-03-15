@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Web Fragments – React Router Fragment</title>
+		<link rel="stylesheet" href="styles.css" />
+	</head>
+	<body>
+		<header class="app-header">
+			<div class="header-inner">
+				<a class="brand" href="/">
+					<img class="brand-logo" src="/webfragmentslogo.svg" alt="web fragments logo" />
+					<span>Node Server Host</span>
+				</a>
+				<nav class="nav-links" aria-label="Fragment navigation">
+					<a href="/" data-nav="home">Home</a>
+					<a href="/remix-page" data-nav="remix">Remix</a>
+					<a href="/qwik-page" data-nav="qwik">Qwik</a>
+					<a href="/rr-page" data-nav="react-router">React Router</a>
+				</nav>
+			</div>
+		</header>
+		<div class="app-shell">
+			<main class="app-main fragment-main"></main>
+			<footer class="app-footer">
+				Sample built by the
+				<a
+					href="https://github.com/web-fragments/web-fragments/graphs/contributors"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					web-fragments contributors
+				</a>
+				.
+			</footer>
+		</div>
+		<script type="module" src="main.ts"></script>
+		<script type="module" src="../src/legacy-bootstrap.ts"></script>
+	</body>
+</html>

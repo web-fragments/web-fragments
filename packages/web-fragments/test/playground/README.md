@@ -89,7 +89,7 @@ As you might have noticed, none of the scenarios work with SSR-ed fragments.
 This is intentional, as adding SSR support would add unnecessary complexity.
 It is possible to enable piercing and treat `fragment.html` as SSRed response — we just haven't gotten around to that yet.
 
-Note that our end-to-end test suite under `/e2e/` contains several applications that exercise Web Fragments against SSR-ed or full-stack applications, but those tests are higher level, and not as focused as the tests in this test suite.
+Note that our end-to-end test suite under `/samples/` contains several applications that exercise Web Fragments against SSR-ed or full-stack applications, but those tests are higher level, and not as focused as the tests in this test suite.
 
 ### Does the playground use Fragment Gateway middleware?
 

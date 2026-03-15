@@ -16,7 +16,11 @@ export default defineConfig({
 		},
 		rollupOptions: {
 			external: ['htmlrewriter', 'node:stream'],
-			output: {},
+			output: {
+				assetFileNames: 'assets/[name][extname]',
+				chunkFileNames: 'chunks/[name]-[hash].js',
+				entryFileNames: '[name].js',
+			},
 		},
 	},
 });

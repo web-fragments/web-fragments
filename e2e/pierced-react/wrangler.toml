@@ -1,4 +1,0 @@
-#:schema node_modules/wrangler/config-schema.json
-name = "pierced-react"
-compatibility_date = "2024-06-14"
-pages_build_output_dir = "dist"
