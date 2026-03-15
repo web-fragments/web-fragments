@@ -11,6 +11,7 @@
 		"start": "pnpm serve",
 		"buildAndServe": "pnpm build && pnpm serve",
 		"deploy": "wrangler deploy",
+		"pretypes:check": "pnpm build",
 		"types:check": "tsc --noEmit"
 	},
 	"dependencies": {
