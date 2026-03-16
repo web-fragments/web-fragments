@@ -1,4 +1,4 @@
-import { ReframedShadowRoot, reframedMetadataSymbol } from './reframed';
+import { ReframedOptions, ReframedShadowRoot, reframedMetadataSymbol } from './reframed';
 import { execToInertScriptMap } from './script-execution';
 import { assert } from './utils/assert';
 import { rewriteQuerySelector } from './utils/selector-helpers';
@@ -9,9 +9,7 @@ import { rewriteQuerySelector } from './utils/selector-helpers';
  */
 export function initializeIFrameContext(
 	iframe: HTMLIFrameElement,
-	reframedShadowRoot: ReframedShadowRoot,
-	wfDocumentElement: HTMLElement,
-	boundNavigation: boolean,
+	{ shadowRoot: reframedShadowRoot, wfDocumentElement, boundNavigation, fragmentId }: ReframedOptions,
 ) {
 	assert(
 		iframe.contentWindow !== null && iframe.contentDocument !== null,
@@ -76,6 +74,19 @@ export function initializeIFrameContext(
 		}
 	});
 	// END> WINDOW: GLOBAL CONSTRUCTORS PATCHES
+
+	/**
+	 * START> WINDOW: fetch and XMLHttpRequest PATCHES
+	 */
+	const originalFetch = iframeWindow.fetch;
+	iframeWindow.fetch = function reframedFetch(input: string | URL | Request, init?: RequestInit): Promise<Response> {
+		init ??= { headers: {} };
+		init.headers ??= {};
+		init.headers = { ...init.headers, 'X-Web-Fragment-Id': fragmentId };
+
+		return originalFetch.call(iframeWindow, input, init);
+	} satisfies typeof iframeWindow.fetch;
+	// END> WINDOW: fetch and XMLHttpRequest PATCHES
 
 	/**
 	 * START> WINDOW: MISC PATCHES
@@ -272,7 +283,7 @@ export function initializeIFrameContext(
 
 		readyState: {
 			get() {
-				return reframedShadowRoot[reframedMetadataSymbol].iframeDocumentReadyState;
+				return (reframedShadowRoot as ReframedShadowRoot)[reframedMetadataSymbol].iframeDocumentReadyState;
 			},
 		},
 
