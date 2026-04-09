@@ -120,7 +120,7 @@ export function getWebMiddleware(
 				.catch(renderErrorResponse);
 		}
 
-		const fragmentResponse = await fragmentResponsePromise!;
+		const fragmentResponse = await fragmentResponsePromise!.catch(handleFetchErrors);
 
 		/**
 		 * Handle SSR request from a soft navigation

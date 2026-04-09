@@ -486,6 +486,27 @@ for (const environment of environments) {
 					expect(response.headers.get('location')).toBe('http://sso.test/login');
 					expect(await response.text()).toBe('');
 				});
+
+				it('should handle non-document fragment fetch errors through onSsrFetchError', async () => {
+					fetchMock.doMockIf('http://bar.test:4321/_fragment/bar/image.jpg', () => {
+						throw new Error('fragment server unavailable');
+					});
+
+					customFragmentBarOnSsrFetchError = async () => ({
+						response: new Response('custom unavailable', {
+							status: 503,
+							headers: { 'content-type': 'text/plain' },
+						}),
+					});
+
+					const response = await testRequest(
+						new Request('http://localhost/_fragment/bar/image.jpg', { headers: { 'sec-fetch-dest': 'image' } }),
+					);
+
+					expect(response.status).toBe(503);
+					expect(await response.text()).toBe('custom unavailable');
+					expect(response.headers.get('x-web-fragment-id')).toBe('fragmentBar');
+				});
 			});
 
 			describe(`web fragment styles`, () => {
@@ -573,6 +594,34 @@ for (const environment of environments) {
 		});
 
 		describe(`fragment soft navigation html requests`, () => {
+			it(`should preserve streamed bodies for non-GET fragment requests`, async () => {
+				fetchMock.doMockIf(
+					(request) => {
+						if (request.url.toString() === 'http://foo.test:1234/foo/some/path') {
+							expect(request.method).toBe('PATCH');
+							return true;
+						}
+						return false;
+					},
+					async (request) => {
+						expect(await request.text()).toBe('{"hello":"world"}');
+						return new Response('patched', { headers: { 'content-type': 'text/plain' } });
+					},
+				);
+
+				const response = await testRequest(
+					new Request('http://localhost/foo/some/path', {
+						method: 'PATCH',
+						headers: { 'content-type': 'application/json', 'sec-fetch-dest': 'empty' },
+						body: '{"hello":"world"}',
+						duplex: 'half',
+					}),
+				);
+
+				expect(response.status).toBe(200);
+				expect(await response.text()).toBe('patched');
+			});
+
 			it(`should serve a fragment soft navigation request`, async () => {
 				mockFragmentFooResponse(
 					'/foo/some/path',
@@ -1043,17 +1092,20 @@ for (const environment of environments) {
 					testRequest = async function nodeTestRequest(request: Request): Promise<Response> {
 						const newUrl = new URL(new URL(request.url).pathname, `http://localhost:${server.address()!.port}`);
 
-						const newRequest = new Request(newUrl, {
+						const requestInit: RequestInit & { duplex?: 'half' } = {
 							method: request.method,
 							headers: request.headers,
 							body: request.body,
+							duplex: request.body ? 'half' : undefined,
 							mode: request.mode,
 							credentials: request.credentials,
 							cache: request.cache,
 							redirect: request.redirect,
 							referrer: request.referrer,
 							integrity: request.integrity,
-						});
+						};
+
+						const newRequest = new Request(newUrl, requestInit);
 
 						// TODO: why not working?
 						// fetchMock.dontMockOnce();
