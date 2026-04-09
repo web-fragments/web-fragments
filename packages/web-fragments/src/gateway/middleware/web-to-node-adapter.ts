@@ -40,6 +40,10 @@ export function webToNodeMiddleware(webMiddleware: (req: Request, next: () => Pr
 	};
 }
 
+interface RequestInitWithDuplex extends RequestInit {
+	duplex?: 'half';
+}
+
 function nodeRequestToWebRequest(nodeReq: http.IncomingMessage): Request {
 	const headers = new Headers();
 
@@ -56,11 +60,14 @@ function nodeRequestToWebRequest(nodeReq: http.IncomingMessage): Request {
 		body = stream.Readable.toWeb(nodeReq) as ReadableStream<Uint8Array>;
 	}
 
-	return new Request(nodeRequestToUrl(nodeReq), {
+	const requestInit: RequestInitWithDuplex = {
 		method: nodeReq.method,
 		headers,
 		body,
-	});
+		duplex: body ? 'half' : undefined,
+	};
+
+	return new Request(nodeRequestToUrl(nodeReq), requestInit);
 }
 
 export function nodeRequestToUrl(nodeReq: http.IncomingMessage): URL {
